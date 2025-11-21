@@ -2,7 +2,9 @@ using Coffee.UIExtensions;
 using Cysharp.Threading.Tasks;
 using LitMotion;
 using UnityEngine;
+#if ADDRESSABLES
 using UnityEngine.AddressableAssets;
+#endif
 
 namespace Void2610.UnityTemplate
 {
@@ -20,14 +22,17 @@ namespace Void2610.UnityTemplate
     /// - UIEffect (Coffee.UIExtensions.Unmask)
     /// - UniTask (Cysharp.Threading.Tasks)
     /// - LitMotion
-    /// - Addressables
+    /// - Addressables（条件付きコンパイル）
     ///
     /// セットアップ手順:
     /// 1. UIEffectパッケージをインストール
-    /// 2. IrisShotプレハブを作成:
+    /// 2. Addressablesパッケージをインストール
+    /// 3. Scripting Define Symbolsに「ADDRESSABLES」を追加
+    ///    - Unity Editor > Project Settings > Player > Other Settings > Scripting Define Symbols
+    /// 4. IrisShotプレハブを作成:
     ///    - Canvas > Image (黒い全画面画像)
     ///    - その子に小さな白い円形Image + Unmaskコンポーネント
-    /// 3. プレハブをAddressablesに登録（アドレス: "IrisShot"）
+    /// 5. プレハブをAddressablesに登録（アドレス: "IrisShot"）
     ///
     /// 使い方:
     /// // シーンアウト（画面を閉じる）
@@ -143,10 +148,15 @@ namespace Void2610.UnityTemplate
                 }
             }
 
+#if ADDRESSABLES
             var prefab = await Addressables.LoadAssetAsync<GameObject>("IrisShot").ToUniTask();
             var instance = Object.Instantiate(prefab, canvas.transform);
             _irisShotObj = instance;
             return _irisShotObj;
+#else
+            Debug.LogError("IrisShot requires Addressables. Please install the Addressables package and add 'ADDRESSABLES' to Scripting Define Symbols.");
+            return null;
+#endif
         }
     }
 }

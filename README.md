@@ -96,6 +96,18 @@ cp -r my-unity-utils/* <YourUnityProject>/Assets/Scripts/Utils/
 - **UniTask** - 各種async/await対応スクリプト
 - **LitMotion** - BgmManager.cs, FloatMove.cs等
 - **UIEffect** - IrisShot.cs
+- **Addressables** - IrisShot.cs（条件付きコンパイル）
+
+### Addressablesを使用する場合
+
+IrisShot.csでAddressables機能を使用する場合は、以下の設定が必要です：
+
+1. Addressablesパッケージをインストール
+2. Scripting Define Symbolsに`ADDRESSABLES`を追加
+   - Unity Editor > Project Settings > Player > Other Settings > Scripting Define Symbols
+   - `ADDRESSABLES`を追加して適用
+
+**注意:** `ADDRESSABLES`シンボルを定義しない場合、IrisShotはエラーメッセージを出力して動作しません。
 
 ## 🔄 更新方法
 
