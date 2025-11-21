@@ -154,6 +154,7 @@ namespace Void2610.UnityTemplate
             _irisShotObj = instance;
             return _irisShotObj;
 #else
+            await UniTask.CompletedTask;
             Debug.LogError("IrisShot requires Addressables. Please install the Addressables package and add 'ADDRESSABLES' to Scripting Define Symbols.");
             return null;
 #endif
