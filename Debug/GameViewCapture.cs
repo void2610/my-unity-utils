@@ -78,7 +78,7 @@ namespace Void2610.UnityTemplate
 
 #if UNITY_EDITOR
     [CustomEditor(typeof(GameViewCapture))]
-    public class GameViewCaptureEditor : Editor
+    public class GameViewCaptureEditor : UnityEditor.Editor
     {
         public override void OnInspectorGUI()
         {
