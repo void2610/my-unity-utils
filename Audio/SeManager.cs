@@ -98,7 +98,7 @@ namespace Void2610.UnityTemplate
             audioSource.volume = data.volume * volume;
             
             // ピッチがマイナスの場合はランダム化
-            audioSource.pitch = pitch < 0.0f ? Random.Range(0.8f, 1.2f) : pitch;
+            audioSource.pitch = pitch < 0.0f ? UnityEngine.Random.Range(0.8f, 1.2f) : pitch;
             audioSource.Play();
         }
 

@@ -8,6 +8,7 @@ using LitMotion.Extensions;
 using TMPro;
 using Cysharp.Threading.Tasks;
 using System.Threading;
+using R3;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -676,15 +677,13 @@ namespace Void2610.UnityTemplate
 
 
 
-#if UNITY_INCLUDE_TESTS || HAS_R3
         /// <summary>
         /// ReactivePropertyの値が増加した時のみ発火するObservableを返す
         /// スコアやHP増加などの検知に便利
         ///
         /// 注意: このメソッドはR3パッケージに依存しています
-        /// R3がインストールされていない場合はコンパイルエラーになります
         /// </summary>
-        public static R3.Observable<T> WhereIncreased<T>(this R3.ReadOnlyReactiveProperty<T> source) where T : IComparable<T>
+        public static Observable<T> WhereIncreased<T>(this ReadOnlyReactiveProperty<T> source) where T : IComparable<T>
         {
             return source
                 .Pairwise()
@@ -697,9 +696,8 @@ namespace Void2610.UnityTemplate
         /// 値自体は不要で、増加イベントのみを検知したい場合に使用
         ///
         /// 注意: このメソッドはR3パッケージに依存しています
-        /// R3がインストールされていない場合はコンパイルエラーになります
         /// </summary>
-        public static R3.Observable<R3.Unit> OnIncreased<T>(this R3.ReadOnlyReactiveProperty<T> source) where T : IComparable<T>
+        public static Observable<Unit> OnIncreased<T>(this ReadOnlyReactiveProperty<T> source) where T : IComparable<T>
         {
             return source
                 .Pairwise()
@@ -712,9 +710,8 @@ namespace Void2610.UnityTemplate
         /// HPやスタミナ減少などの検知に便利
         ///
         /// 注意: このメソッドはR3パッケージに依存しています
-        /// R3がインストールされていない場合はコンパイルエラーになります
         /// </summary>
-        public static R3.Observable<T> WhereDecreased<T>(this R3.ReadOnlyReactiveProperty<T> source) where T : IComparable<T>
+        public static Observable<T> WhereDecreased<T>(this ReadOnlyReactiveProperty<T> source) where T : IComparable<T>
         {
             return source
                 .Pairwise()
@@ -727,16 +724,14 @@ namespace Void2610.UnityTemplate
         /// 値自体は不要で、減少イベントのみを検知したい場合に使用
         ///
         /// 注意: このメソッドはR3パッケージに依存しています
-        /// R3がインストールされていない場合はコンパイルエラーになります
         /// </summary>
-        public static R3.Observable<R3.Unit> OnDecreased<T>(this R3.ReadOnlyReactiveProperty<T> source) where T : IComparable<T>
+        public static Observable<Unit> OnDecreased<T>(this ReadOnlyReactiveProperty<T> source) where T : IComparable<T>
         {
             return source
                 .Pairwise()
                 .Where(pair => pair.Current.CompareTo(pair.Previous) < 0)
                 .AsUnitObservable();
         }
-#endif
 
 
 
