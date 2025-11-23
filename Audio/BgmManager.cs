@@ -293,7 +293,13 @@ namespace Void2610.UnityTemplate
         {
             _currentBGM = null;
             _audioSource.volume = 0;
-            
+
+            // AudioMixerの初期設定
+            if (bgmMixerGroup && bgmMixerGroup.audioMixer)
+            {
+                bgmMixerGroup.audioMixer.SetFloat("BgmVolume", Mathf.Log10(_bgmVolume) * 20);
+            }
+
             if (playOnStart)
             {
                 _isPlaying = true;
