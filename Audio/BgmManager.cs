@@ -282,8 +282,8 @@ namespace Void2610.UnityTemplate
             base.Awake();
             _audioSource = gameObject.AddComponent<AudioSource>();
             _audioSource.outputAudioMixerGroup = bgmMixerGroup;
-            _audioSource.loop = false; // ループは手動で管理
-            
+            _audioSource.loop = true; // BGMをループ再生
+
             // 保存された音量を読み込み
             _bgmVolume = PlayerPrefs.GetFloat(BGM_VOLUME_KEY, 1.0f);
             BgmVolume = _bgmVolume;
@@ -303,16 +303,7 @@ namespace Void2610.UnityTemplate
 
         private void Update()
         {
-            // 自動ループ処理
-            if (_isPlaying && _audioSource.clip && !_isFading)
-            {
-                var remainingTime = _audioSource.clip.length - _audioSource.time;
-                if (remainingTime <= fadeTime)
-                {
-                    _isFading = true;
-                    LoopToNextBGM(remainingTime).Forget();
-                }
-            }
+            // ループ再生が有効なため、自動切り替え処理は不要
         }
 
         protected override void OnDestroy()
