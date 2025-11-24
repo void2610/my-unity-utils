@@ -48,12 +48,9 @@ namespace Void2610.UnityTemplate
         /// </summary>
         public void SetFadeIn()
         {
-            if (_image)
-            {
-                var color = _image.color;
-                color.a = 1f;
-                _image.color = color;
-            }
+            var color = _image.color;
+            color.a = 1f;
+            _image.color = color;
         }
         
         /// <summary>
@@ -61,12 +58,9 @@ namespace Void2610.UnityTemplate
         /// </summary>
         public void SetFadeOut()
         {
-            if (_image)
-            {
-                var color = _image.color;
-                color.a = 0f;
-                _image.color = color;
-            }
+            var color = _image.color;
+            color.a = 0f;
+            _image.color = color;
         }
         
         /// <summary>
@@ -75,21 +69,15 @@ namespace Void2610.UnityTemplate
         /// <param name="color">フェード色（アルファ値は現在の値を保持）</param>
         public void SetFadeColor(Color color)
         {
-            if (_image)
-            {
-                color.a = _image.color.a;
-                _image.color = color;
-            }
+            color.a = _image.color.a;
+            _image.color = color;
         }
 
         private void Awake()
         {
             _image = this.GetComponent<Image>();
-            if (_image)
-            {
-                // 初期状態は完全に黒（フェードイン状態）
-                _image.color = new Color(0f, 0f, 0f, 1f);
-            }
+            // 初期状態は完全に黒（フェードイン状態）
+            _image.color = new Color(0f, 0f, 0f, 1f);
         }
     }
 }
