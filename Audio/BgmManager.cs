@@ -48,7 +48,6 @@ namespace Void2610.UnityTemplate
         private AudioSource _audioSource;
         private bool _isPlaying;
         private float _bgmVolume = 1.0f;
-        private bool _isFading;
         private SoundData _currentBGM;
         private MotionHandle _fadeHandle;
         private MotionHandle _duckingHandle;
@@ -185,7 +184,7 @@ namespace Void2610.UnityTemplate
         /// カテゴリからランダムにBGMを再生
         /// </summary>
         /// <param name="bgmType">BGMカテゴリ</param>
-        public void PlayRandomBGM(BgmType bgmType = BgmType.Default)
+        public void PlayRandomBGM(BgmType bgmType)
         {
             if (bgmList.Count == 0) return;
             
@@ -235,7 +234,6 @@ namespace Void2610.UnityTemplate
             _audioSource.Play();
 
             // フェードイン
-            _isFading = true;
             _fadeHandle = LMotion.Create(0f, _currentBGM.volume, fadeTime)
                 .WithEase(Ease.InQuad)
                 .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
@@ -243,7 +241,6 @@ namespace Void2610.UnityTemplate
                 .AddTo(this);
 
             await UniTask.Delay((int)(fadeTime * 1000), ignoreTimeScale: true);
-            _isFading = false;
         }
 
         /// <summary>
@@ -312,11 +309,6 @@ namespace Void2610.UnityTemplate
                 _isPlaying = true;
                 PlayRandomBGM();
             }
-        }
-
-        private void Update()
-        {
-            // ループ再生が有効なため、自動切り替え処理は不要
         }
 
         protected override void OnDestroy()
