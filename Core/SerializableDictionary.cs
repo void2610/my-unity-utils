@@ -52,12 +52,6 @@ namespace Void2610.UnityTemplate
         /// </summary>
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
-            _serializedList.Clear();
-            
-            foreach (var kvp in this)
-            {
-                _serializedList.Add(new Pair(kvp.Key, kvp.Value));
-            }
         }
     }
 }
