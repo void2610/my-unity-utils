@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using LitMotion;
@@ -9,7 +10,7 @@ namespace Void2610.UnityTemplate
     /// CanvasGroupの表示/非表示を管理するクラス（LitMotionフェード付き）
     /// MVPパターンでのUI状態管理に最適
     /// </summary>
-    public class CanvasGroupSwitcher
+    public class CanvasGroupSwitcher : IDisposable
     {
         private readonly List<CanvasGroup> _canvasGroups;
         private readonly Dictionary<CanvasGroup, MotionHandle> _activeMotions = new();
@@ -99,6 +100,18 @@ namespace Void2610.UnityTemplate
             
             // アニメーション完了後、辞書から削除
             _activeMotions.Remove(cg);
+        }
+        
+        /// <summary>
+        /// 指定したCanvasGroupの表示状態をトグル切り替え
+        /// </summary>
+        public bool ToggleCanvasGroup(string canvasName)
+        {
+            var cg = _canvasGroups.Find(c => c.name == canvasName);
+            if (!cg) return false;
+            var newState = cg.alpha <= 0;
+            EnableCanvasGroupAsync(canvasName, newState).Forget();
+            return newState;
         }
         
         /// <summary>

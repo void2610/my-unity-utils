@@ -35,6 +35,8 @@ namespace Void2610.UnityTemplate
         /// インスタンスが存在するかどうかを返す（作成はしない）
         /// </summary>
         public static bool HasInstance => _instance != null;
+        
+        protected bool IsDontDestroyOnLoad = true;
 
         protected virtual void Awake()
         {
@@ -42,7 +44,8 @@ namespace Void2610.UnityTemplate
             if (_instance == null)
             {
                 _instance = this as T;
-                DontDestroyOnLoad(gameObject);
+                if (IsDontDestroyOnLoad)
+                    DontDestroyOnLoad(gameObject);
             }
             // 既に別のインスタンスが存在する場合は自分を破棄
             else if (_instance != this)
