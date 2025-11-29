@@ -92,7 +92,7 @@ namespace Void2610.UnityTemplate
             _isPlaying = true;
             _audioSource.Play();
             
-            if (_fadeHandle.IsActive()) _fadeHandle.Cancel();
+            _fadeHandle.TryCancel();
             _fadeHandle = LMotion.Create(_audioSource.volume, _currentBGM.volume, fadeTime)
                 .WithEase(Ease.InQuad)
                 .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
@@ -116,7 +116,7 @@ namespace Void2610.UnityTemplate
         {
             _isPlaying = false;
 
-            if (_fadeHandle.IsActive()) _fadeHandle.Cancel();
+            _fadeHandle.TryCancel();
             await LMotion.Create(_audioSource.volume, 0f, fadeTime)
                 .WithEase(Ease.InQuad)
                 .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
@@ -137,7 +137,7 @@ namespace Void2610.UnityTemplate
         {
             _originalVolume = _audioSource.volume;
 
-            if (_duckingHandle.IsActive()) _duckingHandle.Cancel();
+            _duckingHandle.TryCancel();
             _duckingHandle = LMotion.Create(_audioSource.volume, _originalVolume * duckVolume, duckFadeTime)
                 .WithEase(Ease.OutQuad)
                 .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
@@ -154,7 +154,7 @@ namespace Void2610.UnityTemplate
         /// <param name="restoreFadeTime">フェード時間（秒）</param>
         public async UniTask RestoreVolume(float restoreFadeTime = 0.5f)
         {
-            if (_duckingHandle.IsActive()) _duckingHandle.Cancel();
+            _duckingHandle.TryCancel();
             _duckingHandle = LMotion.Create(_audioSource.volume, _originalVolume, restoreFadeTime)
                 .WithEase(Ease.InQuad)
                 .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
@@ -220,7 +220,7 @@ namespace Void2610.UnityTemplate
             // 現在のBGMをフェードアウト
             if (_currentBGM != null)
             {
-                if (_fadeHandle.IsActive()) _fadeHandle.Cancel();
+                _fadeHandle.TryCancel();
                 await LMotion.Create(_audioSource.volume, 0f, fadeTime)
                     .WithEase(Ease.InQuad)
                     .BindToVolume(_audioSource)
@@ -248,7 +248,7 @@ namespace Void2610.UnityTemplate
         /// </summary>
         private async UniTaskVoid PauseInternal()
         {
-            if (_fadeHandle.IsActive()) _fadeHandle.Cancel();
+            _fadeHandle.TryCancel();
             await LMotion.Create(_audioSource.volume, 0f, fadeTime)
                 .WithEase(Ease.InQuad)
                 .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
@@ -263,7 +263,7 @@ namespace Void2610.UnityTemplate
         /// </summary>
         private async UniTaskVoid LoopToNextBGM(float remainingFadeTime)
         {
-            if (_fadeHandle.IsActive()) _fadeHandle.Cancel();
+            _fadeHandle.TryCancel();
             await LMotion.Create(_audioSource.volume, 0f, remainingFadeTime)
                 .WithEase(Ease.InQuad)
                 .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
@@ -313,8 +313,8 @@ namespace Void2610.UnityTemplate
 
         protected override void OnDestroy()
         {
-            if (_fadeHandle.IsActive()) _fadeHandle.Cancel();
-            if (_duckingHandle.IsActive()) _duckingHandle.Cancel();
+            _fadeHandle.TryCancel();
+            _duckingHandle.TryCancel();
             base.OnDestroy();
         }
     }
