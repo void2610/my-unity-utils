@@ -62,6 +62,18 @@ namespace Void2610.UnityTemplate
         }
 
         /// <summary>
+        /// ImageのfillAmountをLitMotionでアニメーション
+        /// </summary>
+        public static MotionHandle FillTo(this Image image, float targetFill, float duration, Ease ease = Ease.Linear, bool ignoreTimeScale = false)
+        {
+            return LMotion.Create(image.fillAmount, targetFill, duration)
+                .WithEase(ease)
+                .WithScheduler(ignoreTimeScale ? MotionScheduler.UpdateIgnoreTimeScale : MotionScheduler.Update)
+                .Bind(value => image.fillAmount = value)
+                .AddTo(image.gameObject);
+        }
+
+        /// <summary>
         /// Imageの色をLitMotionで変更する
         /// </summary>
         public static MotionHandle ColorTo(this Image image, Color targetColor, float duration, Ease ease = Ease.Linear, bool ignoreTimeScale = false)
