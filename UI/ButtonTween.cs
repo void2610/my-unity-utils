@@ -130,10 +130,7 @@ namespace Void2610.UnityTemplate
         {
             foreach (var handle in _motionHandles)
             {
-                if (handle.IsActive())
-                {
-                    handle.Cancel();
-                }
+                handle.TryCancel();
             }
             _motionHandles.Clear();
         }

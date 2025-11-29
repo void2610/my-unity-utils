@@ -66,9 +66,9 @@ namespace Void2610.UnityTemplate
             if (!cg) return;
             
             // 進行中のアニメーションをキャンセル
-            if (_activeMotions.TryGetValue(cg, out var existingMotion) && existingMotion.IsActive())
+            if (_activeMotions.TryGetValue(cg, out var existingMotion))
             {
-                existingMotion.Cancel();
+                existingMotion.TryCancel();
             }
             
             if (enable)
@@ -186,10 +186,7 @@ namespace Void2610.UnityTemplate
         {
             foreach (var kvp in _activeMotions)
             {
-                if (kvp.Value.IsActive())
-                {
-                    kvp.Value.Cancel();
-                }
+                kvp.Value.TryCancel();
             }
             _activeMotions.Clear();
         }
