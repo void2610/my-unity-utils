@@ -5,6 +5,7 @@ using System.Linq;
 using Cysharp.Threading.Tasks;
 using LitMotion;
 using LitMotion.Extensions;
+using Random = UnityEngine.Random;
 
 namespace Void2610.UnityTemplate
 {
