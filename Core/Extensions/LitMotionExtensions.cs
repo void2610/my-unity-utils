@@ -14,6 +14,42 @@ namespace Void2610.UnityTemplate
     public static class LitMotionExtensions
     {
         /// <summary>
+        /// SpriteRendererの透明度をLitMotionでフェードインさせる
+        /// </summary>
+        public static MotionHandle FadeIn(this SpriteRenderer sr, float duration, Ease ease = Ease.Linear, bool ignoreTimeScale = false)
+        {
+            var originalColor = sr.color;
+            return LMotion.Create(sr.color.a, 1f, duration)
+                .WithEase(ease)
+                .WithScheduler(ignoreTimeScale ? MotionScheduler.UpdateIgnoreTimeScale : MotionScheduler.Update)
+                .Bind(alpha =>
+                {
+                    var color = originalColor;
+                    color.a = alpha;
+                    sr.color = color;
+                })
+                .AddTo(sr.gameObject);
+        }
+        
+        /// <summary>
+        /// SpriteRendererの透明度をLitMotionでフェードアウトさせる
+        /// </summary>
+        public static MotionHandle FadeOut(this SpriteRenderer sr, float duration, Ease ease = Ease.Linear, bool ignoreTimeScale = false)
+        {
+            var originalColor = sr.color;
+            return LMotion.Create(sr.color.a, 0f, duration)
+                .WithEase(ease)
+                .WithScheduler(ignoreTimeScale ? MotionScheduler.UpdateIgnoreTimeScale : MotionScheduler.Update)
+                .Bind(alpha =>
+                {
+                    var color = originalColor;
+                    color.a = alpha;
+                    sr.color = color;
+                })
+                .AddTo(sr.gameObject);
+        }
+        
+        /// <summary>
         /// Imageの透明度をLitMotionでフェードインさせる
         /// </summary>
         public static MotionHandle FadeIn(this Image image, float duration, Ease ease = Ease.Linear, bool ignoreTimeScale = false)
