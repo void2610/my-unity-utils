@@ -12,7 +12,7 @@ namespace Void2610.UnityTemplate
     /// </summary>
     public class CameraShake : SingletonMonoBehaviour<CameraShake>
     {
-        private Vector3 _originalPosition;
+        
         private MotionHandle _shakeHandle;
         
         protected override void Awake()
@@ -20,7 +20,6 @@ namespace Void2610.UnityTemplate
             base.Awake();
             // DontDestroyOnLoadを解除してシーン固有で使用
             SceneManager.MoveGameObjectToScene(this.gameObject, SceneManager.GetActiveScene());
-            _originalPosition = this.transform.position;
         }
 
         /// <summary>
@@ -43,21 +42,24 @@ namespace Void2610.UnityTemplate
         /// <returns>完了待機可能なUniTask</returns>
         public async UniTask ShakeCameraAsync(float magnitude, float duration, int frequency = 10, float dampingRatio = 0.5f)
         {
-            if(_shakeHandle.IsPlaying()) _shakeHandle.Complete();
+            _shakeHandle.TryComplete();
+
+            // シェイク開始時の位置を記録
+            var startPosition = this.transform.position;
 
             _shakeHandle = LMotion.Shake.Create(startValue: Vector3.zero, strength: Vector3.one * magnitude, duration: duration)
                 .WithFrequency(frequency)
                 .WithDampingRatio(dampingRatio)
-                .Bind(v => this.transform.position = _originalPosition + v)
+                .Bind(v => this.transform.position = startPosition + v)
                 .AddTo(this);
 
             await _shakeHandle.ToUniTask();
-            this.transform.position = _originalPosition;
+            this.transform.position = startPosition;
         }
 
         protected override void OnDestroy()
         {
-            if (_shakeHandle.IsPlaying()) _shakeHandle.Cancel();
+            _shakeHandle.TryCancel();
             base.OnDestroy();
         }
     }
