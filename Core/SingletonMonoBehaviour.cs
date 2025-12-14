@@ -9,6 +9,17 @@ namespace Void2610.UnityTemplate
     public class SingletonMonoBehaviour<T> : MonoBehaviour where T : Component
     {
         private static T _instance;
+
+#if UNITY_EDITOR
+        /// <summary>
+        /// ドメインリロード無効時にstatic フィールドをリセット
+        /// </summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStaticInstance()
+        {
+            _instance = null;
+        }
+#endif
         
         public static T Instance
         {
@@ -36,7 +47,7 @@ namespace Void2610.UnityTemplate
         /// </summary>
         public static bool HasInstance => _instance != null;
         
-        protected bool IsDontDestroyOnLoad = true;
+        protected bool DontDestroyOnLoad = true;
 
         protected virtual void Awake()
         {
@@ -44,8 +55,8 @@ namespace Void2610.UnityTemplate
             if (_instance == null)
             {
                 _instance = this as T;
-                if (IsDontDestroyOnLoad)
-                    DontDestroyOnLoad(gameObject);
+                if (DontDestroyOnLoad)
+                    UnityEngine.Object.DontDestroyOnLoad(gameObject);
             }
             // 既に別のインスタンスが存在する場合は自分を破棄
             else if (_instance != this)

@@ -39,7 +39,6 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
     private const string AISAC_CONTROL_NAME = "AisacControl_00";
     private const string BGM_VOLUME_KEY = "BgmVolume";
     private const float FADE_TIME = 1.0f;
-    private const float CRI_INIT_TIMEOUT = 10.0f;
 
     private CriSoundPlayer _player;
     private CriSoundPlayer.SimplePlayback _currentPlayback;
@@ -136,15 +135,8 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
         PlayBgm(bgmList[3].Name);
     }
 
-    /// <summary>
-    /// BGMを一時停止（フェードアウト後）
-    /// </summary>
     public void Pause() => PauseInternal().Forget();
 
-    /// <summary>
-    /// BGMを停止（フェードアウト後）
-    /// </summary>
-    /// <param name="fadeOutTime">フェードアウト時間（秒）</param>
     public async UniTask Stop(float fadeOutTime = FADE_TIME)
     {
         await FadeOut(fadeOutTime);
@@ -156,9 +148,6 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
         }
     }
 
-    /// <summary>
-    /// 一時停止したBGMを再開（フェードイン付き）
-    /// </summary>
     public void Resume()
     {
         _currentPlayback.Resume();
@@ -191,14 +180,6 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
         InitializeCri().Forget();
     }
 
-    private void OnEnable()
-    {
-        if (!HasCurrentPlayback && _acbAsset == null)
-        {
-            InitializeCri().Forget();
-        }
-    }
-
     protected override void OnDestroy()
     {
         _fadeHandle.TryCancel();
@@ -206,6 +187,8 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
         {
             _currentPlayback.Stop();
         }
+        // CriSoundPlayerのネイティブリソースを解放
+        _player?.Dispose();
         base.OnDestroy();
     }
 
@@ -217,14 +200,45 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
     {
         var startTime = Time.realtimeSinceStartup;
 
+        // CRIWARE全体の初期化（ACF登録含む）が完了するまで待機
         while (CriAtom.CueSheetsAreLoading)
         {
-            if (Time.realtimeSinceStartup - startTime > CRI_INIT_TIMEOUT)
-            {
+            if (Time.realtimeSinceStartup - startTime > 10f)
                 throw new TimeoutException("CRI初期化タイムアウト");
-            }
             await UniTask.Yield();
         }
+
+#if UNITY_EDITOR
+        // ドメインリロード無効時、ACBアセットのLoadRequestedがtrueのまま残り
+        // Handleがnullになるため、強制的にUnloadして再ロード可能にする
+        foreach (var bgmData in bgmList)
+        {
+            if (bgmData.CueReference.AcbAsset != null)
+            {
+                var acb = bgmData.CueReference.AcbAsset;
+
+                // LoadRequested=true かつ Handle=null の異常状態を検出してUnload
+                if (acb.LoadRequested && acb.Handle == null)
+                {
+                    acb.Unload();
+                }
+
+                // Handle が null なら明示的に LoadAsync を呼び出す
+                if (acb.Handle == null && !acb.LoadRequested)
+                {
+                    acb.LoadAsync();
+
+                    // ACBのロード完了を待機
+                    while (!acb.Loaded)
+                    {
+                        if (Time.realtimeSinceStartup - startTime > 10f)
+                            throw new TimeoutException("ACBロードタイムアウト");
+                        await UniTask.Yield();
+                    }
+                }
+            }
+        }
+#endif
 
         _currentFadeVolume = 0f;
         IsInitialized = true;
