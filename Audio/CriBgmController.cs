@@ -38,7 +38,6 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
 
     private const string AISAC_CONTROL_NAME = "AisacControl_00";
     private const string BGM_VOLUME_KEY = "BgmVolume";
-    private const float FADE_TIME = 1.0f;
 
     private CriSoundPlayer _player;
     private CriSoundPlayer.SimplePlayback _currentPlayback;
@@ -82,64 +81,22 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
     }
 
     public bool IsPlaying => HasCurrentPlayback && _currentPlayback.IsPlaying();
+    public void Pause() => PauseInternal();
+    public void Resume() => _currentPlayback.Resume();
 
     /// <summary>
     /// 指定した名前のBGMを再生
     /// </summary>
     /// <param name="bgmName">BGMデータの名前</param>
-    /// <param name="fadeInTime">フェードイン時間（秒）</param>
-    public void PlayBgm(string bgmName, float fadeInTime = FADE_TIME)
+    public void PlayBgm(string bgmName)
     {
         var bgmData = bgmList.Find(x => x.Name == bgmName);
         CurrentBgmName = bgmName;
-        PlayBgmInternal(bgmData.CueReference, fadeInTime > 0f, fadeInTime).Forget();
+        PlayBgmInternal(bgmData.CueReference).Forget();
     }
 
-    /// <summary>
-    /// BGM1を再生（後方互換性用）
-    /// インスペクタでリストの0番目に設定されているBGMを再生
-    /// </summary>
-    public void PlayBGM1()
+    public void Stop()
     {
-        IsPlayingBGM1 = true;
-        PlayBgm(bgmList[0].Name);
-    }
-
-    /// <summary>
-    /// BGM2を再生（後方互換性用）
-    /// インスペクタでリストの1番目に設定されているBGMを再生
-    /// </summary>
-    public void PlayBGM2()
-    {
-        IsPlayingBGM1 = false;
-        PlayBgm(bgmList[1].Name);
-    }
-
-    /// <summary>
-    /// ニアトゥルーエンドBGMを再生（後方互換性用）
-    /// インスペクタでリストの2番目に設定されているBGMを再生
-    /// </summary>
-    public void PlayNearTrueEndBGM()
-    {
-        IsPlayingBGM1 = false;
-        PlayBgm(bgmList[2].Name);
-    }
-
-    /// <summary>
-    /// エンドBGMを再生（後方互換性用）
-    /// インスペクタでリストの3番目に設定されているBGMを再生
-    /// </summary>
-    public void PlayEndBGM()
-    {
-        IsPlayingBGM1 = false;
-        PlayBgm(bgmList[3].Name);
-    }
-
-    public void Pause() => PauseInternal().Forget();
-
-    public async UniTask Stop(float fadeOutTime = FADE_TIME)
-    {
-        await FadeOut(fadeOutTime);
         if (HasCurrentPlayback)
         {
             _currentPlayback.Stop();
@@ -148,11 +105,6 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
         }
     }
 
-    public void Resume()
-    {
-        _currentPlayback.Resume();
-        FadeIn().Forget();
-    }
 
     /// <summary>
     /// AISACをスムーズに変更
@@ -248,13 +200,10 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
     /// BGM再生の内部処理
     /// </summary>
     /// <param name="cueReference">再生するキュー参照</param>
-    /// <param name="useFadeIn">フェードインするかどうか</param>
-    /// <param name="fadeInTime">フェードイン時間（秒）</param>
-    private async UniTaskVoid PlayBgmInternal(CriAtomCueReference cueReference, bool useFadeIn = true, float fadeInTime = FADE_TIME)
+    private async UniTaskVoid PlayBgmInternal(CriAtomCueReference cueReference)
     {
         if (HasCurrentPlayback)
         {
-            await FadeOut();
             _currentPlayback.Stop();
             HasCurrentPlayback = false;
             await UniTask.Delay(50);
@@ -270,15 +219,8 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
 
         _currentPlayback.SetAisacControl(AISAC_CONTROL_NAME, _aisacValue);
 
-        if (useFadeIn)
-        {
-            await FadeIn(fadeInTime);
-        }
-        else
-        {
-            _currentFadeVolume = 1f;
-            UpdateVolume();
-        }
+        _currentFadeVolume = 1f;
+        UpdateVolume();
     }
 
     /// <summary>
@@ -293,55 +235,12 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
     }
 
     /// <summary>
-    /// フェードイン処理
+    /// 一時停止の内部処理
     /// </summary>
-    /// <param name="fadeInTime">フェードイン時間（秒）</param>
-    private async UniTask FadeIn(float fadeInTime = FADE_TIME)
+    private void PauseInternal()
     {
-        _fadeHandle.TryCancel();
-
-        _fadeHandle = LMotion.Create(0f, 1f, fadeInTime)
-            .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
-            .WithEase(Ease.InQuad)
-            .Bind(x => {
-                _currentFadeVolume = x;
-                UpdateVolume();
-            })
-            .AddTo(this);
-
-        await _fadeHandle.ToUniTask();
-    }
-
-    /// <summary>
-    /// フェードアウト処理
-    /// </summary>
-    /// <param name="fadeOutTime">フェードアウト時間（秒）</param>
-    private async UniTask FadeOut(float fadeOutTime = FADE_TIME)
-    {
-        _fadeHandle.TryCancel();
-
-        _fadeHandle = LMotion.Create(_currentFadeVolume, 0f, fadeOutTime)
-            .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
-            .WithEase(Ease.InQuad)
-            .Bind(x => {
-                _currentFadeVolume = x;
-                UpdateVolume();
-            })
-            .AddTo(this);
-
-        await _fadeHandle.ToUniTask();
-    }
-
-    /// <summary>
-    /// 一時停止の内部処理（フェードアウト後にポーズ）
-    /// </summary>
-    private async UniTaskVoid PauseInternal()
-    {
-        await FadeOut();
         if (HasCurrentPlayback)
-        {
             _currentPlayback.Pause();
-        }
     }
 }
 #endif
