@@ -31,6 +31,7 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
 {
     [SerializeField] private List<BgmData> bgmList = new();
 
+    public bool IsInitialized { get; private set; }
     public bool HasCurrentPlayback { get; private set; }
     public string CurrentBgmName { get; private set; } = string.Empty;
     public bool IsPlayingBGM1 { get; private set; } = true;
@@ -226,6 +227,7 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
         }
 
         _currentFadeVolume = 0f;
+        IsInitialized = true;
     }
 
     /// <summary>
