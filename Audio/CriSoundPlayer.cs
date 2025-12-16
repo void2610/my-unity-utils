@@ -1,3 +1,4 @@
+#if CRIMW
 using System;
 using System.Collections.Generic;
 using CriWare;
@@ -81,3 +82,4 @@ public class CriSoundPlayer : IDisposable
         GC.SuppressFinalize(this);
     }
 }
+#endif
