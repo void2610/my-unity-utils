@@ -1,6 +1,4 @@
-#if CRIMW
-using System;
-using System.Collections.Generic;
+#if CRIWARE_ENABLE
 using CriWare;
 using CriWare.Assets;
 using Cysharp.Threading.Tasks;
