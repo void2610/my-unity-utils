@@ -33,6 +33,11 @@ namespace Void2610.UnityTemplate
             ShakeCameraAsync(magnitude, duration, frequency, dampingRatio).Forget();
 
         /// <summary>
+        /// カメラの振動を止める
+        /// </summary>
+        public void StopShake() => _shakeHandle.TryComplete();
+
+        /// <summary>
         /// カメラを一定時間揺らし、完了後に await できる
         /// </summary>
         /// <param name="magnitude">振動の強さ</param>
