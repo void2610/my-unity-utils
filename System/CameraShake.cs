@@ -12,14 +12,19 @@ namespace Void2610.UnityTemplate
     /// </summary>
     public class CameraShake : SingletonMonoBehaviour<CameraShake>
     {
-        
         private MotionHandle _shakeHandle;
+        private float _continuousMagnitude;
+        private Vector3? _basePosition;
         
-        protected override void Awake()
+        /// <summary>                                 
+        /// 継続的な揺れの強度を設定（0で停止）       
+        /// </summary> 
+        public void SetContinuousMagnitude(float magnitude)
         {
-            base.Awake();
-            // DontDestroyOnLoadを解除してシーン固有で使用
-            SceneManager.MoveGameObjectToScene(this.gameObject, SceneManager.GetActiveScene());
+            if (!_basePosition.HasValue) _basePosition = transform.position;
+            
+            _continuousMagnitude = magnitude;
+            if (magnitude <= 0f) transform.position = _basePosition.Value;
         }
 
         /// <summary>
@@ -49,8 +54,9 @@ namespace Void2610.UnityTemplate
         {
             _shakeHandle.TryComplete();
 
-            // シェイク開始時の位置を記録
-            var startPosition = this.transform.position;
+            // ベースポジションから開始
+            if (!_basePosition.HasValue) _basePosition = transform.position;
+            var startPosition = _basePosition.Value;
 
             _shakeHandle = LMotion.Shake.Create(startValue: Vector3.zero, strength: Vector3.one * magnitude, duration: duration)
                 .WithFrequency(frequency)
@@ -60,6 +66,28 @@ namespace Void2610.UnityTemplate
 
             await _shakeHandle.ToUniTask();
             this.transform.position = startPosition;
+        }
+        
+        private void Update()
+        {
+            if (!_basePosition.HasValue) return;
+            if (_continuousMagnitude <= 0f) return;
+            // ShakeCamera中は継続的な揺れをスキップ
+            if (_shakeHandle.IsActive()) return;
+
+            // Perlin Noiseによる継続的な揺れ
+            var time = Time.time * 10f;
+            var offsetX = (Mathf.PerlinNoise(time, 0f) - 0.5f) * 2f * _continuousMagnitude;
+            var offsetY = (Mathf.PerlinNoise(0f, time) - 0.5f) * 2f * _continuousMagnitude;
+            transform.position = _basePosition.Value + new Vector3(offsetX, offsetY, 0f);
+        }
+
+        protected override void Awake()
+        {
+            _basePosition = transform.position;
+            base.Awake();
+            // DontDestroyOnLoadを解除してシーン固有で使用
+            SceneManager.MoveGameObjectToScene(this.gameObject, SceneManager.GetActiveScene());
         }
 
         protected override void OnDestroy()
