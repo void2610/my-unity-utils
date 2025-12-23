@@ -126,7 +126,7 @@ namespace Void2610.UnityTemplate
         /// </summary>
         public static MotionHandle FadeIn(this CanvasGroup canvasGroup, float duration, Ease ease = Ease.Linear, bool ignoreTimeScale = false)
         {
-            return LMotion.Create(0f, 1f, duration)
+            return LMotion.Create(canvasGroup.alpha, 1f, duration)
                 .WithEase(ease)
                 .WithScheduler(ignoreTimeScale ? MotionScheduler.UpdateIgnoreTimeScale : MotionScheduler.Update)
                 .BindToAlpha(canvasGroup)
@@ -138,7 +138,7 @@ namespace Void2610.UnityTemplate
         /// </summary>
         public static MotionHandle FadeOut(this CanvasGroup canvasGroup, float duration, Ease ease = Ease.Linear, bool ignoreTimeScale = false)
         {
-            return LMotion.Create(1f, 0f, duration)
+            return LMotion.Create(canvasGroup.alpha, 0f, duration)
                 .WithEase(ease)
                 .WithScheduler(ignoreTimeScale ? MotionScheduler.UpdateIgnoreTimeScale : MotionScheduler.Update)
                 .BindToAlpha(canvasGroup)
