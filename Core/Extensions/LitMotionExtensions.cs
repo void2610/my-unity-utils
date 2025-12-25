@@ -190,7 +190,8 @@ namespace Void2610.UnityTemplate
         /// <param name="charSpeed">1文字あたりの表示時間（秒）</param>
         /// <param name="skipOnClick">クリックでスキップ可能にするか</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
-        public static async UniTask TypewriterAnimation(
+        /// <returns>クリックでスキップされた場合はtrue、通常終了の場合はfalse</returns>
+        public static async UniTask<bool> TypewriterAnimation(
             this TextMeshProUGUI text,
             string message,
             float charSpeed = 0.05f,
@@ -198,7 +199,7 @@ namespace Void2610.UnityTemplate
             CancellationToken cancellationToken = default
             )
         {
-            if (!text || string.IsNullOrEmpty(message)) return;
+            if (!text || string.IsNullOrEmpty(message)) return false;
 
             // 初期状態でテキストをクリア
             text.text = "";
@@ -220,6 +221,8 @@ namespace Void2610.UnityTemplate
                 })
                 .AddTo(text.gameObject);
 
+            var wasSkipped = false;
+
             try
             {
                 if (skipOnClick)
@@ -235,6 +238,7 @@ namespace Void2610.UnityTemplate
                     if (winIndex == 1) // clickTaskが完了
                     {
                         motion.TryCancel();
+                        wasSkipped = true;
                     }
                 }
                 else
@@ -252,6 +256,8 @@ namespace Void2610.UnityTemplate
 
             // 最終的に完全なテキストを表示（念のため）
             if (text) text.text = message;
+
+            return wasSkipped;
         }
 
         /// <summary>
