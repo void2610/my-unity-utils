@@ -30,6 +30,7 @@ public class BgmData
 public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
 {
     [SerializeField] private List<BgmData> bgmList = new();
+    [SerializeField, Range(0f, 1f)] private float baseVolume = 1.0f;
 
     public bool IsInitialized { get; private set; }
     public bool HasCurrentPlayback { get; private set; }
@@ -245,13 +246,13 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
     }
 
     /// <summary>
-    /// 音量を更新（マスターボリューム × フェード係数）
+    /// 音量を更新（基礎音量 × マスターボリューム × フェード係数）
     /// </summary>
     private void UpdateVolume()
     {
         if (HasCurrentPlayback)
         {
-            _currentPlayback.SetVolumeAndPitch(_bgmVolume * _currentFadeVolume, 1.0f);
+            _currentPlayback.SetVolumeAndPitch(baseVolume * _bgmVolume * _currentFadeVolume, 1.0f);
         }
     }
 
