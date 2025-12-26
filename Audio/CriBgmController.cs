@@ -105,6 +105,27 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
         }
     }
 
+    /// <summary>
+    /// BGMをフェードアウトして停止
+    /// </summary>
+    /// <param name="duration">フェード時間（秒）</param>
+    public async UniTask FadeOut(float duration = 0.5f)
+    {
+        if (!HasCurrentPlayback) return;
+
+        _fadeHandle.TryCancel();
+        await LMotion.Create(_currentFadeVolume, 0f, duration)
+            .WithEase(Ease.OutQuad)
+            .Bind(x =>
+            {
+                _currentFadeVolume = x;
+                UpdateVolume();
+            })
+            .ToUniTask();
+
+        Stop();
+    }
+
 
     /// <summary>
     /// AISACをスムーズに変更
