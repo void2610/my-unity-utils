@@ -181,16 +181,16 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
             await UniTask.Yield();
         }
 
-#if UNITY_EDITOR
-        // ドメインリロード無効時、ACBアセットのLoadRequestedがtrueのまま残り
-        // Handleがnullになるため、強制的にUnloadして再ロード可能にする
+        // 全BGMのACBアセットがロードされるまで待機
         foreach (var bgmData in bgmList)
         {
             if (bgmData.CueReference.AcbAsset != null)
             {
                 var acb = bgmData.CueReference.AcbAsset;
 
-                // LoadRequested=true かつ Handle=null の異常状態を検出してUnload
+#if UNITY_EDITOR
+                // ドメインリロード無効時、ACBアセットのLoadRequestedがtrueのまま残り
+                // Handleがnullになるため、強制的にUnloadして再ロード可能にする
                 if (acb.LoadRequested && acb.Handle == null)
                 {
                     acb.Unload();
@@ -200,18 +200,18 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
                 if (acb.Handle == null && !acb.LoadRequested)
                 {
                     acb.LoadAsync();
+                }
+#endif
 
-                    // ACBのロード完了を待機
-                    while (!acb.Loaded)
-                    {
-                        if (Time.realtimeSinceStartup - startTime > 10f)
-                            throw new TimeoutException("ACBロードタイムアウト");
-                        await UniTask.Yield();
-                    }
+                // ACBのロード完了を待機
+                while (!acb.Loaded)
+                {
+                    if (Time.realtimeSinceStartup - startTime > 10f)
+                        throw new TimeoutException("ACBロードタイムアウト");
+                    await UniTask.Yield();
                 }
             }
         }
-#endif
 
         _currentFadeVolume = 0f;
         IsInitialized = true;
