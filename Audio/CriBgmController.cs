@@ -232,17 +232,14 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
         }
 
         _currentPlayback = _player.StartPlayback(cueReference);
+        // 再生開始直後に正しい音量を設定（一瞬大音量になるのを防ぐ）
+        _currentFadeVolume = 1f;
         HasCurrentPlayback = true;
+        UpdateVolume();
 
         await UniTask.Delay(100);
 
-        _currentFadeVolume = 0f;
-        _currentPlayback.SetVolumeAndPitch(0f, 1.0f);
-
         _currentPlayback.SetAisacControl(AISAC_CONTROL_NAME, _aisacValue);
-
-        _currentFadeVolume = 1f;
-        UpdateVolume();
     }
 
     /// <summary>
