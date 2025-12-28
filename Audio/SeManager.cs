@@ -169,6 +169,44 @@ namespace Void2610.UnityTemplate
         }
 
         /// <summary>
+        /// 名前を指定してSEをフェードインしながら再生
+        /// </summary>
+        /// <param name="seName">SE名</param>
+        /// <param name="fadeDuration">フェードイン時間（秒）</param>
+        /// <param name="volume">最終音量倍率</param>
+        /// <param name="pitch">ピッチ</param>
+        /// <param name="important">重要なSEフラグ</param>
+        public async UniTaskVoid PlaySeWithFadeIn(string seName, float fadeDuration, float volume = 1.0f, float pitch = 1.0f, bool important = false)
+        {
+            var data = soundData.FirstOrDefault(t => t.name == seName);
+            var audioSource = GetAvailableAudioSource(important);
+
+            if (data == null)
+            {
+                Debug.LogWarning($"SE '{seName}' が見つかりません。");
+                return;
+            }
+            if (!audioSource) return;
+
+            audioSource.clip = data.audioClip;
+            audioSource.volume = 0f;
+            audioSource.pitch = pitch;
+            audioSource.Play();
+
+            var targetVolume = data.volume * volume;
+            var elapsed = 0f;
+
+            while (elapsed < fadeDuration && audioSource.isPlaying)
+            {
+                elapsed += Time.deltaTime;
+                audioSource.volume = Mathf.Lerp(0f, targetVolume, elapsed / fadeDuration);
+                await UniTask.Yield();
+            }
+
+            audioSource.volume = targetVolume;
+        }
+
+        /// <summary>
         /// 名前を指定してSEをループ再生する（CancellationTokenでキャンセル可能）
         /// 足音や環境音など、継続的に再生したいSEに最適
         /// </summary>
