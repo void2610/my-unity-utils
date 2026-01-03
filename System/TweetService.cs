@@ -69,7 +69,7 @@ namespace Void2610.UnityTemplate
 
             var json = request.downloadHandler.text;
             var response = JsonUtility.FromJson<ImgBBResponse>(json);
-            return response.data.url;
+            return response.data.url_viewer;
         }
 
         [Serializable]
@@ -81,7 +81,8 @@ namespace Void2610.UnityTemplate
         [Serializable]
         private class ImgBBData
         {
-            public string url;
+            // ReSharper disable once InconsistentNaming
+            public string url_viewer;
         }
     }
 }
