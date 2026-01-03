@@ -64,12 +64,27 @@ namespace Void2610.UnityTemplate
 
             if (request.result != UnityWebRequest.Result.Success)
             {
+                Debug.LogError($"[TweetService] ImgBBへのアップロードに失敗しました: {request.error}");
                 return null;
             }
 
             var json = request.downloadHandler.text;
-            var response = JsonUtility.FromJson<ImgBBResponse>(json);
-            return response.data.url_viewer;
+
+            try
+            {
+                var response = JsonUtility.FromJson<ImgBBResponse>(json);
+                if (response?.data == null)
+                {
+                    Debug.LogError("[TweetService] ImgBBレスポンスのパースに失敗しました: dataがnullです");
+                    return null;
+                }
+                return response.data.url_viewer;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[TweetService] ImgBBレスポンスのパースに失敗しました: {e.Message}");
+                return null;
+            }
         }
 
         [Serializable]
