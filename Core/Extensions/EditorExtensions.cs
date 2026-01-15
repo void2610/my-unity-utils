@@ -41,10 +41,10 @@ namespace Void2610.UnityTemplate
                 if (asset) targetList.Add(asset);
             }
 
-            // ソートが指定されている場合はソート実行
+            // ソートが指定されている場合はソート実行（Ordinal比較で環境依存を排除）
             if (sortKeySelector != null)
             {
-                targetList.Sort((a, b) => string.Compare(sortKeySelector(a), sortKeySelector(b)));
+                targetList.Sort((a, b) => string.Compare(sortKeySelector(a), sortKeySelector(b), StringComparison.Ordinal));
             }
 
             // ScriptableObjectを更新
