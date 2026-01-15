@@ -35,12 +35,12 @@ public class RandomManager
         {
             var guid = Guid.NewGuid();
             _seedText = guid.ToString("N")[..8];
-            _logger.ZLogInformation($"RandomManager: 新規シード生成: {_seedText}");
+            _logger.ZLogInformation($"[RandomManager] 新規シード生成: {_seedText}");
         }
         else
         {
             _seedText = seedText;
-            _logger.ZLogInformation($"RandomManager: 指定シード使用: {_seedText}");
+            _logger.ZLogInformation($"[RandomManager] 指定シード使用: {_seedText}");
         }
 
         var seed = _seedText.GetHashCode();
@@ -55,7 +55,7 @@ public class RandomManager
     public bool Chance(float probability)
     {
         var r = _random.NextDouble();
-        _logger.ZLogTrace($"RandomManager: Chance: r={r}, probability={probability}, result={(r < probability)}");
+        _logger.ZLogTrace($"[RandomManager] Chance: r={r}, probability={probability}, result={(r < probability)}");
         return r < probability;
     }
 
@@ -81,7 +81,7 @@ public class RandomManager
     public int RandomInt(int min, int max)
     {
         var r = _random.Next(min, max);
-        _logger.ZLogTrace($"RandomManager: RandomInt: r={r} in [{min}, {max})");
+        _logger.ZLogTrace($"[RandomManager] RandomInt: r={r} in [{min}, {max})");
         return r;
     }
 }
