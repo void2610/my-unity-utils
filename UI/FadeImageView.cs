@@ -2,7 +2,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 using LitMotion;
-using LitMotion.Extensions;
+using Coffee.UIEffects;
 
 namespace Void2610.UnityTemplate
 {
@@ -11,73 +11,38 @@ namespace Void2610.UnityTemplate
     /// シーン遷移時の画面フェードに使用
     /// </summary>
     [RequireComponent(typeof(Image))]
+    [RequireComponent(typeof(UIEffect))]
     public class FadeImageView : MonoBehaviour
     {
-        private Image _image;
-        
-        /// <summary>
-        /// フェードイン（透明→不透明）
-        /// </summary>
-        /// <param name="duration">フェード時間</param>
-        /// <returns>完了待機可能なUniTask</returns>
+        private UIEffect _transitionEffect;
+
         public async UniTask FadeIn(float duration = 0.5f)
         {
-            var handle = LMotion.Create(0f, 1f, duration)
-                .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
-                .BindToColorA(_image)
-                .AddTo(this);
-            await handle.ToUniTask();
-        }
-        
-        /// <summary>
-        /// フェードアウト（不透明→透明）
-        /// </summary>
-        /// <param name="duration">フェード時間</param>
-        /// <returns>完了待機可能なUniTask</returns>
-        public async UniTask FadeOut(float duration = 0.5f)
-        {
+            _transitionEffect.transitionRate = 1f;
             var handle = LMotion.Create(1f, 0f, duration)
                 .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
-                .BindToColorA(_image)
+                .Bind(v => _transitionEffect.transitionRate = v)
                 .AddTo(this);
             await handle.ToUniTask();
         }
-        
-        /// <summary>
-        /// 即座にフェードイン状態にする（アニメーションなし）
-        /// </summary>
-        public void SetFadeIn()
+
+        public async UniTask FadeOut(float duration = 0.5f)
         {
-            var color = _image.color;
-            color.a = 1f;
-            _image.color = color;
+            _transitionEffect.transitionRate = 0f;
+            var handle = LMotion.Create(0f, 1f, duration)
+                .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
+                .Bind(v => _transitionEffect.transitionRate = v)
+                .AddTo(this);
+            await handle.ToUniTask();
         }
-        
-        /// <summary>
-        /// 即座にフェードアウト状態にする（アニメーションなし）
-        /// </summary>
-        public void SetFadeOut()
-        {
-            var color = _image.color;
-            color.a = 0f;
-            _image.color = color;
-        }
-        
-        /// <summary>
-        /// フェード色を設定
-        /// </summary>
-        /// <param name="color">フェード色（アルファ値は現在の値を保持）</param>
-        public void SetFadeColor(Color color)
-        {
-            color.a = _image.color.a;
-            _image.color = color;
-        }
+
+        public void SetFadeIn() => _transitionEffect.transitionRate = 1f;
+
+        public void SetFadeOut() => _transitionEffect.transitionRate = 0f;
 
         private void Awake()
         {
-            _image = this.GetComponent<Image>();
-            // 初期状態は完全に黒（フェードイン状態）
-            _image.color = new Color(0f, 0f, 0f, 1f);
+            _transitionEffect = GetComponent<UIEffect>();
         }
     }
 }
