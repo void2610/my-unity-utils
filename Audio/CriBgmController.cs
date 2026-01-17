@@ -86,6 +86,18 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
     public void Resume() => _currentPlayback.Resume();
 
     /// <summary>
+    /// 次の再生ブロックインデックスを設定
+    /// </summary>
+    /// <param name="blockIndex">ブロックインデックス</param>
+    public void SetNextBlockIndex(int blockIndex)
+    {
+        if (HasCurrentPlayback)
+        {
+            _currentPlayback.SetNextBlockIndex(blockIndex);
+        }
+    }
+
+    /// <summary>
     /// 指定した名前のBGMを再生
     /// </summary>
     /// <param name="bgmName">BGMデータの名前</param>
@@ -162,7 +174,7 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
             _currentPlayback.Stop();
         }
         // CriSoundPlayerのネイティブリソースを解放
-        _player?.Dispose();
+        _player.Dispose();
         base.OnDestroy();
     }
 

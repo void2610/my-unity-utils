@@ -40,6 +40,11 @@ public class CriSoundPlayer : IDisposable
             this._player.SetPitch(pitch);
             this._player.Update(_playback);
         }
+
+        /// <summary>
+        /// 次の再生ブロックインデックスを設定
+        /// </summary>
+        public void SetNextBlockIndex(int blockIndex) => _playback.SetNextBlockIndex(blockIndex);
     }
     
     public SimplePlayback StartPlayback(CriAtomExAcb acb, string cueName, float vol = 1.0f, float pitch = 1.0f)
