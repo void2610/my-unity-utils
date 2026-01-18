@@ -202,18 +202,15 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
                 var acb = bgmData.CueReference.AcbAsset;
 
 #if UNITY_EDITOR
-                // ドメインリロード無効時、ACBアセットのLoadRequestedがtrueのまま残り
-                // Handleがnullになるため、強制的にUnloadして再ロード可能にする
-                if (acb.LoadRequested && acb.Handle == null)
+                // ドメインリロード無効時、ACBアセットのLoadRequestedがtrueのまま残るため
+                // 強制的にUnloadして再ロード可能にする
+                if (acb.LoadRequested)
                 {
                     acb.Unload();
                 }
 
-                // Handle が null なら明示的に LoadAsync を呼び出す
-                if (acb.Handle == null && !acb.LoadRequested)
-                {
-                    acb.LoadAsync();
-                }
+                // ロードを要求
+                acb.LoadAsync();
 #endif
 
                 // ACBのロード完了を待機
