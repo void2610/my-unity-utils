@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using NUnit.Framework.Constraints;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -215,15 +216,16 @@ namespace Void2610.UnityTemplate
         /// <param name="volume">音量倍率</param>
         /// <param name="pitchMin">ピッチの最小値</param>
         /// <param name="pitchMax">ピッチの最大値</param>
+        /// <param name="ignoreTimeScale">タイムスケールを無視するか</param>
         /// <param name="cancellationToken">キャンセルトークン</param>
-        public async UniTaskVoid PlaySeLoop(string seName, float interval = 0.08f, float volume = 1.0f, float pitchMin = 0.95f, float pitchMax = 1.05f, CancellationToken cancellationToken = default)
+        public async UniTaskVoid PlaySeLoop(string seName, float interval = 0.08f, float volume = 1.0f, float pitchMin = 0.95f, float pitchMax = 1.05f, bool ignoreTimeScale = false, CancellationToken cancellationToken = default)
         {
             try
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     PlaySe(seName, volume, UnityEngine.Random.Range(pitchMin, pitchMax));
-                    await UniTask.Delay(TimeSpan.FromSeconds(interval), cancellationToken: cancellationToken);
+                    await UniTask.Delay(TimeSpan.FromSeconds(interval), ignoreTimeScale? DelayType.UnscaledDeltaTime : DelayType.DeltaTime, cancellationToken: cancellationToken);
                 }
             }
             catch (OperationCanceledException) { }
