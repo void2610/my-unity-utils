@@ -46,8 +46,10 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
 
     private float _bgmVolume = 1.0f;
     private float _currentFadeVolume;
+    private float _temporaryVolume = 1.0f;
     private float _aisacValue;
     private MotionHandle _fadeHandle;
+    private MotionHandle _temporaryVolumeHandle;
 
     /// <summary>
     /// BGMマスターボリューム（0.0～1.0）
@@ -147,6 +149,25 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
 
 
     /// <summary>
+    /// BGM音量を一時的に変更（フェード付き）
+    /// FadeOutとは別のフィールドで管理するため競合しない
+    /// </summary>
+    /// <param name="targetVolume">目標音量（0.0～1.0）</param>
+    /// <param name="duration">フェード時間（秒）</param>
+    public async UniTask SetTemporaryVolume(float targetVolume, float duration = 0.5f)
+    {
+        _temporaryVolumeHandle.TryCancel();
+        _temporaryVolumeHandle = LMotion.Create(_temporaryVolume, targetVolume, duration)
+            .WithEase(Ease.OutQuad)
+            .Bind(x =>
+            {
+                _temporaryVolume = x;
+                UpdateVolume();
+            });
+        await _temporaryVolumeHandle.ToUniTask();
+    }
+
+    /// <summary>
     /// AISACをスムーズに変更
     /// インタラクティブミュージックの性質を時間をかけて変化させる
     /// </summary>
@@ -175,6 +196,7 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
     protected override void OnDestroy()
     {
         _fadeHandle.TryCancel();
+        _temporaryVolumeHandle.TryCancel();
         if (HasCurrentPlayback)
         {
             _currentPlayback.Stop();
@@ -258,13 +280,13 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
     }
 
     /// <summary>
-    /// 音量を更新（基礎音量 × マスターボリューム × フェード係数）
+    /// 音量を更新（基礎音量 × マスターボリューム × フェード係数 × 一時音量係数）
     /// </summary>
     private void UpdateVolume()
     {
         if (HasCurrentPlayback)
         {
-            _currentPlayback.SetVolumeAndPitch(baseVolume * _bgmVolume * _currentFadeVolume, 1.0f);
+            _currentPlayback.SetVolumeAndPitch(baseVolume * _bgmVolume * _currentFadeVolume * _temporaryVolume, 1.0f);
         }
     }
 
