@@ -107,6 +107,12 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
         CurrentBgmName = bgmName;
         PlayBgmInternal(bgmData.CueReference).Forget();
     }
+    
+    public async UniTaskVoid PlayBgm(string bgmName, int delayMilliseconds)
+    {
+        await UniTask.Delay(delayMilliseconds);
+        PlayBgm(bgmName);
+    }
 
     public void Stop()
     {

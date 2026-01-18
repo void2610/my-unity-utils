@@ -373,6 +373,33 @@ namespace Void2610.UnityTemplate
         }
 
         /// <summary>
+        /// AudioSourceを再生しながら音量をフェードインさせる
+        /// </summary>
+        public static MotionHandle PlayWithFadeIn(this AudioSource audioSource, float targetVolume, float duration, Ease ease = Ease.Linear, bool ignoreTimeScale = false)
+        {
+            audioSource.volume = 0f;
+            audioSource.Play();
+            return LMotion.Create(0f, targetVolume, duration)
+                .WithEase(ease)
+                .WithScheduler(ignoreTimeScale ? MotionScheduler.UpdateIgnoreTimeScale : MotionScheduler.Update)
+                .Bind(v => audioSource.volume = v)
+                .AddTo(audioSource.gameObject);
+        }
+
+        /// <summary>
+        /// AudioSourceの音量をフェードアウトさせて停止する
+        /// </summary>
+        public static MotionHandle StopWithFadeOut(this AudioSource audioSource, float duration, Ease ease = Ease.Linear, bool ignoreTimeScale = false)
+        {
+            return LMotion.Create(audioSource.volume, 0f, duration)
+                .WithEase(ease)
+                .WithScheduler(ignoreTimeScale ? MotionScheduler.UpdateIgnoreTimeScale : MotionScheduler.Update)
+                .WithOnComplete(() => audioSource.Stop())
+                .Bind(v => audioSource.volume = v)
+                .AddTo(audioSource.gameObject);
+        }
+
+        /// <summary>
         /// バウンドアニメーション（RectTransform版・anchoredPosition用）
         /// UI要素が跳ねるような動きを実現
         ///
