@@ -162,7 +162,8 @@ namespace Void2610.UnityTemplate
         /// </summary>
         public static MotionHandle FadeIn(this TextMeshProUGUI text, float duration, Ease ease = Ease.Linear, bool ignoreTimeScale = false)
         {
-            return LMotion.Create(0f, 1f, duration)
+            var startAlpha = text.color.a;
+            return LMotion.Create(startAlpha, 1f, duration)
                 .WithEase(ease)
                 .WithScheduler(ignoreTimeScale ? MotionScheduler.UpdateIgnoreTimeScale : MotionScheduler.Update)
                 .BindToColorA(text)
@@ -174,7 +175,8 @@ namespace Void2610.UnityTemplate
         /// </summary>
         public static MotionHandle FadeOut(this TextMeshProUGUI text, float duration, Ease ease = Ease.Linear, bool ignoreTimeScale = false)
         {
-            return LMotion.Create(1f, 0f, duration)
+            var startAlpha = text.color.a;
+            return LMotion.Create(startAlpha, 0f, duration)
                 .WithEase(ease)
                 .WithScheduler(ignoreTimeScale ? MotionScheduler.UpdateIgnoreTimeScale : MotionScheduler.Update)
                 .BindToColorA(text)
