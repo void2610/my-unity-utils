@@ -42,9 +42,18 @@ namespace Void2610.UnityTemplate
             }
 
             // ソートが指定されている場合はソート実行（Ordinal比較で環境依存を排除）
+            // 同じキーの場合はアセットパスで二次ソートし、順序を安定化
             if (sortKeySelector != null)
             {
-                targetList.Sort((a, b) => string.Compare(sortKeySelector(a), sortKeySelector(b), StringComparison.Ordinal));
+                targetList.Sort((a, b) =>
+                {
+                    var keyCompare = string.Compare(sortKeySelector(a), sortKeySelector(b), StringComparison.Ordinal);
+                    if (keyCompare != 0) return keyCompare;
+                    return string.Compare(
+                        AssetDatabase.GetAssetPath(a),
+                        AssetDatabase.GetAssetPath(b),
+                        StringComparison.Ordinal);
+                });
             }
 
             // ScriptableObjectを更新
