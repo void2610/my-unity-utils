@@ -17,7 +17,7 @@ public class TMProBoilEffect : MonoBehaviour
     private bool _isInitialized;
     private bool _isUpdating;
 
-    private void OnTextChanged(Object obj)
+    private void OnTextChanged(UnityEngine.Object obj)
     {
         if (obj == _text && !_isUpdating)
         {
