@@ -10,16 +10,18 @@ using Void2610.UnityTemplate;
 
 /// <summary>
 /// BGMデータクラス
-/// CRIWAREのキュー参照と識別名を保持
+/// CRIWAREのキュー参照、ACFアセット、識別名を保持
 /// </summary>
 [Serializable]
 public class BgmData
 {
     [SerializeField] private string name;
     [SerializeField] private CriAtomCueReference cueReference;
+    [SerializeField] private CriAtomAcfAsset acfAsset;
 
     public string Name => name;
     public CriAtomCueReference CueReference => cueReference;
+    public CriAtomAcfAsset AcfAsset => acfAsset;
 }
 
 /// <summary>
@@ -214,12 +216,27 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
     {
         var startTime = Time.realtimeSinceStartup;
 
-        // CRIWARE全体の初期化（ACF登録含む）が完了するまで待機
+        // CRIWAREライブラリの初期化完了を待機
+        while (!CriAtomPlugin.IsLibraryInitialized())
+        {
+            if (Time.realtimeSinceStartup - startTime > 10f)
+                throw new TimeoutException("CRIライブラリ初期化タイムアウト");
+            await UniTask.Yield();
+        }
+
+        // CRIWARE全体の初期化が完了するまで待機
         while (CriAtom.CueSheetsAreLoading)
         {
             if (Time.realtimeSinceStartup - startTime > 10f)
                 throw new TimeoutException("CRI初期化タイムアウト");
             await UniTask.Yield();
+        }
+
+        // 全BGMのACFを登録
+        foreach (var bgmData in bgmList)
+        {
+            if (bgmData.AcfAsset)
+                bgmData.AcfAsset.Register();
         }
 
         // 全BGMのACBアセットがロードされるまで待機
@@ -228,24 +245,34 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
             if (bgmData.CueReference.AcbAsset != null)
             {
                 var acb = bgmData.CueReference.AcbAsset;
+                var acbStartTime = Time.realtimeSinceStartup;
 
-#if UNITY_EDITOR
-                // ドメインリロード無効時、ACBアセットのLoadRequestedがtrueのまま残るため
-                // 強制的にUnloadして再ロード可能にする
+                // 既にロード要求済みの場合
                 if (acb.LoadRequested)
                 {
+#if UNITY_EDITOR
+                    // エディターのドメインリロード無効時のみUnloadして再ロード
                     acb.Unload();
+#else
+                    // ビルド環境では既にロード済みならロード完了を待つだけ
+                    while (!acb.Loaded)
+                    {
+                        if (Time.realtimeSinceStartup - acbStartTime > 10f)
+                            throw new TimeoutException($"ACBロードタイムアウト: {bgmData.Name}");
+                        await UniTask.Yield();
+                    }
+                    continue;
+#endif
                 }
 
                 // ロードを要求
                 acb.LoadAsync();
-#endif
 
                 // ACBのロード完了を待機
                 while (!acb.Loaded)
                 {
-                    if (Time.realtimeSinceStartup - startTime > 10f)
-                        throw new TimeoutException("ACBロードタイムアウト");
+                    if (Time.realtimeSinceStartup - acbStartTime > 10f)
+                        throw new TimeoutException($"ACBロードタイムアウト: {bgmData.Name}");
                     await UniTask.Yield();
                 }
             }
