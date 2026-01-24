@@ -1,4 +1,4 @@
-#if UNITY_INCLUDE_TESTS || HAS_R3
+#if R3_ENABLE
 using UnityEngine.InputSystem;
 using R3;
 
