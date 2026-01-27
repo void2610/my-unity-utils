@@ -13,8 +13,8 @@ namespace Void2610.UnityTemplate
     {
         [Header("トゥイーン設定")]
         [SerializeField] private float scale = 1.1f;
-        [SerializeField] private float duration = 0.5f;
-        [SerializeField] private Ease easeType = Ease.OutElastic;
+        [SerializeField] private float duration = 0.1f;
+        [SerializeField] private Ease easeType = Ease.OutQuad;
 
         private float _defaultScale = 1.0f;
         private readonly List<MotionHandle> _motionHandles = new();
