@@ -339,6 +339,18 @@ namespace Void2610.UnityTemplate
         }
 
         /// <summary>
+        /// RectTransformをLitMotionで開始位置から指定位置に移動（anchoredPosition）
+        /// </summary>
+        public static MotionHandle MoveToAnchoredFrom(this RectTransform rectTransform, Vector2 startPosition, Vector2 targetPosition, float duration, Ease ease = Ease.Linear, bool ignoreTimeScale = false)
+        {
+            return LMotion.Create(startPosition, targetPosition, duration)
+                .WithEase(ease)
+                .WithScheduler(ignoreTimeScale ? MotionScheduler.UpdateIgnoreTimeScale : MotionScheduler.Update)
+                .BindToAnchoredPosition(rectTransform)
+                .AddTo(rectTransform.gameObject);
+        }
+
+        /// <summary>
         /// RectTransformのX座標のみをLitMotionで移動
         /// </summary>
         public static MotionHandle MoveToX(this RectTransform rectTransform, float targetX, float duration, Ease ease = Ease.Linear, bool ignoreTimeScale = false)
