@@ -123,24 +123,39 @@ namespace Void2610.UnityTemplate
 
         /// <summary>
         /// CanvasGroupの透明度をLitMotionでフェードインさせる
+        /// 完了時にinteractableとblocksRaycastsをtrueに設定
         /// </summary>
         public static MotionHandle FadeIn(this CanvasGroup canvasGroup, float duration, Ease ease = Ease.Linear, bool ignoreTimeScale = false)
         {
+            canvasGroup.interactable = false;
+            canvasGroup.blocksRaycasts = false;
+
             return LMotion.Create(canvasGroup.alpha, 1f, duration)
                 .WithEase(ease)
                 .WithScheduler(ignoreTimeScale ? MotionScheduler.UpdateIgnoreTimeScale : MotionScheduler.Update)
+                .WithOnComplete(() =>
+                {
+                    canvasGroup.interactable = true;
+                    canvasGroup.blocksRaycasts = true;
+                })
                 .BindToAlpha(canvasGroup)
                 .AddTo(canvasGroup.gameObject);
         }
 
         /// <summary>
         /// CanvasGroupの透明度をLitMotionでフェードアウトさせる
+        /// 完了時にinteractableとblocksRaycastsをfalseに設定
         /// </summary>
         public static MotionHandle FadeOut(this CanvasGroup canvasGroup, float duration, Ease ease = Ease.Linear, bool ignoreTimeScale = false)
         {
             return LMotion.Create(canvasGroup.alpha, 0f, duration)
                 .WithEase(ease)
                 .WithScheduler(ignoreTimeScale ? MotionScheduler.UpdateIgnoreTimeScale : MotionScheduler.Update)
+                .WithOnComplete(() =>
+                {
+                    canvasGroup.interactable = false;
+                    canvasGroup.blocksRaycasts = false;
+                })
                 .BindToAlpha(canvasGroup)
                 .AddTo(canvasGroup.gameObject);
         }
