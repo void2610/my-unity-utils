@@ -1,4 +1,4 @@
-#if !UNITY_WEBGL || UNITY_EDITOR
+#if DISCORD_ENABLE && (!UNITY_WEBGL || UNITY_EDITOR)
 using UnityEngine;
 using Discord.Sdk;
 using System;
