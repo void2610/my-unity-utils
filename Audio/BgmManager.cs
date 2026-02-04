@@ -41,7 +41,7 @@ namespace Void2610.UnityTemplate
         }
 
         [Header("設定")]
-        [SerializeField] private bool playOnStart = true;
+        [SerializeField] private bool playOnStart;
         [SerializeField] private AudioMixerGroup bgmMixerGroup;
         [SerializeField] private List<SoundData> bgmList = new List<SoundData>();
         [SerializeField] private float fadeTime = 1.0f;
