@@ -159,7 +159,7 @@ namespace Void2610.UnityTemplate.Steam
     public class SteamService : IDisposable, ITickable
     {
         public static bool Initialized => false;
-        public SteamService(int appId) { }
+        public SteamService() { }
         public bool UnlockAchievement(string achievementName) => false;
         public bool SetStat(string statName, int value) => false;
         public bool SetStat(string statName, float value) => false;
