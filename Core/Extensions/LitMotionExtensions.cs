@@ -454,5 +454,16 @@ namespace Void2610.UnityTemplate
                 })
                 .AddTo(rectTrans.gameObject);
         }
+        
+        /// <summary>
+        /// Materialのfloatプロパティをアニメーションする
+        /// </summary>
+        public static MotionHandle MaterialFloatTo(this Material material, int propertyId, float target, float duration, Ease ease = Ease.Linear, GameObject owner = null)
+        {
+            var builder = LMotion.Create(material.GetFloat(propertyId), target, duration)
+                .WithEase(ease)
+                .Bind(value => material.SetFloat(propertyId, value));
+            return owner ? builder.AddTo(owner) : builder;
+        }
     }
 }
