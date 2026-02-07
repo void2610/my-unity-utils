@@ -12,7 +12,7 @@ using UnityEditor;
 [RequireComponent(typeof(TextMeshProUGUI))]
 public class TMProArchedText : MonoBehaviour
 {
-    public enum TextVAlignment
+    private enum TextVAlignment
     {
         Base,
         Top,
@@ -20,11 +20,11 @@ public class TMProArchedText : MonoBehaviour
     }
 
     [Header("アライメント")]
-    [SerializeField] private TextVAlignment _vAlignment;
-    [SerializeField] private HorizontalAlignmentOptions _hAlignment;
+    [SerializeField] private TextVAlignment vAlignment;
+    [SerializeField] private HorizontalAlignmentOptions hAlignment;
 
     [Header("カーブ")]
-    [SerializeField] private AnimationCurve _vertexCurve = new(new Keyframe(0, 0), new Keyframe(0.5f, 0.25f), new Keyframe(1, 0f));
+    [SerializeField] private AnimationCurve vertexCurve = new(new Keyframe(0, 0), new Keyframe(0.5f, 0.25f), new Keyframe(1, 0f));
 
     private TextMeshProUGUI _textComponent;
 
@@ -70,8 +70,8 @@ public class TMProArchedText : MonoBehaviour
             // 曲線の傾き(angle)の計算
             var x0 = (float)(i + 1) / (characterCount + 1);
             var x1 = x0 + 0.0001f;
-            var y0 = _vertexCurve.Evaluate(x0);
-            var y1 = _vertexCurve.Evaluate(x1);
+            var y0 = vertexCurve.Evaluate(x0);
+            var y1 = vertexCurve.Evaluate(x1);
             var horizontal = new Vector3(1, 0, 0);
             var tangent = new Vector3(0.0001f, y1 - y0);
             var angleDirection = tangent.normalized;
@@ -115,18 +115,18 @@ public class TMProArchedText : MonoBehaviour
         }
 
         // 揃えの計算
-        if (_hAlignment != HorizontalAlignmentOptions.Left || _vAlignment != TextVAlignment.Base)
+        if (hAlignment != HorizontalAlignmentOptions.Left || vAlignment != TextVAlignment.Base)
         {
             var hOffset = 0f;
-            if (_hAlignment == HorizontalAlignmentOptions.Center)
+            if (hAlignment == HorizontalAlignmentOptions.Center)
                 hOffset = (prevOffsetToMidBaseline.x - baseline.x) * 0.5f;
-            else if (_hAlignment == HorizontalAlignmentOptions.Right)
+            else if (hAlignment == HorizontalAlignmentOptions.Right)
                 hOffset = prevOffsetToMidBaseline.x - baseline.x;
 
             var vOffset = 0f;
-            if (_vAlignment == TextVAlignment.Bottom)
+            if (vAlignment == TextVAlignment.Bottom)
                 vOffset = defaultBaseLine - minBaseLine;
-            else if (_vAlignment == TextVAlignment.Top)
+            else if (vAlignment == TextVAlignment.Top)
                 vOffset = defaultBaseLine - maxBaseLine;
 
             var alignOffset = new Vector3(hOffset, vOffset, 0);
@@ -155,6 +155,16 @@ public class TMProArchedText : MonoBehaviour
         _textComponent = GetComponent<TextMeshProUGUI>();
     }
 
+    /// <summary>
+    /// アーチ表示を強制的に再適用する
+    /// </summary>
+    public void ForceUpdate() => UpdateCurveMesh();
+
+    private void OnEnable()
+    {
+        UpdateCurveMesh();
+    }
+
     private void Update()
     {
         if (!_textComponent.havePropertiesChanged)
@@ -167,11 +177,6 @@ public class TMProArchedText : MonoBehaviour
 
 #if UNITY_EDITOR
     protected virtual void OnValidate()
-    {
-        UpdateCurveMesh();
-    }
-
-    private void OnEnable()
     {
         UpdateCurveMesh();
     }
