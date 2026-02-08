@@ -28,8 +28,18 @@ public class TMProArchedText : MonoBehaviour
 
     private TextMeshProUGUI _textComponent;
 
+    private bool TryGetTextComponent()
+    {
+        if (_textComponent == null)
+            _textComponent = GetComponent<TextMeshProUGUI>();
+        return _textComponent != null;
+    }
+
     private void UpdateCurveMesh()
     {
+        if (!TryGetTextComponent())
+            return;
+
         _textComponent.ForceMeshUpdate();
 
         var textInfo = _textComponent.textInfo;
@@ -183,7 +193,8 @@ public class TMProArchedText : MonoBehaviour
 
     private void OnDisable()
     {
-        _textComponent.ForceMeshUpdate();
+        if (TryGetTextComponent())
+            _textComponent.ForceMeshUpdate();
     }
 #endif
 }
