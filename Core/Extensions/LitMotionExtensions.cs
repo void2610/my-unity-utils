@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using LitMotion;
@@ -464,6 +465,62 @@ namespace Void2610.UnityTemplate
                 .WithEase(ease)
                 .Bind(value => material.SetFloat(propertyId, value));
             return owner ? builder.AddTo(owner) : builder;
+        }
+
+        /// <summary>
+        /// 複数のUI要素をスタッガード（順次遅延）でスライド+フェードインさせる
+        /// 各要素は現在位置からslideOffset分ずれた位置から元の位置へスライドする
+        /// </summary>
+        /// <param name="targets">アニメーション対象のリスト。CanvasGroupがnullの場合フェードなし</param>
+        /// <param name="slideOffset">目標位置からの開始オフセット</param>
+        /// <param name="duration">各要素のアニメーション時間</param>
+        /// <param name="staggerDelay">各要素間の遅延時間</param>
+        /// <param name="handles">生成されたMotionHandleの追加先</param>
+        /// <param name="moveEase">移動アニメーションのイージング</param>
+        /// <param name="fadeEase">フェードアニメーションのイージング。nullでフェードなし</param>
+        /// <param name="ignoreTimeScale">TimeScaleを無視するか</param>
+        public static void StaggeredSlideIn(
+            this IReadOnlyList<(RectTransform rect, CanvasGroup canvasGroup)> targets,
+            Vector2 slideOffset,
+            float duration,
+            float staggerDelay,
+            List<MotionHandle> handles,
+            Ease moveEase = Ease.OutCubic,
+            Ease? fadeEase = Ease.OutCubic,
+            bool ignoreTimeScale = false)
+        {
+            var scheduler = ignoreTimeScale ? MotionScheduler.UpdateIgnoreTimeScale : MotionScheduler.Update;
+
+            for (var i = 0; i < targets.Count; i++)
+            {
+                var (rect, canvasGroup) = targets[i];
+                var targetPos = rect.anchoredPosition;
+                var startPos = targetPos + slideOffset;
+                var delay = staggerDelay * i;
+
+                rect.anchoredPosition = startPos;
+
+                var moveHandle = LMotion.Create(startPos, targetPos, duration)
+                    .WithEase(moveEase)
+                    .WithDelay(delay)
+                    .WithScheduler(scheduler)
+                    .BindToAnchoredPosition(rect)
+                    .AddTo(rect.gameObject);
+                handles.Add(moveHandle);
+
+                // フェードアニメーション（fadeEaseがnullでなく、CanvasGroupが存在する場合）
+                if (fadeEase.HasValue && canvasGroup)
+                {
+                    canvasGroup.alpha = 0f;
+                    var fadeHandle = LMotion.Create(0f, 1f, duration)
+                        .WithEase(fadeEase.Value)
+                        .WithDelay(delay)
+                        .WithScheduler(scheduler)
+                        .BindToAlpha(canvasGroup)
+                        .AddTo(canvasGroup.gameObject);
+                    handles.Add(fadeHandle);
+                }
+            }
         }
     }
 }
