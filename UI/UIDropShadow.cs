@@ -21,46 +21,85 @@ public class UIDropShadow : BaseMeshEffect
     public int iterations = 5;
     public Vector2 shadowSpread = Vector2.one;
 
+    private static readonly List<UIDropShadow> _tempShadowList = new();
+
     public override void ModifyMesh(VertexHelper vh)
     {
         if (!IsActive()) return;
-    
-        var output = new List<UIVertex>();
-        vh.GetUIVertexStream(output);
 
-        DropShadowEffect(output);
+        // 同じオブジェクト上の全UIDropShadowを取得
+        GetComponents(_tempShadowList);
 
-        vh.Clear();
-        vh.AddUIVertexTriangleStream(output);
-    }
-    
-    private void DropShadowEffect(List<UIVertex> verts)
-    {
-        var count = verts.Count;
-
-        var vertsCopy = new List<UIVertex>(verts);
-        verts.Clear();
-
-        for(var i=0; i<iterations; i++)
+        // 自分より前にアクティブなUIDropShadowがあればスキップ
+        foreach (var shadow in _tempShadowList)
         {
-            for(var v=0; v<count; v++)
+            if (shadow == this) break;
+            if (shadow.IsActive())
             {
-                var vt = vertsCopy[v];
-                var position = vt.position;
-                var fac = i/(float)iterations;
-                position.x *= (1 + shadowSpread.x*fac*0.01f);
-                position.y *= (1 + shadowSpread.y*fac*0.01f);
-                position.x += shadowDistance.x * fac;
-                position.y += shadowDistance.y * fac;
-                vt.position = position;
-                Color32 color = shadowColor;
-                color.a = (byte)(color.a /(float)iterations);
-                vt.color = color;
-                verts.Add(vt);
+                _tempShadowList.Clear();
+                return;
             }
         }
 
-        verts.AddRange(vertsCopy);
+        var output = new List<UIVertex>();
+        vh.GetUIVertexStream(output);
+        var originalVerts = new List<UIVertex>(output);
+        output.Clear();
+
+        // 各UIDropShadowの影を追加（コンポーネント順 = 最初が最背面）
+        foreach (var shadow in _tempShadowList)
+        {
+            if (!shadow.IsActive()) continue;
+            shadow.AppendShadowVertices(originalVerts, output);
+        }
+
+        // オリジナル頂点を最前面に追加
+        output.AddRange(originalVerts);
+
+        vh.Clear();
+        vh.AddUIVertexTriangleStream(output);
+        _tempShadowList.Clear();
+    }
+
+    private void AppendShadowVertices(List<UIVertex> originalVerts, List<UIVertex> output)
+    {
+        var count = originalVerts.Count;
+        if (count == 0) return;
+
+        // バウンディングボックスの中心を計算
+        var min = originalVerts[0].position;
+        var max = min;
+        for (var v = 1; v < count; v++)
+        {
+            var pos = originalVerts[v].position;
+            if (pos.x < min.x) min.x = pos.x;
+            if (pos.y < min.y) min.y = pos.y;
+            if (pos.x > max.x) max.x = pos.x;
+            if (pos.y > max.y) max.y = pos.y;
+        }
+        var center = (min + max) * 0.5f;
+
+        for (var i = 0; i < iterations; i++)
+        {
+            for (var v = 0; v < count; v++)
+            {
+                var vt = originalVerts[v];
+                var position = vt.position;
+                var fac = i / (float)iterations;
+                // 中心基準でスケーリング（位置に依存しない均一なspread）
+                var scaleX = 1 + shadowSpread.x * fac * 0.01f;
+                var scaleY = 1 + shadowSpread.y * fac * 0.01f;
+                position.x = center.x + (position.x - center.x) * scaleX;
+                position.y = center.y + (position.y - center.y) * scaleY;
+                position.x += shadowDistance.x * fac;
+                position.y += shadowDistance.y * fac;
+                vt.position = position;
+                var color = (Color32)shadowColor;
+                color.a = (byte)(color.a / (float)iterations);
+                vt.color = color;
+                output.Add(vt);
+            }
+        }
     }
 
 #if UNITY_EDITOR
