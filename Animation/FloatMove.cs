@@ -12,17 +12,53 @@ namespace Void2610.UnityTemplate
         [Header("フロート設定")]
         [SerializeField] private float moveDistance = 0.2f; // 移動距離
         [SerializeField] private float moveDuration = 1f; // 移動時間
-        [SerializeField] private float startDelay = 0f; // 開始遅延
+        [SerializeField] private float startDelay; // 開始遅延
         [SerializeField] private AnimationCurve moveCurve = AnimationCurve.EaseInOut(0, 0, 1, 1); // 移動カーブ
         [SerializeField] private bool autoStart = true; // 自動開始
-        [SerializeField] private bool useRandomOffset = false; // ランダムオフセット
+        [SerializeField] private bool useRandomOffset; // ランダムオフセット
         
         private Vector3 _originalPosition;
         private bool _isMovingUp = true;
-        private float _currentTime = 0f;
-        private bool _isActive = false;
+        private float _currentTime;
+        private bool _isActive;
         private RectTransform _rectTransform;
         private Transform _targetTransform;
+        
+        /// <summary>
+        /// フロートアニメーションを停止
+        /// </summary>
+        public void StopFloating()
+        {
+            _isActive = false;
+        }
+
+        /// <summary>
+        /// 元の位置に戻す
+        /// </summary>
+        public void ResetToOriginalPosition()
+        {
+            _isActive = false;
+            _targetTransform.localPosition = _originalPosition;
+        }
+
+        /// <summary>
+        /// 指定位置に移動してからフロートを開始
+        /// </summary>
+        public void MoveToAndFloat(Vector3 targetPosition, float moveDuration = 1f)
+        {
+            StopFloating();
+            StartCoroutine(MoveToCoroutine(targetPosition, moveDuration));
+        }
+
+        /// <summary>
+        /// フロートアニメーションを開始
+        /// </summary>
+        public void StartFloating()
+        {
+            _isActive = true;
+            _currentTime = 0f;
+            _isMovingUp = true;
+        }
 
         private void Awake()
         {
@@ -70,56 +106,12 @@ namespace Void2610.UnityTemplate
                 _isMovingUp = !_isMovingUp;
             }
 
-            // 正規化された時間（0-1）
-            float normalizedTime = _currentTime / moveDuration;
-            
-            // アニメーションカーブを適用
-            float curveValue = moveCurve.Evaluate(normalizedTime);
-            
-            // Y座標を計算
-            float yOffset = _isMovingUp ? 
-                Mathf.Lerp(0f, moveDistance, curveValue) : 
-                Mathf.Lerp(moveDistance, 0f, curveValue);
+            var curveValue = moveCurve.Evaluate(_currentTime / moveDuration);
+            var yOffset = _isMovingUp ? Mathf.Lerp(0f, moveDistance, curveValue) : Mathf.Lerp(moveDistance, 0f, curveValue);
 
             // 位置を更新
-            Vector3 newPosition = _originalPosition + Vector3.up * yOffset;
+            var newPosition = _originalPosition + Vector3.up * yOffset;
             _targetTransform.localPosition = newPosition;
-        }
-
-        /// <summary>
-        /// フロートアニメーションを開始
-        /// </summary>
-        public void StartFloating()
-        {
-            _isActive = true;
-            _currentTime = 0f;
-            _isMovingUp = true;
-        }
-
-        /// <summary>
-        /// フロートアニメーションを停止
-        /// </summary>
-        public void StopFloating()
-        {
-            _isActive = false;
-        }
-
-        /// <summary>
-        /// 元の位置に戻す
-        /// </summary>
-        public void ResetToOriginalPosition()
-        {
-            _isActive = false;
-            _targetTransform.localPosition = _originalPosition;
-        }
-
-        /// <summary>
-        /// 指定位置に移動してからフロートを開始
-        /// </summary>
-        public void MoveToAndFloat(Vector3 targetPosition, float moveDuration = 1f)
-        {
-            StopFloating();
-            StartCoroutine(MoveToCoroutine(targetPosition, moveDuration));
         }
 
         /// <summary>
@@ -127,13 +119,13 @@ namespace Void2610.UnityTemplate
         /// </summary>
         private System.Collections.IEnumerator MoveToCoroutine(Vector3 targetPosition, float duration)
         {
-            Vector3 startPosition = _targetTransform.localPosition;
-            float elapsedTime = 0f;
+            var startPosition = _targetTransform.localPosition;
+            var elapsedTime = 0f;
 
             while (elapsedTime < duration)
             {
                 elapsedTime += Time.deltaTime;
-                float t = elapsedTime / duration;
+                var t = elapsedTime / duration;
                 
                 // スムーズな移動
                 _targetTransform.localPosition = Vector3.Lerp(startPosition, targetPosition, moveCurve.Evaluate(t));
@@ -149,30 +141,11 @@ namespace Void2610.UnityTemplate
             StartFloating();
         }
 
-        /// <summary>
-        /// 設定を更新
-        /// </summary>
-        public void UpdateSettings(float newMoveDistance, float newMoveDuration)
-        {
-            moveDistance = newMoveDistance;
-            moveDuration = newMoveDuration;
-        }
-
-        /// <summary>
-        /// 現在のフロート状態を取得
-        /// </summary>
-        public bool IsFloating => _isActive;
-
         private void OnDisable()
         {
             StopFloating();
         }
-
-        private void OnDestroy()
-        {
-            StopAllCoroutines();
-        }
-
+        
         /// <summary>
         /// エディタでのギズモ表示
         /// </summary>
@@ -181,12 +154,17 @@ namespace Void2610.UnityTemplate
             if (Application.isPlaying) return;
 
             Gizmos.color = Color.yellow;
-            Vector3 basePos = transform.position;
+            var basePos = transform.position;
             
             // 移動範囲を表示
             Gizmos.DrawWireSphere(basePos, 0.1f);
             Gizmos.DrawWireSphere(basePos + Vector3.up * moveDistance, 0.1f);
             Gizmos.DrawLine(basePos, basePos + Vector3.up * moveDistance);
+        }
+
+        private void OnDestroy()
+        {
+            StopAllCoroutines();
         }
     }
 }
