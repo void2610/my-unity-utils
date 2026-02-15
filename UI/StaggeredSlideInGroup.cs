@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using LitMotion;
 using UnityEngine;
-using Void2610.UnityTemplate;
+
+namespace Void2610.UnityTemplate
+{
 
 /// <summary>
 /// 子要素のレイアウト計算とスタッガーアニメーションを統合したコンポーネント
@@ -355,4 +357,6 @@ public class StaggeredSlideInGroup : MonoBehaviour
     {
         _animHandles.CancelAll();
     }
+}
+
 }

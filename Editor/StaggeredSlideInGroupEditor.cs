@@ -2,9 +2,13 @@ using System.Collections.Generic;
 using LitMotion;
 using UnityEditor;
 using UnityEngine;
+using Void2610.UnityTemplate;
+
+namespace Void2610.UnityTemplate.Editor
+{
 
 [CustomEditor(typeof(StaggeredSlideInGroup))]
-public class StaggeredSlideInGroupEditor : Editor
+public class StaggeredSlideInGroupEditor : UnityEditor.Editor
 {
     private bool _isPreviewing;
     private double _previewStartTime;
@@ -182,4 +186,6 @@ public class StaggeredSlideInGroupEditor : Editor
         if (_isPreviewing)
             StopPreview();
     }
+}
+
 }
