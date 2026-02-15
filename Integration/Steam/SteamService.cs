@@ -102,6 +102,7 @@ namespace Void2610.UnityTemplate.Steam
 
             try
             {
+                #if ENABLE_STEAMWORKS_RESTARTAPPIFNECESSARY
                 // Steam以外で起動された場合、Steamクライアントを起動しゲームを再度Steam経由で起動する
                 if (SteamAPI.RestartAppIfNecessary(new AppId_t((uint)appId)))
                 {
@@ -109,6 +110,7 @@ namespace Void2610.UnityTemplate.Steam
                     Application.Quit();
                     return;
                 }
+                #endif
             }
             catch (DllNotFoundException e)
             {
