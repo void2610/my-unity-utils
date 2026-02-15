@@ -8,6 +8,7 @@ namespace Void2610.UnityTemplate
 /// <summary>
 /// 子要素のレイアウト計算とスタッガーアニメーションを統合したコンポーネント
 /// </summary>
+[RequireComponent(typeof(RectTransform))]
 public class StaggeredSlideInGroup : MonoBehaviour
 {
     public enum LayoutMode { None, Horizontal, Vertical, Grid }
@@ -256,12 +257,27 @@ public class StaggeredSlideInGroup : MonoBehaviour
     private float CalculateCrossOffset(float childSize, float parentSize, bool isHorizontal)
     {
         var crossAlignment = isHorizontal ? GetRowAlignment() : GetColumnAlignment();
-        return crossAlignment switch
+
+        if (isHorizontal)
         {
-            0 => parentSize / 2f - childSize / 2f,
-            1 => 0f,
-            _ => -parentSize / 2f + childSize / 2f
-        };
+            // 水平レイアウト時: クロス軸はY方向（Upper/Middle/Lower）
+            return crossAlignment switch
+            {
+                0 => parentSize / 2f - childSize / 2f,
+                1 => 0f,
+                _ => -parentSize / 2f + childSize / 2f
+            };
+        }
+        else
+        {
+            // 垂直レイアウト時: クロス軸はX方向（Left/Center/Right）
+            return crossAlignment switch
+            {
+                0 => -parentSize / 2f + childSize / 2f,
+                1 => 0f,
+                _ => parentSize / 2f - childSize / 2f
+            };
+        }
     }
 
     private Vector2 CalculateGridStartOffset(float totalWidth, float totalHeight, Vector2 parentSize)
@@ -342,12 +358,18 @@ public class StaggeredSlideInGroup : MonoBehaviour
     }
 
 #if UNITY_EDITOR
+    private bool _isLayoutApplyScheduled;
+
     private void OnValidate()
     {
         if (layoutMode == LayoutMode.None) return;
-        // エディタ時にレイアウトを即時プレビュー
+        if (_isLayoutApplyScheduled) return;
+        _isLayoutApplyScheduled = true;
+
+        // エディタ時にレイアウトを即時プレビュー（フレーム終端で1回だけ）
         UnityEditor.EditorApplication.delayCall += () =>
         {
+            _isLayoutApplyScheduled = false;
             if (this) ApplyLayout();
         };
     }
