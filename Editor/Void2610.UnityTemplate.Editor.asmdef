@@ -1,0 +1,19 @@
+{
+    "name": "Void2610.UnityTemplate.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:602cca619fac04b2f9de6bcaefed88e9",
+        "GUID:3b570a5146f9d4f0fa107ed4559471a3"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
