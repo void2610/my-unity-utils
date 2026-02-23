@@ -14,7 +14,7 @@ public class StaggeredSlideInGroup : MonoBehaviour
     public enum LayoutMode { None, Horizontal, Vertical, Grid }
 
     [Header("レイアウト設定")]
-    [SerializeField] private LayoutMode layoutMode = LayoutMode.Horizontal;
+    [SerializeField] private LayoutMode layoutMode = LayoutMode.None;
     [SerializeField] private float spacing = 10f;
     [SerializeField] private TextAnchor alignment = TextAnchor.MiddleCenter;
     [SerializeField] private int gridConstraintCount = 2;
@@ -32,6 +32,8 @@ public class StaggeredSlideInGroup : MonoBehaviour
     [Header("オプション")]
     [SerializeField] private bool ignoreTimeScale;
     [SerializeField] private bool activeOnly = true;
+    
+    public float Spacing => spacing;
 
     private readonly List<MotionHandle> _animHandles = new();
 
