@@ -292,11 +292,7 @@ namespace Void2610.UnityTemplate
         
         private void Start()
         {
-            // AudioMixerの初期設定
-            if (seMixerGroup && seMixerGroup.audioMixer)
-            {
-                seMixerGroup.audioMixer.SetFloat("SeVolume", Mathf.Log10(_seVolume) * 20);
-            }
+            seMixerGroup.audioMixer.SetFloat("SeVolume", Mathf.Log10(_seVolume) * 20);
         }
     }
 }
