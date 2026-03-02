@@ -7,7 +7,6 @@ public class UIDropShadow : BaseMeshEffect
 {
     [SerializeField] private Color shadowColor = new(0f, 0f, 0f, 0.5f);
     [SerializeField] private Vector2 shadowDistance = new(1f, -1f);
-    [SerializeField] private bool useGraphicAlpha = true;
     
     public Vector2 EffectDistance
     {
