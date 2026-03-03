@@ -10,17 +10,7 @@ namespace Void2610.UnityTemplate
     {
         private static T _instance;
 
-#if UNITY_EDITOR
-        /// <summary>
-        /// ドメインリロード無効時にstatic フィールドをリセット
-        /// </summary>
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStaticInstance()
-        {
-            _instance = null;
-        }
-#endif
-        
+
         public static T Instance
         {
             get
