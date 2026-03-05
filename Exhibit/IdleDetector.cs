@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.SceneManagement;
 
 namespace Void2610.UnityTemplate
 {
@@ -19,6 +20,7 @@ namespace Void2610.UnityTemplate
         {
             _lastInputTime = Time.realtimeSinceStartup;
             InputSystem.onEvent += OnInputEvent;
+            SceneManager.activeSceneChanged += OnActiveSceneChanged;
         }
 
         public void ResetIdleTimer() => _lastInputTime = Time.realtimeSinceStartup;
@@ -47,6 +49,12 @@ namespace Void2610.UnityTemplate
         public void Dispose()
         {
             InputSystem.onEvent -= OnInputEvent;
+            SceneManager.activeSceneChanged -= OnActiveSceneChanged;
+        }
+
+        private void OnActiveSceneChanged(Scene previousScene, Scene nextScene)
+        {
+            ResetIdleTimer();
         }
     }
 }
