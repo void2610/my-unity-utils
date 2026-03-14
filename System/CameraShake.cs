@@ -23,8 +23,7 @@ namespace Void2610.UnityTemplate
         /// <summary>
         /// カメラを振動させる（非同期実行）
         /// </summary>
-        public void ShakeCamera(float magnitude, float duration, int frequency = 10, float dampingRatio = 0.5f) =>
-            ShakeCameraAsync(magnitude, duration, frequency, dampingRatio).Forget();
+        public void ShakeCamera(float magnitude, float duration, int frequency = 10, float dampingRatio = 0.5f) => ShakeCameraAsync(magnitude, duration, frequency, dampingRatio).Forget();
 
         /// <summary>
         /// カメラの振動を止める
