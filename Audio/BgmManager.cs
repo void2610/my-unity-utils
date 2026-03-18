@@ -113,12 +113,12 @@ namespace Void2610.UnityTemplate
         /// <summary>
         /// 停止
         /// </summary>
-        public async UniTask Stop()
+        public async UniTask Stop(float fadeDuration = -1f)
         {
             _isPlaying = false;
 
             _fadeHandle.TryCancel();
-            await LMotion.Create(_audioSource.volume, 0f, fadeTime)
+            await LMotion.Create(_audioSource.volume, 0f, fadeDuration > 0 ? fadeDuration : fadeTime)
                 .WithEase(Ease.InQuad)
                 .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
                 .BindToVolume(_audioSource)
@@ -218,6 +218,8 @@ namespace Void2610.UnityTemplate
         /// </summary>
         private async UniTaskVoid PlayBGMInternal(SoundData data)
         {
+            _isPlaying = true;
+
             // 現在のBGMをフェードアウト
             if (_currentBGM != null)
             {
