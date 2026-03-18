@@ -44,7 +44,8 @@ namespace Void2610.UnityTemplate
         [SerializeField] private bool playOnStart;
         [SerializeField] private AudioMixerGroup bgmMixerGroup;
         [SerializeField] private List<SoundData> bgmList = new List<SoundData>();
-        [SerializeField] private float fadeTime = 1.0f;
+        [SerializeField] private float fadeInTime = 1.0f;
+        [SerializeField] private float fadeOutTime = 1.0f;
 
         private AudioSource _audioSource;
         private bool _isPlaying;
@@ -94,7 +95,7 @@ namespace Void2610.UnityTemplate
             _audioSource.Play();
             
             _fadeHandle.TryCancel();
-            _fadeHandle = LMotion.Create(_audioSource.volume, _currentBGM.volume, fadeTime)
+            _fadeHandle = LMotion.Create(_audioSource.volume, _currentBGM.volume, fadeInTime)
                 .WithEase(Ease.InQuad)
                 .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
                 .BindToVolume(_audioSource)
@@ -113,12 +114,21 @@ namespace Void2610.UnityTemplate
         /// <summary>
         /// 停止
         /// </summary>
-        public async UniTask Stop(float fadeDuration = -1f)
+        public UniTask Stop()
+        {
+            return Stop(fadeOutTime);
+        }
+
+        /// <summary>
+        /// フェード時間を指定して停止
+        /// </summary>
+        public async UniTask Stop(float fadeDuration)
         {
             _isPlaying = false;
+            var resolvedFadeDuration = ResolveFadeOutDuration(fadeDuration);
 
             _fadeHandle.TryCancel();
-            await LMotion.Create(_audioSource.volume, 0f, fadeDuration > 0 ? fadeDuration : fadeTime)
+            await LMotion.Create(_audioSource.volume, 0f, resolvedFadeDuration)
                 .WithEase(Ease.InQuad)
                 .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
                 .BindToVolume(_audioSource)
@@ -171,6 +181,32 @@ namespace Void2610.UnityTemplate
         /// <param name="bgmName">BGM名</param>
         public void PlayBGM(string bgmName)
         {
+            PlayBGMInternal(bgmName, fadeOutTime, fadeInTime);
+        }
+
+        /// <summary>
+        /// 名前を指定してBGMを再生
+        /// </summary>
+        /// <param name="bgmName">BGM名</param>
+        /// <param name="fadeDuration">フェード時間</param>
+        public void PlayBGM(string bgmName, float fadeDuration)
+        {
+            PlayBGMInternal(bgmName, fadeDuration, fadeDuration);
+        }
+
+        /// <summary>
+        /// 名前を指定してBGMを再生
+        /// </summary>
+        /// <param name="bgmName">BGM名</param>
+        /// <param name="fadeOutDuration">フェードアウト時間</param>
+        /// <param name="fadeInDuration">フェードイン時間</param>
+        public void PlayBGM(string bgmName, float fadeOutDuration, float fadeInDuration)
+        {
+            PlayBGMInternal(bgmName, fadeOutDuration, fadeInDuration);
+        }
+
+        private void PlayBGMInternal(string bgmName, float fadeOutDuration, float fadeInDuration)
+        {
             var data = bgmList.FirstOrDefault(t => t.name == bgmName);
             if (data == null)
             {
@@ -178,7 +214,7 @@ namespace Void2610.UnityTemplate
                 return;
             }
             
-            PlayBGMInternal(data).Forget();
+            PlayBGMInternal(data, fadeOutDuration, fadeInDuration).Forget();
         }
 
         /// <summary>
@@ -186,6 +222,27 @@ namespace Void2610.UnityTemplate
         /// </summary>
         /// <param name="bgmType">BGMカテゴリ</param>
         public void PlayRandomBGM(BgmType bgmType)
+        {
+            PlayRandomBGM(bgmType, fadeOutTime, fadeInTime);
+        }
+
+        /// <summary>
+        /// カテゴリからランダムにBGMを再生
+        /// </summary>
+        /// <param name="bgmType">BGMカテゴリ</param>
+        /// <param name="fadeDuration">フェード時間</param>
+        public void PlayRandomBGM(BgmType bgmType, float fadeDuration)
+        {
+            PlayRandomBGM(bgmType, fadeDuration, fadeDuration);
+        }
+
+        /// <summary>
+        /// カテゴリからランダムにBGMを再生
+        /// </summary>
+        /// <param name="bgmType">BGMカテゴリ</param>
+        /// <param name="fadeOutDuration">フェードアウト時間</param>
+        /// <param name="fadeInDuration">フェードイン時間</param>
+        public void PlayRandomBGM(BgmType bgmType, float fadeOutDuration, float fadeInDuration)
         {
             if (bgmList.Count == 0) return;
             
@@ -200,7 +257,7 @@ namespace Void2610.UnityTemplate
             if (_currentBGM != null && _currentBGM.bgmType == bgmType) return;
             
             var data = targetBgmList[Random.Range(0, targetBgmList.Count)];
-            PlayBGMInternal(data).Forget();
+            PlayBGMInternal(data, fadeOutDuration, fadeInDuration).Forget();
         }
 
         /// <summary>
@@ -208,23 +265,44 @@ namespace Void2610.UnityTemplate
         /// </summary>
         public void PlayRandomBGM()
         {
+            PlayRandomBGM(fadeOutTime, fadeInTime);
+        }
+
+        /// <summary>
+        /// 全BGMからランダム再生
+        /// </summary>
+        /// <param name="fadeDuration">フェード時間</param>
+        public void PlayRandomBGM(float fadeDuration)
+        {
+            PlayRandomBGM(fadeDuration, fadeDuration);
+        }
+
+        /// <summary>
+        /// 全BGMからランダム再生
+        /// </summary>
+        /// <param name="fadeOutDuration">フェードアウト時間</param>
+        /// <param name="fadeInDuration">フェードイン時間</param>
+        public void PlayRandomBGM(float fadeOutDuration, float fadeInDuration)
+        {
             if (bgmList.Count == 0) return;
             var data = bgmList[Random.Range(0, bgmList.Count)];
-            PlayBGMInternal(data).Forget();
+            PlayBGMInternal(data, fadeOutDuration, fadeInDuration).Forget();
         }
 
         /// <summary>
         /// BGM再生の内部処理
         /// </summary>
-        private async UniTaskVoid PlayBGMInternal(SoundData data)
+        private async UniTaskVoid PlayBGMInternal(SoundData data, float fadeOutDuration, float fadeInDuration)
         {
             _isPlaying = true;
+            var resolvedFadeOutDuration = ResolveFadeOutDuration(fadeOutDuration);
+            var resolvedFadeInDuration = ResolveFadeInDuration(fadeInDuration);
 
             // 現在のBGMをフェードアウト
             if (_currentBGM != null)
             {
                 _fadeHandle.TryCancel();
-                await LMotion.Create(_audioSource.volume, 0f, fadeTime)
+                await LMotion.Create(_audioSource.volume, 0f, resolvedFadeOutDuration)
                     .WithEase(Ease.InQuad)
                     .BindToVolume(_audioSource)
                     .ToUniTask();
@@ -237,13 +315,13 @@ namespace Void2610.UnityTemplate
             _audioSource.Play();
 
             // フェードイン
-            _fadeHandle = LMotion.Create(0f, _currentBGM.volume, fadeTime)
+            _fadeHandle = LMotion.Create(0f, _currentBGM.volume, resolvedFadeInDuration)
                 .WithEase(Ease.InQuad)
                 .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
                 .BindToVolume(_audioSource)
                 .AddTo(this);
 
-            await UniTask.Delay((int)(fadeTime * 1000), ignoreTimeScale: true);
+            await UniTask.Delay((int)(resolvedFadeInDuration * 1000), ignoreTimeScale: true);
         }
 
         /// <summary>
@@ -252,7 +330,7 @@ namespace Void2610.UnityTemplate
         private async UniTaskVoid PauseInternal()
         {
             _fadeHandle.TryCancel();
-            await LMotion.Create(_audioSource.volume, 0f, fadeTime)
+            await LMotion.Create(_audioSource.volume, 0f, fadeOutTime)
                 .WithEase(Ease.InQuad)
                 .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
                 .BindToVolume(_audioSource)
@@ -282,6 +360,16 @@ namespace Void2610.UnityTemplate
             {
                 PlayRandomBGM();
             }
+        }
+
+        private float ResolveFadeInDuration(float fadeDuration)
+        {
+            return fadeDuration > 0f ? fadeDuration : fadeInTime;
+        }
+
+        private float ResolveFadeOutDuration(float fadeDuration)
+        {
+            return fadeDuration > 0f ? fadeDuration : fadeOutTime;
         }
 
         protected override void Awake()
