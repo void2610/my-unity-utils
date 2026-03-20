@@ -21,7 +21,6 @@ namespace Void2610.UnityTemplate
             EnsureInitialized();
             _transitionEffect.transitionRate = 0f;
             var handle = LMotion.Create(1f, 0f, duration)
-                .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
                 .Bind(SetTransitionRate)
                 .AddTo(this);
             await handle.ToUniTask();
@@ -32,7 +31,6 @@ namespace Void2610.UnityTemplate
             EnsureInitialized();
             _transitionEffect.transitionRate = 1f;
             var handle = LMotion.Create(0f, 1f, duration)
-                .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
                 .Bind(SetTransitionRate)
                 .AddTo(this);
             await handle.ToUniTask();
@@ -52,11 +50,7 @@ namespace Void2610.UnityTemplate
 
         private void EnsureInitialized()
         {
-            if (_transitionEffect)
-            {
-                return;
-            }
-
+            if (_transitionEffect) return;
             _transitionEffect = GetComponent<UIEffect>();
         }
 
