@@ -340,26 +340,24 @@ namespace Void2610.UnityTemplate
         }
 
         /// <summary>
-        /// 次のBGMへのループ処理
+        /// BGMをループさせる
         /// </summary>
-        private async UniTaskVoid LoopToNextBGM(float remainingFadeTime)
+        private async UniTaskVoid LoopBGM(float remainingFadeTime)
         {
+            var bgmToLoop = _currentBGM;
+            if (bgmToLoop == null) return;
+
             _fadeHandle.TryCancel();
             await LMotion.Create(_audioSource.volume, 0f, remainingFadeTime)
                 .WithEase(Ease.InQuad)
                 .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
                 .BindToVolume(_audioSource)
                 .ToUniTask();
+
+            if (!_isPlaying || _currentBGM != bgmToLoop) return;
             
-            // 同じタイプからランダム選択
-            if (_currentBGM != null)
-            {
-                PlayRandomBGM(_currentBGM.bgmType);
-            }
-            else
-            {
-                PlayRandomBGM();
-            }
+            _audioSource.Stop();
+            PlayBGM(bgmToLoop.name, fadeOutTime, fadeInTime);
         }
 
         private float ResolveFadeInDuration(float fadeDuration)
@@ -395,6 +393,18 @@ namespace Void2610.UnityTemplate
             {
                 _isPlaying = true;
                 PlayRandomBGM();
+            }
+        }
+        
+        private void Update()
+        {
+            if (IsPlaying)
+            {
+                var remainingTime = _audioSource.clip.length - _audioSource.time;
+                if (remainingTime <= fadeOutTime && !_fadeHandle.IsPlaying())
+                {
+                    LoopBGM(remainingTime).Forget();
+                }
             }
         }
 
