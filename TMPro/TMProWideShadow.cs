@@ -177,7 +177,7 @@ public sealed class TMProWideShadow : MonoBehaviour
 
     private void RenderShadow()
     {
-        _text.ForceMeshUpdate(ignoreActiveState: true, forceTextReparsing: true);
+        RefreshTextMeshIfNeeded();
         if (!HasRenderableText())
         {
             SetReplicaEnabled(false);
@@ -213,6 +213,19 @@ public sealed class TMProWideShadow : MonoBehaviour
             RenderTexture.ReleaseTemporary(source);
             RenderTexture.ReleaseTemporary(ping);
             RenderTexture.ReleaseTemporary(pong);
+        }
+    }
+
+    private void RefreshTextMeshIfNeeded()
+    {
+        if (!_text)
+        {
+            return;
+        }
+
+        if (_text.havePropertiesChanged || _text.textInfo.characterCount == 0)
+        {
+            _text.ForceMeshUpdate(ignoreActiveState: true, forceTextReparsing: true);
         }
     }
 
