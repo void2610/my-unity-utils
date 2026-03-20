@@ -1,8 +1,8 @@
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
-using LitMotion;
 using Coffee.UIEffects;
+using LitMotion;
 
 namespace Void2610.UnityTemplate
 {
@@ -18,31 +18,57 @@ namespace Void2610.UnityTemplate
 
         public async UniTask FadeIn(float duration = 0.5f)
         {
-            _transitionEffect.transitionRate = 1f;
+            EnsureInitialized();
+            _transitionEffect.transitionRate = 0f;
             var handle = LMotion.Create(1f, 0f, duration)
                 .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
-                .Bind(v => _transitionEffect.transitionRate = v)
+                .Bind(SetTransitionRate)
                 .AddTo(this);
             await handle.ToUniTask();
         }
 
         public async UniTask FadeOut(float duration = 0.5f)
         {
-            _transitionEffect.transitionRate = 0f;
+            EnsureInitialized();
+            _transitionEffect.transitionRate = 1f;
             var handle = LMotion.Create(0f, 1f, duration)
                 .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
-                .Bind(v => _transitionEffect.transitionRate = v)
+                .Bind(SetTransitionRate)
                 .AddTo(this);
             await handle.ToUniTask();
         }
 
-        public void SetFadeIn() => _transitionEffect.transitionRate = 1f;
+        public void SetFadeIn()
+        {
+            EnsureInitialized();
+            _transitionEffect.transitionRate = 0f;
+        }
 
-        public void SetFadeOut() => _transitionEffect.transitionRate = 0f;
+        public void SetFadeOut()
+        {
+            EnsureInitialized();
+            _transitionEffect.transitionRate = 1f;
+        }
+
+        private void EnsureInitialized()
+        {
+            if (_transitionEffect)
+            {
+                return;
+            }
+
+            _transitionEffect = GetComponent<UIEffect>();
+        }
+
+        private void SetTransitionRate(float value)
+        {
+            EnsureInitialized();
+            _transitionEffect.transitionRate = value;
+        }
 
         private void Awake()
         {
-            _transitionEffect = GetComponent<UIEffect>();
+            EnsureInitialized();
         }
     }
 }
