@@ -43,9 +43,10 @@ namespace Void2610.UnityTemplate
         [Header("設定")]
         [SerializeField] private bool playOnStart;
         [SerializeField] private AudioMixerGroup bgmMixerGroup;
-        [SerializeField] private List<SoundData> bgmList = new List<SoundData>();
+        [SerializeField] private List<SoundData> bgmList = new();
         [SerializeField] private float fadeInTime = 1.0f;
         [SerializeField] private float fadeOutTime = 1.0f;
+        [SerializeField, Range(0f, 1f)] private float projectMasterVolume = 1.0f;
 
         private AudioSource _audioSource;
         private bool _isPlaying;
@@ -68,8 +69,8 @@ namespace Void2610.UnityTemplate
             {
                 _bgmVolume = Mathf.Clamp01(value);
                 if (_bgmVolume <= 0.0f) _bgmVolume = 0.0001f;
-                
-                bgmMixerGroup.audioMixer.SetFloat("BgmVolume", Mathf.Log10(_bgmVolume) * 20);
+
+                ApplyMixerVolume();
                 PlayerPrefs.SetFloat(BGM_VOLUME_KEY, _bgmVolume);
             }
         }
@@ -370,6 +371,12 @@ namespace Void2610.UnityTemplate
             return fadeDuration > 0f ? fadeDuration : fadeOutTime;
         }
 
+        private void ApplyMixerVolume()
+        {
+            var effectiveVolume = Mathf.Clamp01(_bgmVolume * projectMasterVolume);
+            bgmMixerGroup.audioMixer.SetFloat("BgmVolume", Mathf.Log10(effectiveVolume) * 20);
+        }
+
         protected override void Awake()
         {
             base.Awake();
@@ -387,7 +394,7 @@ namespace Void2610.UnityTemplate
             _currentBGM = null;
             _audioSource.volume = 0;
 
-            bgmMixerGroup.audioMixer.SetFloat("BgmVolume", Mathf.Log10(_bgmVolume) * 20);
+            ApplyMixerVolume();
 
             if (playOnStart)
             {
