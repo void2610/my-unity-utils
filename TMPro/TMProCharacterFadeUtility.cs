@@ -7,7 +7,7 @@ using UnityEngine;
 /// <summary>
 /// TextMeshPro の文字フェード演出ユーティリティ。
 /// </summary>
-public static class TMPCharacterFadeUtility
+public static class TMProCharacterFadeUtility
 {
     public readonly struct TextLineRange
     {

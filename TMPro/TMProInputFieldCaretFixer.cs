@@ -10,7 +10,7 @@ namespace Void2610.UnityTemplate
     /// UI操作時の意図しないクリック問題を解決
     /// </summary>
     [RequireComponent(typeof(TMP_InputField))]
-    public class TMPInputFieldCaretFixer : MonoBehaviour
+    public class TMProInputFieldCaretFixer : MonoBehaviour
     {
         [Header("修正設定")]
         [SerializeField] private bool fixOnAwake = true; // Awake時に自動修正
