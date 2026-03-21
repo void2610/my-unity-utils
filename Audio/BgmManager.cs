@@ -55,6 +55,7 @@ namespace Void2610.UnityTemplate
         private MotionHandle _fadeHandle;
         private MotionHandle _duckingHandle;
         private float _originalVolume = 1.0f;
+        private bool _currentLoop = true;
 
         // PlayerPrefsキー
         private const string BGM_VOLUME_KEY = "BgmVolume";
@@ -182,7 +183,7 @@ namespace Void2610.UnityTemplate
         /// <param name="bgmName">BGM名</param>
         public void PlayBGM(string bgmName)
         {
-            PlayBGMInternal(bgmName, fadeOutTime, fadeInTime);
+            PlayBGMInternal(bgmName, fadeOutTime, fadeInTime, true);
         }
 
         /// <summary>
@@ -192,7 +193,7 @@ namespace Void2610.UnityTemplate
         /// <param name="fadeDuration">フェード時間</param>
         public void PlayBGM(string bgmName, float fadeDuration)
         {
-            PlayBGMInternal(bgmName, fadeDuration, fadeDuration);
+            PlayBGMInternal(bgmName, fadeDuration, fadeDuration, true);
         }
 
         /// <summary>
@@ -203,10 +204,15 @@ namespace Void2610.UnityTemplate
         /// <param name="fadeInDuration">フェードイン時間</param>
         public void PlayBGM(string bgmName, float fadeOutDuration, float fadeInDuration)
         {
-            PlayBGMInternal(bgmName, fadeOutDuration, fadeInDuration);
+            PlayBGMInternal(bgmName, fadeOutDuration, fadeInDuration, true);
         }
 
-        private void PlayBGMInternal(string bgmName, float fadeOutDuration, float fadeInDuration)
+        public void PlayBGM(string bgmName, float fadeOutDuration, float fadeInDuration, bool loop)
+        {
+            PlayBGMInternal(bgmName, fadeOutDuration, fadeInDuration, loop);
+        }
+
+        private void PlayBGMInternal(string bgmName, float fadeOutDuration, float fadeInDuration, bool loop)
         {
             var data = bgmList.FirstOrDefault(t => t.name == bgmName);
             if (data == null)
@@ -215,7 +221,7 @@ namespace Void2610.UnityTemplate
                 return;
             }
             
-            PlayBGMInternal(data, fadeOutDuration, fadeInDuration).Forget();
+            PlayBGMInternal(data, fadeOutDuration, fadeInDuration, loop).Forget();
         }
 
         /// <summary>
@@ -258,7 +264,7 @@ namespace Void2610.UnityTemplate
             if (_currentBGM != null && _currentBGM.bgmType == bgmType) return;
             
             var data = targetBgmList[Random.Range(0, targetBgmList.Count)];
-            PlayBGMInternal(data, fadeOutDuration, fadeInDuration).Forget();
+            PlayBGMInternal(data, fadeOutDuration, fadeInDuration, true).Forget();
         }
 
         /// <summary>
@@ -287,15 +293,16 @@ namespace Void2610.UnityTemplate
         {
             if (bgmList.Count == 0) return;
             var data = bgmList[Random.Range(0, bgmList.Count)];
-            PlayBGMInternal(data, fadeOutDuration, fadeInDuration).Forget();
+            PlayBGMInternal(data, fadeOutDuration, fadeInDuration, true).Forget();
         }
 
         /// <summary>
         /// BGM再生の内部処理
         /// </summary>
-        private async UniTaskVoid PlayBGMInternal(SoundData data, float fadeOutDuration, float fadeInDuration)
+        private async UniTaskVoid PlayBGMInternal(SoundData data, float fadeOutDuration, float fadeInDuration, bool loop)
         {
             _isPlaying = true;
+            _currentLoop = loop;
             var resolvedFadeOutDuration = ResolveFadeOutDuration(fadeOutDuration);
             var resolvedFadeInDuration = ResolveFadeInDuration(fadeInDuration);
 
@@ -312,6 +319,7 @@ namespace Void2610.UnityTemplate
 
             _currentBGM = data;
             _audioSource.clip = _currentBGM.audioClip;
+            _audioSource.loop = loop;
             _audioSource.volume = 0;
             _audioSource.Play();
 
@@ -358,7 +366,7 @@ namespace Void2610.UnityTemplate
             if (!_isPlaying || _currentBGM != bgmToLoop) return;
             
             _audioSource.Stop();
-            PlayBGM(bgmToLoop.name, fadeOutTime, fadeInTime);
+            PlayBGM(bgmToLoop.name, fadeOutTime, fadeInTime, true);
         }
 
         private float ResolveFadeInDuration(float fadeDuration)
@@ -382,7 +390,7 @@ namespace Void2610.UnityTemplate
             base.Awake();
             _audioSource = gameObject.AddComponent<AudioSource>();
             _audioSource.outputAudioMixerGroup = bgmMixerGroup;
-            _audioSource.loop = true; // BGMをループ再生
+            _audioSource.loop = true; // デフォルトはループ再生
 
             // 保存された音量を読み込み
             _bgmVolume = PlayerPrefs.GetFloat(BGM_VOLUME_KEY, 1.0f);
@@ -405,7 +413,7 @@ namespace Void2610.UnityTemplate
         
         private void Update()
         {
-            if (IsPlaying)
+            if (IsPlaying && _currentLoop)
             {
                 var remainingTime = _audioSource.clip.length - _audioSource.time;
                 if (remainingTime <= fadeOutTime && !_fadeHandle.IsPlaying())
