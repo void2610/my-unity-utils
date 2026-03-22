@@ -29,6 +29,22 @@ namespace Void2610.UnityTemplate
         [SerializeField]
         private List<Pair> _serializedList = new List<Pair>();
 
+        public IEnumerable<KeyValuePair<TKey, TValue>> EnumerateSerializedOrder()
+        {
+            foreach (var pair in _serializedList)
+            {
+                if (pair == null)
+                {
+                    continue;
+                }
+
+                if (TryGetValue(pair.key, out var value))
+                {
+                    yield return new KeyValuePair<TKey, TValue>(pair.key, value);
+                }
+            }
+        }
+
         /// <summary>
         /// Unityがオブジェクトをデシリアライズした後に呼ばれる
         /// シリアライズされたリストを辞書に変換する
