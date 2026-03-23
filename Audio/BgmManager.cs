@@ -38,6 +38,10 @@ namespace Void2610.UnityTemplate
             public AudioClip audioClip;
             public float volume = 1.0f;
             public BgmType bgmType = BgmType.Default;
+            // イントロ付きループのループ開始時間（秒、0 = 通常ループ）
+            public float loopStartSeconds = 0f;
+            // イントロ付きループのループ終端時間（秒、0 = クリップ末尾）
+            public float loopEndSeconds = 0f;
         }
 
         [Header("設定")]
@@ -56,6 +60,8 @@ namespace Void2610.UnityTemplate
         private MotionHandle _duckingHandle;
         private float _originalVolume = 1.0f;
         private bool _currentLoop = true;
+        // イントロループ検知用：ループ開始点を通過済みかどうか
+        private bool _hasPassedLoopStart = false;
 
         // PlayerPrefsキー
         private const string BGM_VOLUME_KEY = "BgmVolume";
@@ -320,6 +326,7 @@ namespace Void2610.UnityTemplate
             _currentBGM = data;
             _audioSource.clip = _currentBGM.audioClip;
             _audioSource.loop = loop;
+            _hasPassedLoopStart = false;
             _audioSource.volume = 0;
             _audioSource.Play();
 
@@ -399,8 +406,7 @@ namespace Void2610.UnityTemplate
         
         private void Start()
         {
-            _currentBGM = null;
-            _audioSource.volume = 0;
+            _audioSource.volume = _currentBGM == null ? 0 : _audioSource.volume;
 
             ApplyMixerVolume();
 
@@ -413,7 +419,32 @@ namespace Void2610.UnityTemplate
         
         private void Update()
         {
-            if (IsPlaying && _currentLoop)
+            if (!_isPlaying || _currentBGM == null) return;
+
+            // イントロ付きループBGMの処理
+            if (_currentBGM.loopStartSeconds > 0f)
+            {
+                var clip = _audioSource.clip;
+                var loopStartSample = (int)(_currentBGM.loopStartSeconds * clip.frequency);
+
+                // 一度ループ開始点を通過したか記録
+                if (!_hasPassedLoopStart && _audioSource.timeSamples >= loopStartSample)
+                {
+                    _hasPassedLoopStart = true;
+                }
+
+                // ループ開始点通過後にtimeSamplesがloopStart未満になった = Unityのループが発生
+                if (_hasPassedLoopStart && _audioSource.timeSamples < loopStartSample)
+                {
+                    _audioSource.Stop();
+                    _audioSource.timeSamples = loopStartSample;
+                    _audioSource.Play();
+                }
+                return;
+            }
+
+            // 通常ループBGMは曲末付近でフェードアウトして先頭から再生
+            if (_currentLoop && _audioSource.isPlaying)
             {
                 var remainingTime = _audioSource.clip.length - _audioSource.time;
                 if (remainingTime <= fadeOutTime && !_fadeHandle.IsPlaying())
