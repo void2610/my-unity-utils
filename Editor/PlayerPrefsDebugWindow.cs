@@ -37,8 +37,8 @@ namespace Void2610.UnityTemplate.Editor
         [SerializeField] private Vector2 keyListScrollPosition;
         [SerializeField] private Vector2 detailScrollPosition;
 
-        private readonly HashSet<string> _knownKeys = new(StringComparer.Ordinal);
-        private readonly List<string> _filteredKeys = new();
+        private readonly HashSet<string> _sourceKnownKeys = new(StringComparer.Ordinal);
+        private readonly HashSet<string> _runtimeKnownKeys = new(StringComparer.Ordinal);
 
         [MenuItem("Tools/Utils/PlayerPrefs Debug Window")]
         private static void Open()
@@ -78,14 +78,12 @@ namespace Void2610.UnityTemplate.Editor
             if (nextSearchText != searchText)
             {
                 searchText = nextSearchText;
-                ApplyFilter();
             }
 
             if (GUILayout.Button("x", cancelButtonStyle))
             {
                 searchText = string.Empty;
                 GUI.FocusControl(null);
-                ApplyFilter();
             }
 
             GUILayout.FlexibleSpace();
@@ -110,15 +108,9 @@ namespace Void2610.UnityTemplate.Editor
             EditorGUILayout.LabelField("Known Keys", EditorStyles.boldLabel);
 
             keyListScrollPosition = EditorGUILayout.BeginScrollView(keyListScrollPosition);
-            foreach (var key in _filteredKeys)
-            {
-                var isSelected = string.Equals(selectedKey, key, StringComparison.Ordinal);
-                if (GUILayout.Toggle(isSelected, key, "Button") && !isSelected)
-                {
-                    selectedKey = key;
-                    LoadSelectedKey();
-                }
-            }
+            DrawKeySection("From Code", _sourceKnownKeys);
+            EditorGUILayout.Space(6f);
+            DrawKeySection("Created Here", _runtimeKnownKeys);
             EditorGUILayout.EndScrollView();
         }
 
@@ -196,6 +188,37 @@ namespace Void2610.UnityTemplate.Editor
             GUI.contentColor = previousColor;
         }
 
+        private void DrawKeySection(string label, IEnumerable<string> keys)
+        {
+            EditorGUILayout.LabelField(label, EditorStyles.miniBoldLabel);
+
+            var visibleKeys = keys
+                .Where(static key => !string.IsNullOrWhiteSpace(key))
+                .Where(key => string.IsNullOrWhiteSpace(searchText) || key.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(static key => key, StringComparer.Ordinal)
+                .ToList();
+
+            if (visibleKeys.Count == 0)
+            {
+                using (new EditorGUI.DisabledScope(true))
+                {
+                    EditorGUILayout.TextField("(none)");
+                }
+
+                return;
+            }
+
+            foreach (var key in visibleKeys)
+            {
+                var isSelected = string.Equals(selectedKey, key, StringComparison.Ordinal);
+                if (GUILayout.Toggle(isSelected, key, "Button") && !isSelected)
+                {
+                    selectedKey = key;
+                    LoadSelectedKey();
+                }
+            }
+        }
+
         private void LoadSelectedKey()
         {
             if (string.IsNullOrWhiteSpace(selectedKey))
@@ -254,9 +277,9 @@ namespace Void2610.UnityTemplate.Editor
                 }
 
                 PlayerPrefs.Save();
-                if (_knownKeys.Add(selectedKey))
+                if (_runtimeKnownKeys.Add(selectedKey))
                 {
-                    ApplyFilter();
+                    Repaint();
                 }
 
                 LoadSelectedKey();
@@ -282,7 +305,9 @@ namespace Void2610.UnityTemplate.Editor
 
             PlayerPrefs.DeleteKey(selectedKey);
             PlayerPrefs.Save();
+            _runtimeKnownKeys.Remove(selectedKey);
             LoadSelectedKey();
+            Repaint();
             ShowNotification(new GUIContent("Deleted"));
         }
 
@@ -295,33 +320,22 @@ namespace Void2610.UnityTemplate.Editor
 
             PlayerPrefs.DeleteAll();
             PlayerPrefs.Save();
+            _runtimeKnownKeys.Clear();
             LoadSelectedKey();
+            Repaint();
             ShowNotification(new GUIContent("Deleted All"));
         }
 
         private void RefreshKnownKeys()
         {
-            _knownKeys.Clear();
+            _sourceKnownKeys.Clear();
 
             foreach (var path in EnumerateScriptPaths())
             {
-                CollectKeysFromFile(path, _knownKeys);
+                CollectKeysFromFile(path, _sourceKnownKeys);
             }
 
-            ApplyFilter();
-        }
-
-        private void ApplyFilter()
-        {
-            _filteredKeys.Clear();
-            foreach (var key in _knownKeys.OrderBy(static key => key, StringComparer.Ordinal))
-            {
-                if (string.IsNullOrWhiteSpace(searchText)
-                    || key.Contains(searchText, StringComparison.OrdinalIgnoreCase))
-                {
-                    _filteredKeys.Add(key);
-                }
-            }
+            Repaint();
         }
 
         private IEnumerable<string> EnumerateScriptPaths()
