@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Void2610.UnityTemplate
 {
@@ -9,10 +10,11 @@ namespace Void2610.UnityTemplate
     /// Inspectorで辞書を編集可能にする
     /// </summary>
     [Serializable]
-    public class SerializableDictionary<TKey, TValue> : 
-        Dictionary<TKey, TValue>, 
+    public class SerializableDictionary<TKey, TValue> :
+        Dictionary<TKey, TValue>,
         ISerializationCallbackReceiver
     {
+#pragma warning disable IDE1006
         [Serializable]
         public class Pair
         {
@@ -26,12 +28,14 @@ namespace Void2610.UnityTemplate
             }
         }
 
+        [FormerlySerializedAs("_serializedList")]
         [SerializeField]
-        private List<Pair> _serializedList = new List<Pair>();
+        private List<Pair> serializedList = new List<Pair>();
+#pragma warning restore IDE1006
 
         public IEnumerable<KeyValuePair<TKey, TValue>> EnumerateSerializedOrder()
         {
-            foreach (var pair in _serializedList)
+            foreach (var pair in serializedList)
             {
                 if (pair == null)
                 {
@@ -52,8 +56,8 @@ namespace Void2610.UnityTemplate
         void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
             Clear();
-            
-            foreach (var pair in _serializedList)
+
+            foreach (var pair in serializedList)
             {
                 if (pair.key != null && !ContainsKey(pair.key))
                 {

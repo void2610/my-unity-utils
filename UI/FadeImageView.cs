@@ -1,8 +1,8 @@
+using Coffee.UIEffects;
 using Cysharp.Threading.Tasks;
+using LitMotion;
 using UnityEngine;
 using UnityEngine.UI;
-using Coffee.UIEffects;
-using LitMotion;
 
 namespace Void2610.UnityTemplate
 {

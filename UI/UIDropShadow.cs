@@ -7,7 +7,7 @@ public class UIDropShadow : BaseMeshEffect
 {
     [SerializeField] private Color shadowColor = new(0f, 0f, 0f, 0.5f);
     [SerializeField] private Vector2 shadowDistance = new(1f, -1f);
-    
+
     public Vector2 EffectDistance
     {
         set
@@ -17,10 +17,10 @@ public class UIDropShadow : BaseMeshEffect
         }
     }
 
+    private static readonly List<UIDropShadow> _tempShadowList = new();
+
     public int iterations = 5;
     public Vector2 shadowSpread = Vector2.one;
-
-    private static readonly List<UIDropShadow> _tempShadowList = new();
 
     public override void ModifyMesh(VertexHelper vh)
     {

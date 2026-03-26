@@ -1,11 +1,12 @@
+using LitMotion;
+using LitMotion.Extensions;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using LitMotion;
-using LitMotion.Extensions;
 
 namespace Void2610.UnityTemplate
 {
+#pragma warning disable VUA1001
     /// <summary>
     /// ボタン選択/ホバー時の背景グロー効果を管理するコンポーネント
     /// キーボード/ゲームパッド選択とマウスホバーの両方に対応
@@ -38,6 +39,28 @@ namespace Void2610.UnityTemplate
         private MotionHandle _currentMotion;
         private bool _isSelected;
         private bool _isHovered;
+
+        /// <summary>
+        /// グローを表示
+        /// </summary>
+        private void ShowGlow()
+        {
+            if (glowImage == null) return;
+
+            _currentMotion.TryCancel();
+            _currentMotion = glowImage.FadeIn(fadeDuration, fadeEase, ignoreTimeScale: ignoreTimeScale);
+        }
+
+        /// <summary>
+        /// グローを非表示
+        /// </summary>
+        private void HideGlow()
+        {
+            if (glowImage == null) return;
+
+            _currentMotion.TryCancel();
+            _currentMotion = glowImage.FadeOut(fadeDuration, fadeEase, ignoreTimeScale: ignoreTimeScale);
+        }
 
         private void Awake()
         {
@@ -92,33 +115,6 @@ namespace Void2610.UnityTemplate
             }
         }
 
-        /// <summary>
-        /// グローを表示
-        /// </summary>
-        private void ShowGlow()
-        {
-            if (glowImage == null) return;
-
-            _currentMotion.TryCancel();
-            _currentMotion = glowImage.FadeIn(fadeDuration, fadeEase, ignoreTimeScale: ignoreTimeScale);
-        }
-
-        /// <summary>
-        /// グローを非表示
-        /// </summary>
-        private void HideGlow()
-        {
-            if (glowImage == null) return;
-
-            _currentMotion.TryCancel();
-            _currentMotion = glowImage.FadeOut(fadeDuration, fadeEase, ignoreTimeScale: ignoreTimeScale);
-        }
-
-        private void OnDestroy()
-        {
-            _currentMotion.TryCancel();
-        }
-
 #if UNITY_EDITOR
         /// <summary>
         /// エディタでの検証
@@ -130,6 +126,12 @@ namespace Void2610.UnityTemplate
                 Debug.LogWarning($"ButtonSelectionGlow: Glow Imageが設定されていません ({gameObject.name})", this);
             }
         }
+
+        private void OnDestroy()
+        {
+            _currentMotion.TryCancel();
+        }
 #endif
     }
+#pragma warning restore VUA1001
 }

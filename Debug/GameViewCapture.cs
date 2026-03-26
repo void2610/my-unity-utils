@@ -40,7 +40,7 @@ namespace Void2610.UnityTemplate
         public void CaptureScreenshot()
         {
             // 保存先フォルダのパスを構築
-            string folderPath = Path.Combine(Application.dataPath, "..", folderName);
+            var folderPath = Path.Combine(Application.dataPath, "..", folderName);
 
             // フォルダが存在しない場合は作成
             if (!Directory.Exists(folderPath))
@@ -49,8 +49,8 @@ namespace Void2610.UnityTemplate
             }
 
             // ファイル名を生成（タイムスタンプ付き）
-            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-            string fileName = $"{fileNamePrefix}_{timestamp}.png";
+            var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            var fileName = $"{fileNamePrefix}_{timestamp}.png";
             _screenshotPath = Path.Combine(folderPath, fileName);
 
             // スクリーンショットを撮影
@@ -64,7 +64,7 @@ namespace Void2610.UnityTemplate
         /// </summary>
         public void OpenScreenshotFolder()
         {
-            string folderPath = Path.Combine(Application.dataPath, "..", folderName);
+            var folderPath = Path.Combine(Application.dataPath, "..", folderName);
             if (Directory.Exists(folderPath))
             {
                 Application.OpenURL($"file://{folderPath}");
@@ -84,7 +84,7 @@ namespace Void2610.UnityTemplate
         {
             DrawDefaultInspector();
 
-            GameViewCapture capture = (GameViewCapture)target;
+            var capture = (GameViewCapture)target;
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("操作", EditorStyles.boldLabel);

@@ -27,12 +27,6 @@ namespace Void2610.UnityTemplate
         [SerializeField] private SoundData[] soundData;
         [SerializeField] private int maxChannels = 20;
 
-        private AudioSource[] _seAudioSourceList;
-        private float _seVolume = 0.5f;
-
-        // PlayerPrefsキー
-        private const string SE_VOLUME_KEY = "SeVolume";
-
         /// <summary>
         /// SE音量プロパティ（0.0f～1.0f）
         /// </summary>
@@ -43,11 +37,43 @@ namespace Void2610.UnityTemplate
             {
                 _seVolume = Mathf.Clamp01(value);
                 if (_seVolume <= 0.0f) _seVolume = 0.0001f;
-                
+
                 seMixerGroup.audioMixer.SetFloat("SeVolume", Mathf.Log10(_seVolume) * 20);
                 PlayerPrefs.SetFloat(SE_VOLUME_KEY, _seVolume);
             }
         }
+
+        // PlayerPrefsキー
+        private const string SE_VOLUME_KEY = "SeVolume";
+
+        private AudioSource[] _seAudioSourceList;
+        private float _seVolume = 0.5f;
+
+        /// <summary>
+        /// 遅延してSEを再生
+        /// </summary>
+        /// <param name="seName">SE名</param>
+        /// <param name="delayTime">遅延時間（秒）</param>
+        /// <param name="volume">音量倍率</param>
+        /// <param name="pitch">ピッチ</param>
+        /// <param name="important">重要なSEフラグ</param>
+        public void WaitAndPlaySe(string seName, float delayTime, float volume = 1.0f, float pitch = 1.0f, bool important = false) => WaitAndPlaySeAsync(seName, delayTime, volume, pitch, important).Forget();
+
+        /// <summary>
+        /// 遅延してAudioClipを再生
+        /// </summary>
+        /// <param name="clip">再生するAudioClip</param>
+        /// <param name="delayTime">遅延時間（秒）</param>
+        /// <param name="volume">音量倍率</param>
+        /// <param name="pitch">ピッチ</param>
+        /// <param name="important">重要なSEフラグ</param>
+        public void WaitAndPlaySe(AudioClip clip, float delayTime, float volume = 1.0f, float pitch = 1.0f, bool important = false) => WaitAndPlaySeAsync(clip, delayTime, volume, pitch, important).Forget();
+
+        /// <summary>
+        /// 現在再生中のSE数を取得
+        /// </summary>
+        /// <returns>再生中のSE数</returns>
+        public int GetPlayingSeCount() => _seAudioSourceList.Count(audioSource => audioSource.isPlaying);
 
         /// <summary>
         /// AudioClipを直接指定してSEを再生
@@ -87,8 +113,8 @@ namespace Void2610.UnityTemplate
         {
             var data = soundData.FirstOrDefault(t => t.name == seName);
             var audioSource = GetAvailableAudioSource(important);
-            
-            if (data == null) 
+
+            if (data == null)
             {
                 Debug.LogWarning($"SE '{seName}' が見つかりません。");
                 return;
@@ -97,36 +123,10 @@ namespace Void2610.UnityTemplate
 
             audioSource.clip = data.audioClip;
             audioSource.volume = data.volume * volume;
-            
+
             // ピッチがマイナスの場合はランダム化
             audioSource.pitch = pitch < 0.0f ? UnityEngine.Random.Range(0.8f, 1.2f) : pitch;
             audioSource.Play();
-        }
-
-        /// <summary>
-        /// 遅延してSEを再生
-        /// </summary>
-        /// <param name="seName">SE名</param>
-        /// <param name="delayTime">遅延時間（秒）</param>
-        /// <param name="volume">音量倍率</param>
-        /// <param name="pitch">ピッチ</param>
-        /// <param name="important">重要なSEフラグ</param>
-        public void WaitAndPlaySe(string seName, float delayTime, float volume = 1.0f, float pitch = 1.0f, bool important = false)
-        {
-            WaitAndPlaySeAsync(seName, delayTime, volume, pitch, important).Forget();
-        }
-
-        /// <summary>
-        /// 遅延してAudioClipを再生
-        /// </summary>
-        /// <param name="clip">再生するAudioClip</param>
-        /// <param name="delayTime">遅延時間（秒）</param>
-        /// <param name="volume">音量倍率</param>
-        /// <param name="pitch">ピッチ</param>
-        /// <param name="important">重要なSEフラグ</param>
-        public void WaitAndPlaySe(AudioClip clip, float delayTime, float volume = 1.0f, float pitch = 1.0f, bool important = false)
-        {
-            WaitAndPlaySeAsync(clip, delayTime, volume, pitch, important).Forget();
         }
 
         /// <summary>
@@ -150,7 +150,7 @@ namespace Void2610.UnityTemplate
         public void StopSe(AudioClip clip)
         {
             if (!clip) return;
-            
+
             foreach (var audioSource in _seAudioSourceList)
             {
                 if (audioSource.isPlaying && audioSource.clip == clip)
@@ -158,15 +158,6 @@ namespace Void2610.UnityTemplate
                     audioSource.Stop();
                 }
             }
-        }
-
-        /// <summary>
-        /// 現在再生中のSE数を取得
-        /// </summary>
-        /// <returns>再生中のSE数</returns>
-        public int GetPlayingSeCount()
-        {
-            return _seAudioSourceList.Count(audioSource => audioSource.isPlaying);
         }
 
         /// <summary>
@@ -225,7 +216,7 @@ namespace Void2610.UnityTemplate
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     PlaySe(seName, volume, UnityEngine.Random.Range(pitchMin, pitchMax));
-                    await UniTask.Delay(TimeSpan.FromSeconds(interval), ignoreTimeScale? DelayType.UnscaledDeltaTime : DelayType.DeltaTime, cancellationToken: cancellationToken);
+                    await UniTask.Delay(TimeSpan.FromSeconds(interval), ignoreTimeScale ? DelayType.UnscaledDeltaTime : DelayType.DeltaTime, cancellationToken: cancellationToken);
                 }
             }
             catch (OperationCanceledException) { }
@@ -259,7 +250,7 @@ namespace Void2610.UnityTemplate
             // 使用中でないAudioSourceを探す
             var unusedAudioSource = _seAudioSourceList.FirstOrDefault(t => !t.isPlaying);
             if (unusedAudioSource) return unusedAudioSource;
-            
+
             // importantフラグがtrueの場合、強制的に最初のAudioSourceを使用
             if (important)
             {
@@ -267,7 +258,7 @@ namespace Void2610.UnityTemplate
                 forcedAudioSource.Stop(); // 現在の再生を停止
                 return forcedAudioSource;
             }
-            
+
             // 利用可能なAudioSourceがない場合はnullを返す
             return null;
         }
@@ -275,7 +266,7 @@ namespace Void2610.UnityTemplate
         protected override void Awake()
         {
             base.Awake();
-            
+
             // AudioSourceリストを初期化
             _seAudioSourceList = new AudioSource[maxChannels];
             for (var i = 0; i < _seAudioSourceList.Length; ++i)
@@ -284,12 +275,12 @@ namespace Void2610.UnityTemplate
                 _seAudioSourceList[i].outputAudioMixerGroup = seMixerGroup;
                 _seAudioSourceList[i].playOnAwake = false;
             }
-            
+
             // 保存された音量を読み込み
             _seVolume = PlayerPrefs.GetFloat(SE_VOLUME_KEY, 0.5f);
             SeVolume = _seVolume;
         }
-        
+
         private void Start()
         {
             seMixerGroup.audioMixer.SetFloat("SeVolume", Mathf.Log10(_seVolume) * 20);

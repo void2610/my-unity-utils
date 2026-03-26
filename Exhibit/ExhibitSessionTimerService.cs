@@ -57,6 +57,9 @@ namespace Void2610.UnityTemplate
             _idleDetector.ResetIdleTimer();
         }
 
-        public void Start() => _sessionStartTime = Time.realtimeSinceStartup;
+        public void Start()
+        {
+            _sessionStartTime = Time.realtimeSinceStartup;
+        }
     }
 }

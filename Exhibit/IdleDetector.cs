@@ -46,15 +46,15 @@ namespace Void2610.UnityTemplate
             }
         }
 
+        private void OnActiveSceneChanged(Scene previousScene, Scene nextScene)
+        {
+            ResetIdleTimer();
+        }
+
         public void Dispose()
         {
             InputSystem.onEvent -= OnInputEvent;
             SceneManager.activeSceneChanged -= OnActiveSceneChanged;
-        }
-
-        private void OnActiveSceneChanged(Scene previousScene, Scene nextScene)
-        {
-            ResetIdleTimer();
         }
     }
 }

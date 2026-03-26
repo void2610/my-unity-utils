@@ -1,7 +1,7 @@
+using System.Collections.Generic;
+using LitMotion;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using LitMotion;
-using System.Collections.Generic;
 
 namespace Void2610.UnityTemplate
 {
@@ -18,26 +18,6 @@ namespace Void2610.UnityTemplate
 
         private float _defaultScale = 1.0f;
         private readonly List<MotionHandle> _motionHandles = new();
-
-        /// <summary>
-        /// 選択時のアニメーション
-        /// </summary>
-        public void OnSelect(BaseEventData eventData)
-        {
-            CancelAllMotions();
-            var handle = transform.ScaleTo(Vector3.one * _defaultScale * scale, duration, easeType, ignoreTimeScale: true);
-            _motionHandles.Add(handle);
-        }
-
-        /// <summary>
-        /// 選択解除時のアニメーション
-        /// </summary>
-        public void OnDeselect(BaseEventData eventData)
-        {
-            CancelAllMotions();
-            var handle = transform.ScaleTo(Vector3.one * _defaultScale, duration, easeType, ignoreTimeScale: true);
-            _motionHandles.Add(handle);
-        }
 
         /// <summary>
         /// スケールを元に戻す
@@ -93,6 +73,26 @@ namespace Void2610.UnityTemplate
                 handle.TryCancel();
             }
             _motionHandles.Clear();
+        }
+
+        /// <summary>
+        /// 選択時のアニメーション
+        /// </summary>
+        public void OnSelect(BaseEventData eventData)
+        {
+            CancelAllMotions();
+            var handle = transform.ScaleTo(Vector3.one * _defaultScale * scale, duration, easeType, ignoreTimeScale: true);
+            _motionHandles.Add(handle);
+        }
+
+        /// <summary>
+        /// 選択解除時のアニメーション
+        /// </summary>
+        public void OnDeselect(BaseEventData eventData)
+        {
+            CancelAllMotions();
+            var handle = transform.ScaleTo(Vector3.one * _defaultScale, duration, easeType, ignoreTimeScale: true);
+            _motionHandles.Add(handle);
         }
 
         private void Awake()

@@ -35,12 +35,6 @@ namespace Void2610.UnityTemplate
 
         private TextMeshProUGUI _text;
 
-        private void Awake()
-        {
-            _text = GetComponent<TextMeshProUGUI>();
-            UpdateVersionText();
-        }
-
         /// <summary>
         /// バージョンテキストを更新
         /// </summary>
@@ -56,6 +50,12 @@ namespace Void2610.UnityTemplate
 
             // フォーマットに従って表示
             _text.text = string.Format(versionFormat, version);
+        }
+
+        private void Awake()
+        {
+            _text = GetComponent<TextMeshProUGUI>();
+            UpdateVersionText();
         }
 
 #if UNITY_EDITOR

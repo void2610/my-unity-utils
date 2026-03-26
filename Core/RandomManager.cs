@@ -15,10 +15,10 @@ public class RandomManager
     private string _seedText;
     private Random _random;
     private ILogger _logger;
-    
-    public string GetSeedText() => _seedText;
 
     private RandomManager() { }
+
+    public string GetSeedText() => _seedText;
 
     // public メソッド
     /// <summary>

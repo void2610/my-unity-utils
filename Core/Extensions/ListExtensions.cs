@@ -21,7 +21,7 @@ namespace Void2610.UnityTemplate
             }
 
             Debug.Log($"リストの内容 ({list.Count}個の要素):");
-            for (int i = 0; i < list.Count; i++)
+            for (var i = 0; i < list.Count; i++)
             {
                 Debug.Log($"[{i}] {list[i]}");
             }
@@ -35,7 +35,7 @@ namespace Void2610.UnityTemplate
             if (list == null || list.Count == 0)
                 throw new ArgumentException("リストが空またはnullです");
 
-            float totalWeight = 0f;
+            var totalWeight = 0f;
             foreach (var item in list)
             {
                 totalWeight += weightSelector(item);

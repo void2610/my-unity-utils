@@ -3,6 +3,7 @@ using UnityEngine.UI;
 
 namespace Void2610.UnityTemplate
 {
+#pragma warning disable VUA1001
     /// <summary>
     /// UI Canvas上でカスタムラインを描画するコンポーネント
     /// データ可視化、ミニマップ、手描き風UI効果などに使用可能
@@ -52,6 +53,44 @@ namespace Void2610.UnityTemplate
         {
             thickness = newThickness;
             SetVerticesDirty();
+        }
+
+        protected override void OnPopulateMesh(VertexHelper vh)
+        {
+            vh.Clear();
+
+            if (points == null || points.Length < 2)
+                return;
+
+            // ライン全体の長さを計算
+            var totalLength = 0f;
+            for (var i = 0; i < points.Length - 1; i++)
+            {
+                totalLength += Vector2.Distance(points[i], points[i + 1]);
+            }
+
+            // 各セグメントのU座標を計算しながら描画
+            var currentLength = 0f;
+            for (var i = 0; i < points.Length - 1; i++)
+            {
+                var segmentLength = Vector2.Distance(points[i], points[i + 1]);
+                var u1 = totalLength > 0 ? currentLength / totalLength : 0f;
+                var u2 = totalLength > 0 ? (currentLength + segmentLength) / totalLength : 1f;
+
+                CreateLineSegment(points[i], points[i + 1], vh, u1, u2);
+                currentLength += segmentLength;
+
+                var index = i * 5;
+
+                vh.AddTriangle(index, index + 1, index + 3);
+                vh.AddTriangle(index + 3, index + 2, index);
+
+                if (i != 0)
+                {
+                    vh.AddTriangle(index, index - 1, index - 3);
+                    vh.AddTriangle(index + 1, index - 1, index - 2);
+                }
+            }
         }
 
         /// <summary>
@@ -108,43 +147,6 @@ namespace Void2610.UnityTemplate
         {
             return (float)(Mathf.Atan2(target.y - vertex.y, target.x - vertex.x) * (180 / Mathf.PI));
         }
-
-        protected override void OnPopulateMesh(VertexHelper vh)
-        {
-            vh.Clear();
-
-            if (points == null || points.Length < 2)
-                return;
-
-            // ライン全体の長さを計算
-            float totalLength = 0f;
-            for (int i = 0; i < points.Length - 1; i++)
-            {
-                totalLength += Vector2.Distance(points[i], points[i + 1]);
-            }
-
-            // 各セグメントのU座標を計算しながら描画
-            float currentLength = 0f;
-            for (int i = 0; i < points.Length - 1; i++)
-            {
-                float segmentLength = Vector2.Distance(points[i], points[i + 1]);
-                float u1 = totalLength > 0 ? currentLength / totalLength : 0f;
-                float u2 = totalLength > 0 ? (currentLength + segmentLength) / totalLength : 1f;
-
-                CreateLineSegment(points[i], points[i + 1], vh, u1, u2);
-                currentLength += segmentLength;
-
-                int index = i * 5;
-
-                vh.AddTriangle(index, index + 1, index + 3);
-                vh.AddTriangle(index + 3, index + 2, index);
-
-                if (i != 0)
-                {
-                    vh.AddTriangle(index, index - 1, index - 3);
-                    vh.AddTriangle(index + 1, index - 1, index - 2);
-                }
-            }
-        }
     }
+#pragma warning restore VUA1001
 }

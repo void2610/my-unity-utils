@@ -14,7 +14,7 @@ public sealed class TMProWideShadow : MonoBehaviour
         Auto = 0,
         Manual = 1,
     }
-    
+
     [SerializeField] private Color color = new(0f, 0f, 0f, 0.7f);
     [SerializeField] private Vector2 offset = new(12f, -12f);
     [SerializeField][Min(0f)] private float blurRadius = 24f;

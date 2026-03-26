@@ -24,13 +24,13 @@ namespace Void2610.UnityTemplate
             {
                 var delayTask = UniTask.Delay(delayTime, cancellationToken: cts.Token);
                 var conditionTask = UniTask.WaitUntil(condition, cancellationToken: cts.Token);
-                
+
                 var result = await UniTask.WhenAny(delayTask, conditionTask);
 
                 if (result == 1) cts.Cancel();
             }
         }
-        
+
         /// <summary>
         /// GameObjectにEventTriggerを動的に追加
         /// </summary>
@@ -45,14 +45,14 @@ namespace Void2610.UnityTemplate
             {
                 trigger = obj.AddComponent<EventTrigger>();
             }
-            
-            if(removeExisting) trigger.triggers.RemoveAll(x => x.eventID == type);
-            
-            var entry = new EventTrigger.Entry {eventID = type};
+
+            if (removeExisting) trigger.triggers.RemoveAll(x => x.eventID == type);
+
+            var entry = new EventTrigger.Entry { eventID = type };
             entry.callback.AddListener((data) => action());
             trigger.triggers.Add(entry);
         }
-        
+
         /// <summary>
         /// GameObjectから全てのイベントを削除
         /// </summary>

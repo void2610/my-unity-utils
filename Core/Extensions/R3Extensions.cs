@@ -3,6 +3,7 @@ using R3;
 
 namespace Void2610.UnityTemplate
 {
+#pragma warning disable VUA3001
     /// <summary>
     /// R3（Reactive Extensions）の拡張メソッド
     /// </summary>
@@ -56,4 +57,5 @@ namespace Void2610.UnityTemplate
                 .AsUnitObservable();
         }
     }
+#pragma warning restore VUA3001
 }

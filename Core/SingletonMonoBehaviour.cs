@@ -8,9 +8,6 @@ namespace Void2610.UnityTemplate
     /// </summary>
     public class SingletonMonoBehaviour<T> : MonoBehaviour where T : Component
     {
-        private static T _instance;
-
-
         public static T Instance
         {
             get
@@ -27,7 +24,7 @@ namespace Void2610.UnityTemplate
                 // インスタンスが存在しない場合は自動作成
                 var singletonObject = new GameObject(typeof(T).Name);
                 _instance = singletonObject.AddComponent<T>();
-                
+
                 return _instance;
             }
         }
@@ -36,7 +33,8 @@ namespace Void2610.UnityTemplate
         /// インスタンスが存在するかどうかを返す（作成はしない）
         /// </summary>
         public static bool HasInstance => _instance != null;
-        
+        private static T _instance;
+
         protected bool IsDontDestroyOnLoad = true;
 
         protected virtual void Awake()

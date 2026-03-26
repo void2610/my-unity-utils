@@ -28,6 +28,11 @@ public class TMProArchedText : MonoBehaviour
 
     private TextMeshProUGUI _textComponent;
 
+    /// <summary>
+    /// アーチ表示を強制的に再適用する
+    /// </summary>
+    public void ForceUpdate() => UpdateCurveMesh();
+
     private bool TryGetTextComponent()
     {
         if (_textComponent == null)
@@ -164,11 +169,6 @@ public class TMProArchedText : MonoBehaviour
     {
         _textComponent = GetComponent<TextMeshProUGUI>();
     }
-
-    /// <summary>
-    /// アーチ表示を強制的に再適用する
-    /// </summary>
-    public void ForceUpdate() => UpdateCurveMesh();
 
     private void OnEnable()
     {

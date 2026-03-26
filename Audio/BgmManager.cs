@@ -1,10 +1,10 @@
-using UnityEngine;
-using UnityEngine.Audio;
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
 using LitMotion;
 using LitMotion.Extensions;
+using UnityEngine;
+using UnityEngine.Audio;
 using Random = UnityEngine.Random;
 
 namespace Void2610.UnityTemplate
@@ -52,20 +52,6 @@ namespace Void2610.UnityTemplate
         [SerializeField] private float fadeOutTime = 1.0f;
         [SerializeField, Range(0f, 1f)] private float projectMasterVolume = 1.0f;
 
-        private AudioSource _audioSource;
-        private bool _isPlaying;
-        private float _bgmVolume = 1.0f;
-        private SoundData _currentBGM;
-        private MotionHandle _fadeHandle;
-        private MotionHandle _duckingHandle;
-        private float _originalVolume = 1.0f;
-        private bool _currentLoop = true;
-        // イントロループ検知用：ループ開始点を通過済みかどうか
-        private bool _hasPassedLoopStart = false;
-
-        // PlayerPrefsキー
-        private const string BGM_VOLUME_KEY = "BgmVolume";
-
         /// <summary>
         /// BGM音量プロパティ（0.0f～1.0f）
         /// </summary>
@@ -92,6 +78,72 @@ namespace Void2610.UnityTemplate
         /// </summary>
         public bool IsPlaying => _isPlaying && _audioSource && _audioSource.isPlaying;
 
+        // PlayerPrefsキー
+        private const string BGM_VOLUME_KEY = "BgmVolume";
+
+        private AudioSource _audioSource;
+        private bool _isPlaying;
+        private float _bgmVolume = 1.0f;
+        private SoundData _currentBGM;
+        private MotionHandle _fadeHandle;
+        private MotionHandle _duckingHandle;
+        private float _originalVolume = 1.0f;
+        private bool _currentLoop = true;
+        // イントロループ検知用：ループ開始点を通過済みかどうか
+        private bool _hasPassedLoopStart = false;
+
+        /// <summary>
+        /// 停止
+        /// </summary>
+        public UniTask Stop() => Stop(fadeOutTime);
+
+        /// <summary>
+        /// 名前を指定してBGMを再生
+        /// </summary>
+        /// <param name="bgmName">BGM名</param>
+        public void PlayBGM(string bgmName) => PlayBGMInternal(bgmName, fadeOutTime, fadeInTime, true);
+
+        /// <summary>
+        /// 名前を指定してBGMを再生
+        /// </summary>
+        /// <param name="bgmName">BGM名</param>
+        /// <param name="fadeDuration">フェード時間</param>
+        public void PlayBGM(string bgmName, float fadeDuration) => PlayBGMInternal(bgmName, fadeDuration, fadeDuration, true);
+
+        /// <summary>
+        /// 名前を指定してBGMを再生
+        /// </summary>
+        /// <param name="bgmName">BGM名</param>
+        /// <param name="fadeOutDuration">フェードアウト時間</param>
+        /// <param name="fadeInDuration">フェードイン時間</param>
+        public void PlayBGM(string bgmName, float fadeOutDuration, float fadeInDuration) => PlayBGMInternal(bgmName, fadeOutDuration, fadeInDuration, true);
+
+        public void PlayBGM(string bgmName, float fadeOutDuration, float fadeInDuration, bool loop) => PlayBGMInternal(bgmName, fadeOutDuration, fadeInDuration, loop);
+
+        /// <summary>
+        /// カテゴリからランダムにBGMを再生
+        /// </summary>
+        /// <param name="bgmType">BGMカテゴリ</param>
+        public void PlayRandomBGM(BgmType bgmType) => PlayRandomBGM(bgmType, fadeOutTime, fadeInTime);
+
+        /// <summary>
+        /// カテゴリからランダムにBGMを再生
+        /// </summary>
+        /// <param name="bgmType">BGMカテゴリ</param>
+        /// <param name="fadeDuration">フェード時間</param>
+        public void PlayRandomBGM(BgmType bgmType, float fadeDuration) => PlayRandomBGM(bgmType, fadeDuration, fadeDuration);
+
+        /// <summary>
+        /// 全BGMからランダム再生
+        /// </summary>
+        public void PlayRandomBGM() => PlayRandomBGM(fadeOutTime, fadeInTime);
+
+        /// <summary>
+        /// 全BGMからランダム再生
+        /// </summary>
+        /// <param name="fadeDuration">フェード時間</param>
+        public void PlayRandomBGM(float fadeDuration) => PlayRandomBGM(fadeDuration, fadeDuration);
+
         /// <summary>
         /// 再生を再開
         /// </summary>
@@ -101,7 +153,7 @@ namespace Void2610.UnityTemplate
 
             _isPlaying = true;
             _audioSource.Play();
-            
+
             _fadeHandle.TryCancel();
             _fadeHandle = LMotion.Create(_audioSource.volume, _currentBGM.volume, fadeInTime)
                 .WithEase(Ease.InQuad)
@@ -117,14 +169,6 @@ namespace Void2610.UnityTemplate
         {
             _isPlaying = false;
             PauseInternal().Forget();
-        }
-
-        /// <summary>
-        /// 停止
-        /// </summary>
-        public UniTask Stop()
-        {
-            return Stop(fadeOutTime);
         }
 
         /// <summary>
@@ -184,72 +228,6 @@ namespace Void2610.UnityTemplate
         }
 
         /// <summary>
-        /// 名前を指定してBGMを再生
-        /// </summary>
-        /// <param name="bgmName">BGM名</param>
-        public void PlayBGM(string bgmName)
-        {
-            PlayBGMInternal(bgmName, fadeOutTime, fadeInTime, true);
-        }
-
-        /// <summary>
-        /// 名前を指定してBGMを再生
-        /// </summary>
-        /// <param name="bgmName">BGM名</param>
-        /// <param name="fadeDuration">フェード時間</param>
-        public void PlayBGM(string bgmName, float fadeDuration)
-        {
-            PlayBGMInternal(bgmName, fadeDuration, fadeDuration, true);
-        }
-
-        /// <summary>
-        /// 名前を指定してBGMを再生
-        /// </summary>
-        /// <param name="bgmName">BGM名</param>
-        /// <param name="fadeOutDuration">フェードアウト時間</param>
-        /// <param name="fadeInDuration">フェードイン時間</param>
-        public void PlayBGM(string bgmName, float fadeOutDuration, float fadeInDuration)
-        {
-            PlayBGMInternal(bgmName, fadeOutDuration, fadeInDuration, true);
-        }
-
-        public void PlayBGM(string bgmName, float fadeOutDuration, float fadeInDuration, bool loop)
-        {
-            PlayBGMInternal(bgmName, fadeOutDuration, fadeInDuration, loop);
-        }
-
-        private void PlayBGMInternal(string bgmName, float fadeOutDuration, float fadeInDuration, bool loop)
-        {
-            var data = bgmList.FirstOrDefault(t => t.name == bgmName);
-            if (data == null)
-            {
-                Debug.LogError($"BGM '{bgmName}' が見つかりません。");
-                return;
-            }
-            
-            PlayBGMInternal(data, fadeOutDuration, fadeInDuration, loop).Forget();
-        }
-
-        /// <summary>
-        /// カテゴリからランダムにBGMを再生
-        /// </summary>
-        /// <param name="bgmType">BGMカテゴリ</param>
-        public void PlayRandomBGM(BgmType bgmType)
-        {
-            PlayRandomBGM(bgmType, fadeOutTime, fadeInTime);
-        }
-
-        /// <summary>
-        /// カテゴリからランダムにBGMを再生
-        /// </summary>
-        /// <param name="bgmType">BGMカテゴリ</param>
-        /// <param name="fadeDuration">フェード時間</param>
-        public void PlayRandomBGM(BgmType bgmType, float fadeDuration)
-        {
-            PlayRandomBGM(bgmType, fadeDuration, fadeDuration);
-        }
-
-        /// <summary>
         /// カテゴリからランダムにBGMを再生
         /// </summary>
         /// <param name="bgmType">BGMカテゴリ</param>
@@ -258,36 +236,19 @@ namespace Void2610.UnityTemplate
         public void PlayRandomBGM(BgmType bgmType, float fadeOutDuration, float fadeInDuration)
         {
             if (bgmList.Count == 0) return;
-            
+
             var targetBgmList = bgmList.FindAll(x => x.bgmType == bgmType);
-            if (targetBgmList.Count == 0) 
+            if (targetBgmList.Count == 0)
             {
                 Debug.LogWarning($"BGMタイプ '{bgmType}' のBGMが見つかりません。");
                 return;
             }
-            
+
             // 同じタイプで同じBGMが再生中の場合はスキップ
             if (_currentBGM != null && _currentBGM.bgmType == bgmType) return;
-            
+
             var data = targetBgmList[Random.Range(0, targetBgmList.Count)];
             PlayBGMInternal(data, fadeOutDuration, fadeInDuration, true).Forget();
-        }
-
-        /// <summary>
-        /// 全BGMからランダム再生
-        /// </summary>
-        public void PlayRandomBGM()
-        {
-            PlayRandomBGM(fadeOutTime, fadeInTime);
-        }
-
-        /// <summary>
-        /// 全BGMからランダム再生
-        /// </summary>
-        /// <param name="fadeDuration">フェード時間</param>
-        public void PlayRandomBGM(float fadeDuration)
-        {
-            PlayRandomBGM(fadeDuration, fadeDuration);
         }
 
         /// <summary>
@@ -300,6 +261,18 @@ namespace Void2610.UnityTemplate
             if (bgmList.Count == 0) return;
             var data = bgmList[Random.Range(0, bgmList.Count)];
             PlayBGMInternal(data, fadeOutDuration, fadeInDuration, true).Forget();
+        }
+
+        private void PlayBGMInternal(string bgmName, float fadeOutDuration, float fadeInDuration, bool loop)
+        {
+            var data = bgmList.FirstOrDefault(t => t.name == bgmName);
+            if (data == null)
+            {
+                Debug.LogError($"BGM '{bgmName}' が見つかりません。");
+                return;
+            }
+
+            PlayBGMInternal(data, fadeOutDuration, fadeInDuration, loop).Forget();
         }
 
         /// <summary>
@@ -351,7 +324,7 @@ namespace Void2610.UnityTemplate
                 .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
                 .BindToVolume(_audioSource)
                 .ToUniTask();
-            
+
             _audioSource.Stop();
         }
 
@@ -371,7 +344,7 @@ namespace Void2610.UnityTemplate
                 .ToUniTask();
 
             if (!_isPlaying || _currentBGM != bgmToLoop) return;
-            
+
             _audioSource.Stop();
             PlayBGM(bgmToLoop.name, fadeOutTime, fadeInTime, true);
         }
@@ -403,7 +376,7 @@ namespace Void2610.UnityTemplate
             _bgmVolume = PlayerPrefs.GetFloat(BGM_VOLUME_KEY, 1.0f);
             BgmVolume = _bgmVolume;
         }
-        
+
         private void Start()
         {
             _audioSource.volume = _currentBGM == null ? 0 : _audioSource.volume;
@@ -416,7 +389,7 @@ namespace Void2610.UnityTemplate
                 PlayRandomBGM();
             }
         }
-        
+
         private void Update()
         {
             if (!_isPlaying || _currentBGM == null) return;

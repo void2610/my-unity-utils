@@ -10,6 +10,8 @@ namespace Void2610.UnityTemplate
         private const string TWEET_URL = "https://x.com/intent/tweet";
         private const string IMGBB_UPLOAD_URL = "https://api.imgbb.com/1/upload";
 
+        public static void OpenTweet() => Application.OpenURL(TWEET_URL);
+
         public static void OpenTweet(string tweetText)
         {
             var encodedText = Uri.EscapeDataString(tweetText);
@@ -23,11 +25,6 @@ namespace Void2610.UnityTemplate
             var encodedUrl = Uri.EscapeDataString(linkUrl);
             var url = $"{TWEET_URL}?text={encodedText}&url={encodedUrl}";
             Application.OpenURL(url);
-        }
-
-        public static void OpenTweet()
-        {
-            Application.OpenURL(TWEET_URL);
         }
 
         public static async UniTask OpenTweetWithScreenshotAsync(string tweetText, string imgBBApiKey)

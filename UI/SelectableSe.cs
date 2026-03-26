@@ -4,6 +4,7 @@ using Random = UnityEngine.Random;
 
 namespace Void2610.UnityTemplate
 {
+#pragma warning disable VUA1001
     /// <summary>
     /// Selectableに効果音を自動追加するコンポーネント
     /// EventSystemの選択・決定イベントに応じて効果音を再生
@@ -29,16 +30,6 @@ namespace Void2610.UnityTemplate
         [SerializeField] private bool isImportantButton;
 
         private float _lastSelectTime;
-
-        /// <summary>
-        /// 選択時
-        /// </summary>
-        public void OnSelect(BaseEventData eventData) => PlaySelectSound();
-
-        /// <summary>
-        /// 決定時
-        /// </summary>
-        public void OnSubmit(BaseEventData eventData) => PlaySubmitSound();
 
         /// <summary>
         /// 選択音を手動で再生
@@ -121,6 +112,23 @@ namespace Void2610.UnityTemplate
             if (Application.isPlaying)
                 PlaySubmitSound();
         }
+
+        /// <summary>
+        /// 選択時
+        /// </summary>
+        public void OnSelect(BaseEventData eventData)
+        {
+            PlaySelectSound();
+        }
+
+        /// <summary>
+        /// 決定時
+        /// </summary>
+        public void OnSubmit(BaseEventData eventData)
+        {
+            PlaySubmitSound();
+        }
 #endif
     }
+#pragma warning restore VUA1001
 }

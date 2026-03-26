@@ -22,15 +22,6 @@ namespace Void2610.UnityTemplate
     {
         public static RandomManager Instance { get; } = new RandomManager();
 
-        private string _seedText;
-        private Random _random;
-        private bool _enableLogging = false;
-
-        /// <summary>
-        /// 現在のシード文字列を取得
-        /// </summary>
-        public string GetSeedText() => _seedText;
-
         /// <summary>
         /// ログ出力の有効/無効を設定
         /// </summary>
@@ -40,7 +31,16 @@ namespace Void2610.UnityTemplate
             set => _enableLogging = value;
         }
 
+        private string _seedText;
+        private Random _random;
+        private bool _enableLogging = false;
+
         private RandomManager() { }
+
+        /// <summary>
+        /// 現在のシード文字列を取得
+        /// </summary>
+        public string GetSeedText() => _seedText;
 
         /// <summary>
         /// シード値を初期化する

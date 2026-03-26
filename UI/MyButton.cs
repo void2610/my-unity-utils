@@ -1,6 +1,6 @@
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace Void2610.UnityTemplate
 {
@@ -11,9 +11,6 @@ namespace Void2610.UnityTemplate
     /// </summary>
     public class MyButton : Button
     {
-        private bool _isAvailable = true;
-        private bool _forceDisabledVisual = false;
-
         /// <summary>
         /// 独自の使用可否（interactableとは別に制御）
         /// </summary>
@@ -26,6 +23,31 @@ namespace Void2610.UnityTemplate
                 _isAvailable = value;
                 UpdateVisualState();
             }
+        }
+        private bool _isAvailable = true;
+        private bool _forceDisabledVisual = false;
+
+        protected override void DoStateTransition(SelectionState state, bool instant)
+        {
+            if (_forceDisabledVisual)
+            {
+                base.DoStateTransition(SelectionState.Disabled, instant);
+                return;
+            }
+
+            base.DoStateTransition(state, instant);
+        }
+
+        /// <summary>
+        /// 見た目を更新する
+        /// </summary>
+        private void UpdateVisualState()
+        {
+            base.interactable = true;
+
+            _forceDisabledVisual = !IsAvailable;
+            var state = _forceDisabledVisual ? SelectionState.Disabled : SelectionState.Normal;
+            DoStateTransition(state, true);
         }
 
         protected override void Awake()
@@ -49,29 +71,6 @@ namespace Void2610.UnityTemplate
         public override void OnSelect(BaseEventData eventData)
         {
             base.OnSelect(eventData);
-        }
-
-        /// <summary>
-        /// 見た目を更新する
-        /// </summary>
-        private void UpdateVisualState()
-        {
-            base.interactable = true;
-
-            _forceDisabledVisual = !IsAvailable;
-            var state = _forceDisabledVisual ? SelectionState.Disabled : SelectionState.Normal;
-            DoStateTransition(state, true);
-        }
-
-        protected override void DoStateTransition(SelectionState state, bool instant)
-        {
-            if (_forceDisabledVisual)
-            {
-                base.DoStateTransition(SelectionState.Disabled, instant);
-                return;
-            }
-
-            base.DoStateTransition(state, instant);
         }
     }
 }

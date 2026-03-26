@@ -9,6 +9,7 @@ using UnityEngine.UI;
 
 namespace Void2610.UnityTemplate
 {
+#pragma warning disable VUA3001
     /// <summary>
     /// LitMotionアニメーションの拡張メソッド
     /// </summary>
@@ -31,7 +32,7 @@ namespace Void2610.UnityTemplate
                 })
                 .AddTo(sr.gameObject);
         }
-        
+
         /// <summary>
         /// SpriteRendererの透明度をLitMotionでフェードアウトさせる
         /// </summary>
@@ -49,7 +50,7 @@ namespace Void2610.UnityTemplate
                 })
                 .AddTo(sr.gameObject);
         }
-        
+
         /// <summary>
         /// Imageの透明度をLitMotionでフェードインさせる
         /// </summary>
@@ -455,7 +456,7 @@ namespace Void2610.UnityTemplate
                 })
                 .AddTo(rectTrans.gameObject);
         }
-        
+
         /// <summary>
         /// Materialのfloatプロパティをアニメーションする
         /// </summary>
@@ -523,4 +524,5 @@ namespace Void2610.UnityTemplate
             }
         }
     }
+#pragma warning restore VUA3001
 }

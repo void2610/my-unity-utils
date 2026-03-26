@@ -73,7 +73,7 @@ public class TMProBoilEffect : MonoBehaviour
             _text.UpdateGeometry(textInfo.meshInfo[i].mesh, i);
         }
     }
-    
+
     private void Awake()
     {
         _text = GetComponent<TextMeshProUGUI>();

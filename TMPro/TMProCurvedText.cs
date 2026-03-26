@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -12,9 +13,13 @@ using UnityEditor;
 [RequireComponent(typeof(TextMeshProUGUI))]
 public class TMProCurvedText : MonoBehaviour
 {
+#pragma warning disable IDE1006
     [Header("カーブ")]
-    [SerializeField] private AnimationCurve _vertexCurve = new(new Keyframe(0, 0), new Keyframe(0.5f, 0.25f), new Keyframe(1, 0f));
-    [SerializeField] private float _curveScale = 100.0f;
+    [FormerlySerializedAs("_vertexCurve")]
+    [SerializeField] private AnimationCurve vertexCurve = new(new Keyframe(0, 0), new Keyframe(0.5f, 0.25f), new Keyframe(1, 0f));
+    [FormerlySerializedAs("_curveScale")]
+    [SerializeField] private float curveScale = 100.0f;
+#pragma warning restore IDE1006
 
     private TextMeshProUGUI _textComponent;
 
@@ -55,8 +60,8 @@ public class TMProCurvedText : MonoBehaviour
             // カーブの傾きに沿って文字サイズをかけて傾き量を計算
             var x0 = (offsetToMidBaseline.x - boundsMinX) / (boundsMaxX - boundsMinX);
             var x1 = x0 + 0.0001f;
-            var y0 = _vertexCurve.Evaluate(x0) * _curveScale;
-            var y1 = _vertexCurve.Evaluate(x1) * _curveScale;
+            var y0 = vertexCurve.Evaluate(x0) * curveScale;
+            var y1 = vertexCurve.Evaluate(x1) * curveScale;
             var charSize = boundsMaxX - boundsMinX;
             var horizontal = new Vector3(1, 0, 0);
             var tangent = new Vector3(charSize * 0.0001f, y1 - y0);

@@ -52,15 +52,6 @@ namespace Void2610.UnityTemplate
         private static GameObject _irisShotObj;
 
         /// <summary>
-        /// シーン遷移時にクリアする
-        /// </summary>
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void Init()
-        {
-            _irisShotObj = null;
-        }
-
-        /// <summary>
         /// アイリスアウト（画面を閉じる）
         /// 大きな円から小さな円へとスケールダウンし、最終的に画面全体が黒くなる
         /// </summary>
@@ -159,6 +150,15 @@ namespace Void2610.UnityTemplate
             Debug.LogError("IrisShot requires Addressables. Please install the Addressables package and add 'ADDRESSABLES' to Scripting Define Symbols.");
             return null;
 #endif
+        }
+
+        /// <summary>
+        /// シーン遷移時にクリアする
+        /// </summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void Init()
+        {
+            _irisShotObj = null;
         }
     }
 }

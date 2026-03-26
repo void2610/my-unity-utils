@@ -14,7 +14,7 @@ namespace Void2610.UnityTemplate
     {
         private readonly List<CanvasGroup> _canvasGroups;
         private readonly Dictionary<CanvasGroup, MotionHandle> _activeMotions = new();
-        
+
         /// <summary>
         /// コンストラクタ
         /// </summary>
@@ -23,7 +23,7 @@ namespace Void2610.UnityTemplate
         public CanvasGroupSwitcher(List<CanvasGroup> canvasGroups, string initialVisibleCanvas = null)
         {
             _canvasGroups = canvasGroups;
-            
+
             foreach (var cg in _canvasGroups)
             {
                 if (cg.name == initialVisibleCanvas)
@@ -39,20 +39,20 @@ namespace Void2610.UnityTemplate
                 }
             }
         }
-        
+
         /// <summary>
         /// 現在表示されているCanvasGroupのGameObjectを取得
         /// </summary>
         /// <returns>表示中のCanvasGroupのGameObject（なければnull）</returns>
         public GameObject GetTopCanvasGroup() => _canvasGroups.Find(c => c.alpha > 0)?.gameObject;
-        
+
         /// <summary>
         /// CanvasGroupの表示状態を切り替え（同期）
         /// </summary>
         /// <param name="canvasName">対象CanvasGroup名</param>
         /// <param name="enable">表示するか</param>
         public void EnableCanvasGroup(string canvasName, bool enable) => EnableCanvasGroupAsync(canvasName, enable).Forget();
-        
+
         /// <summary>
         /// CanvasGroupの表示状態を切り替え（非同期）
         /// </summary>
@@ -64,23 +64,23 @@ namespace Void2610.UnityTemplate
         {
             var cg = _canvasGroups.Find(c => c.name == canvasName);
             if (!cg) return;
-            
+
             // 進行中のアニメーションをキャンセル
             if (_activeMotions.TryGetValue(cg, out var existingMotion))
             {
                 existingMotion.TryCancel();
             }
-            
+
             if (enable)
             {
                 cg.interactable = true;
                 cg.blocksRaycasts = true;
-                
+
                 var motion = LMotion.Create(cg.alpha, 1f, duration)
                     .WithEase(Ease.OutQuad)
                     .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
                     .Bind(alpha => cg.alpha = alpha);
-                    
+
                 _activeMotions[cg] = motion;
                 await motion.ToUniTask();
             }
@@ -90,18 +90,18 @@ namespace Void2610.UnityTemplate
                     .WithEase(Ease.OutQuad)
                     .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
                     .Bind(alpha => cg.alpha = alpha);
-                    
+
                 _activeMotions[cg] = motion;
                 await motion.ToUniTask();
-                
+
                 cg.interactable = false;
                 cg.blocksRaycasts = false;
             }
-            
+
             // アニメーション完了後、辞書から削除
             _activeMotions.Remove(cg);
         }
-        
+
         /// <summary>
         /// 指定したCanvasGroupの表示状態をトグル切り替え
         /// </summary>
@@ -113,7 +113,7 @@ namespace Void2610.UnityTemplate
             EnableCanvasGroupAsync(canvasName, newState).Forget();
             return newState;
         }
-        
+
         /// <summary>
         /// 指定したCanvasGroup以外をすべて非表示にする
         /// </summary>
@@ -125,7 +125,7 @@ namespace Void2610.UnityTemplate
                 EnableCanvasGroup(cg.name, cg.name == canvasName);
             }
         }
-        
+
         /// <summary>
         /// 指定したCanvasGroup以外をすべて非表示にする（非同期）
         /// </summary>
@@ -141,7 +141,7 @@ namespace Void2610.UnityTemplate
             }
             await UniTask.WhenAll(tasks);
         }
-        
+
         /// <summary>
         /// すべてのCanvasGroupを非表示にする
         /// </summary>
@@ -152,7 +152,7 @@ namespace Void2610.UnityTemplate
                 EnableCanvasGroup(cg.name, false);
             }
         }
-        
+
         /// <summary>
         /// すべてのCanvasGroupを非表示にする（非同期）
         /// </summary>
@@ -167,7 +167,7 @@ namespace Void2610.UnityTemplate
             }
             await UniTask.WhenAll(tasks);
         }
-        
+
         /// <summary>
         /// 指定したCanvasGroupが表示中かどうかを確認
         /// </summary>
@@ -178,7 +178,7 @@ namespace Void2610.UnityTemplate
             var cg = _canvasGroups.Find(c => c.name == canvasName);
             return cg != null && cg.alpha > 0;
         }
-        
+
         /// <summary>
         /// すべてのアニメーションを停止し、リソースをクリーンアップする
         /// </summary>

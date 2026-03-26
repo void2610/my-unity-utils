@@ -23,60 +23,12 @@ public class TMProRollEffect : MonoBehaviour
     private bool _isUpdatingMesh;
     private int _lastSelectionStepIndex = int.MinValue;
 
-    private void Awake()
-    {
-        _text = GetComponent<TextMeshProUGUI>();
-    }
-
-    private void OnEnable()
-    {
-        TMPro_EventManager.TEXT_CHANGED_EVENT.Add(OnTextChanged);
-        Initialize();
-    }
-
-    private void OnDisable()
-    {
-        TMPro_EventManager.TEXT_CHANGED_EVENT.Remove(OnTextChanged);
-        RestoreOriginalMesh();
-    }
-
-    private void OnValidate()
-    {
-        if (!isActiveAndEnabled)
-        {
-            return;
-        }
-
-        Initialize();
-        ApplyEffect();
-    }
-
     /// <summary>
     /// 演出を即時再適用する。
     /// </summary>
     public void ForceUpdateEffect()
     {
         Initialize();
-        ApplyEffect();
-    }
-
-    private void Update()
-    {
-        if (!_isInitialized)
-        {
-            Initialize();
-        }
-
-        if (_text == null || !_isInitialized || _text.textInfo.characterCount == 0)
-        {
-            return;
-        }
-
-        if (_text.havePropertiesChanged)
-        {
-            Initialize();
-        }
-
         ApplyEffect();
     }
 
@@ -378,5 +330,53 @@ public class TMProRollEffect : MonoBehaviour
         var seed = (selectionStepIndex + 1) * multiplier ^ (ordinal + 1) * 19349663;
         seed ^= Mathf.RoundToInt(randomSeedOffset * 1000f) * 83492791;
         return Mathf.Abs(seed % count);
+    }
+
+    private void Awake()
+    {
+        _text = GetComponent<TextMeshProUGUI>();
+    }
+
+    private void OnEnable()
+    {
+        TMPro_EventManager.TEXT_CHANGED_EVENT.Add(OnTextChanged);
+        Initialize();
+    }
+
+    private void OnDisable()
+    {
+        TMPro_EventManager.TEXT_CHANGED_EVENT.Remove(OnTextChanged);
+        RestoreOriginalMesh();
+    }
+
+    private void OnValidate()
+    {
+        if (!isActiveAndEnabled)
+        {
+            return;
+        }
+
+        Initialize();
+        ApplyEffect();
+    }
+
+    private void Update()
+    {
+        if (!_isInitialized)
+        {
+            Initialize();
+        }
+
+        if (_text == null || !_isInitialized || _text.textInfo.characterCount == 0)
+        {
+            return;
+        }
+
+        if (_text.havePropertiesChanged)
+        {
+            Initialize();
+        }
+
+        ApplyEffect();
     }
 }

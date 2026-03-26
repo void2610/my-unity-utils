@@ -102,7 +102,7 @@ namespace Void2610.UnityTemplate.Steam
 
             try
             {
-                #if ENABLE_STEAMWORKS_RESTARTAPPIFNECESSARY
+#if ENABLE_STEAMWORKS_RESTARTAPPIFNECESSARY
                 // Steam以外で起動された場合、Steamクライアントを起動しゲームを再度Steam経由で起動する
                 if (SteamAPI.RestartAppIfNecessary(new AppId_t((uint)appId)))
                 {
@@ -110,7 +110,7 @@ namespace Void2610.UnityTemplate.Steam
                     Application.Quit();
                     return;
                 }
-                #endif
+#endif
             }
             catch (DllNotFoundException e)
             {
@@ -167,9 +167,9 @@ namespace Void2610.UnityTemplate.Steam
         public bool SetStat(string statName, float value) => false;
         public bool AddStat(string statName, int value) => false;
         public bool AddStat(string statName, float value) => false;
+        public bool ResetAllStats(bool achievementsToo = true) => false;
         public bool GetStat(string statName, out int value) { value = 0; return false; }
         public bool GetStat(string statName, out float value) { value = 0f; return false; }
-        public bool ResetAllStats(bool achievementsToo = true) => false;
         public void Tick() { }
         public void Dispose() { }
     }

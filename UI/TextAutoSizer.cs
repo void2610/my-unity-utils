@@ -1,5 +1,5 @@
-using UnityEngine;
 using TMPro;
+using UnityEngine;
 
 namespace Void2610.UnityTemplate
 {
@@ -17,10 +17,10 @@ namespace Void2610.UnityTemplate
         public static void UpdateContentSize(TextMeshProUGUI text)
         {
             if (text == null) return;
-            
+
             UpdateContentSize(text, true);
         }
-        
+
         /// <summary>
         /// TextMeshProの推奨サイズに合わせてコンテンツサイズを更新
         /// </summary>
@@ -29,15 +29,15 @@ namespace Void2610.UnityTemplate
         public static void UpdateContentSize(TextMeshProUGUI text, bool updateParent)
         {
             if (text == null) return;
-            
+
             var preferredHeight = text.GetPreferredValues().y;
             var content = text.GetComponent<RectTransform>();
-            
+
             if (content == null) return;
-            
+
             // テキスト要素のサイズを更新
             content.sizeDelta = new Vector2(content.sizeDelta.x, preferredHeight);
-            
+
             // 親要素のサイズも更新
             if (updateParent && content.parent != null)
             {
@@ -48,7 +48,7 @@ namespace Void2610.UnityTemplate
                 }
             }
         }
-        
+
         /// <summary>
         /// 指定したRectTransformをTextMeshProの内容にフィット
         /// </summary>
@@ -57,11 +57,11 @@ namespace Void2610.UnityTemplate
         public static void FitToContent(RectTransform rectTransform, TextMeshProUGUI text)
         {
             if (rectTransform == null || text == null) return;
-            
+
             var preferredSize = text.GetPreferredValues();
             rectTransform.sizeDelta = preferredSize;
         }
-        
+
         /// <summary>
         /// TextMeshProの幅を固定して高さを自動調整
         /// </summary>
@@ -70,21 +70,21 @@ namespace Void2610.UnityTemplate
         public static void UpdateHeightToFitWidth(TextMeshProUGUI text, float width)
         {
             if (text == null) return;
-            
+
             var rectTransform = text.GetComponent<RectTransform>();
             if (rectTransform == null) return;
-            
+
             // 幅を設定
             rectTransform.sizeDelta = new Vector2(width, rectTransform.sizeDelta.y);
-            
+
             // テキスト更新を強制
             text.ForceMeshUpdate();
-            
+
             // 推奨高さを取得して設定
             var preferredHeight = text.GetPreferredValues(width, 0).y;
             rectTransform.sizeDelta = new Vector2(width, preferredHeight);
         }
-        
+
         /// <summary>
         /// ScrollViewのContent領域をテキストサイズに合わせて調整
         /// </summary>
@@ -94,11 +94,11 @@ namespace Void2610.UnityTemplate
         public static void UpdateScrollViewContent(RectTransform scrollViewContent, TextMeshProUGUI text, float padding = 0f)
         {
             if (scrollViewContent == null || text == null) return;
-            
+
             var preferredHeight = text.GetPreferredValues().y + padding;
             scrollViewContent.sizeDelta = new Vector2(scrollViewContent.sizeDelta.x, preferredHeight);
         }
-        
+
         /// <summary>
         /// 複数のTextMeshProを基準に最大サイズを適用
         /// </summary>
@@ -107,19 +107,19 @@ namespace Void2610.UnityTemplate
         public static void FitToMaxContent(RectTransform targetRect, params TextMeshProUGUI[] texts)
         {
             if (targetRect == null || texts == null || texts.Length == 0) return;
-            
-            float maxWidth = 0f;
-            float maxHeight = 0f;
-            
+
+            var maxWidth = 0f;
+            var maxHeight = 0f;
+
             foreach (var text in texts)
             {
                 if (text == null) continue;
-                
+
                 var preferredSize = text.GetPreferredValues();
                 maxWidth = Mathf.Max(maxWidth, preferredSize.x);
                 maxHeight = Mathf.Max(maxHeight, preferredSize.y);
             }
-            
+
             targetRect.sizeDelta = new Vector2(maxWidth, maxHeight);
         }
     }

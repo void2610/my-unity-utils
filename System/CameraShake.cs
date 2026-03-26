@@ -1,6 +1,6 @@
-using UnityEngine;
-using LitMotion;
 using Cysharp.Threading.Tasks;
+using LitMotion;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace Void2610.UnityTemplate
@@ -12,13 +12,6 @@ namespace Void2610.UnityTemplate
     public class CameraShake : SingletonMonoBehaviour<CameraShake>
     {
         protected MotionHandle ShakeHandle;
-
-        protected override void Awake()
-        {
-            base.Awake();
-            // DontDestroyOnLoadを解除してシーン固有で使用
-            SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetActiveScene());
-        }
 
         /// <summary>
         /// カメラを振動させる（非同期実行）
@@ -52,6 +45,13 @@ namespace Void2610.UnityTemplate
 
             await ShakeHandle.ToUniTask();
             transform.position = startPosition;
+        }
+
+        protected override void Awake()
+        {
+            base.Awake();
+            // DontDestroyOnLoadを解除してシーン固有で使用
+            SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetActiveScene());
         }
 
         protected override void OnDestroy()

@@ -16,7 +16,7 @@ namespace Void2610.UnityTemplate
             if (selectables == null || selectables.Count == 0)
                 return;
 
-            for (int i = 0; i < selectables.Count; i++)
+            for (var i = 0; i < selectables.Count; i++)
             {
                 var selectable = selectables[i];
                 if (selectable == null) continue;
@@ -72,7 +72,7 @@ namespace Void2610.UnityTemplate
             if (selectables == null || selectables.Count == 0 || columns <= 0)
                 return;
 
-            for (int i = 0; i < selectables.Count; i++)
+            for (var i = 0; i < selectables.Count; i++)
             {
                 var selectable = selectables[i];
                 if (selectable == null) continue;
