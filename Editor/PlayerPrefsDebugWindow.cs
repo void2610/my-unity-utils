@@ -14,9 +14,6 @@ namespace Void2610.UnityTemplate.Editor
     /// </summary>
     public sealed class PlayerPrefsDebugWindow : EditorWindow
     {
-        private const string AllAssembliesScope = "All Assemblies";
-        private const string DefaultAssetsAssemblyScope = "Assembly-CSharp";
-
         private enum ValueType
         {
             Int,
@@ -24,11 +21,21 @@ namespace Void2610.UnityTemplate.Editor
             String,
         }
 
+        [SerializeField] private string selectedKey = string.Empty;
+        [SerializeField] private string searchText = string.Empty;
+
         [Serializable]
         private sealed class AssemblyDefinitionData
         {
             public string name;
         }
+        [SerializeField] private string editValue = string.Empty;
+        [SerializeField] private ValueType editType = ValueType.String;
+        [SerializeField] private List<string> selectedAssemblyScopes = new() { ALL_ASSEMBLIES_SCOPE };
+        [SerializeField] private Vector2 keyListScrollPosition;
+        [SerializeField] private Vector2 detailScrollPosition;
+        private const string ALL_ASSEMBLIES_SCOPE = "All Assemblies";
+        private const string DEFAULT_ASSETS_ASSEMBLY_SCOPE = "Assembly-CSharp";
 
         private static readonly Regex ConstStringRegex = new(
             @"const\s+string\s+(?<name>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*""(?<value>(?:\\.|[^""\\])*)""\s*;",
@@ -38,14 +45,6 @@ namespace Void2610.UnityTemplate.Editor
             @"PlayerPrefs\.(?:GetString|GetInt|GetFloat|SetString|SetInt|SetFloat|DeleteKey|HasKey)\s*\(\s*(?:""(?<literal>(?:\\.|[^""\\])*)""|(?<identifier>[A-Za-z_][A-Za-z0-9_]*))",
             RegexOptions.Compiled);
 
-        [SerializeField] private string selectedKey = string.Empty;
-        [SerializeField] private string searchText = string.Empty;
-        [SerializeField] private string editValue = string.Empty;
-        [SerializeField] private ValueType editType = ValueType.String;
-        [SerializeField] private List<string> selectedAssemblyScopes = new() { AllAssembliesScope };
-        [SerializeField] private Vector2 keyListScrollPosition;
-        [SerializeField] private Vector2 detailScrollPosition;
-
         private readonly HashSet<string> _sourceKnownKeys = new(StringComparer.Ordinal);
         private readonly HashSet<string> _existingKeys = new(StringComparer.Ordinal);
         private readonly List<string> _assemblyScopeOptions = new();
@@ -54,24 +53,6 @@ namespace Void2610.UnityTemplate.Editor
         private static void Open()
         {
             GetWindow<PlayerPrefsDebugWindow>("PlayerPrefs Debug");
-        }
-
-        private void OnEnable()
-        {
-            RefreshKnownKeys();
-            if (!string.IsNullOrEmpty(selectedKey))
-            {
-                LoadSelectedKey();
-            }
-        }
-
-        private void OnGUI()
-        {
-            DrawToolbar();
-
-            using var horizontalScope = new EditorGUILayout.HorizontalScope();
-            DrawKeyListPane();
-            DrawDetailPane();
         }
 
         private void DrawToolbar()
@@ -238,10 +219,10 @@ namespace Void2610.UnityTemplate.Editor
 
             var menu = new GenericMenu();
             var allSelected = IsAllAssembliesSelected();
-            menu.AddItem(new GUIContent(AllAssembliesScope), allSelected, () =>
+            menu.AddItem(new GUIContent(ALL_ASSEMBLIES_SCOPE), allSelected, () =>
             {
                 selectedAssemblyScopes.Clear();
-                selectedAssemblyScopes.Add(AllAssembliesScope);
+                selectedAssemblyScopes.Add(ALL_ASSEMBLIES_SCOPE);
                 RefreshKnownKeys();
             });
 
@@ -249,7 +230,7 @@ namespace Void2610.UnityTemplate.Editor
 
             foreach (var scope in _assemblyScopeOptions)
             {
-                if (string.Equals(scope, AllAssembliesScope, StringComparison.Ordinal))
+                if (string.Equals(scope, ALL_ASSEMBLIES_SCOPE, StringComparison.Ordinal))
                 {
                     continue;
                 }
@@ -430,8 +411,8 @@ namespace Void2610.UnityTemplate.Editor
         {
             var scopes = new HashSet<string>(StringComparer.Ordinal)
             {
-                AllAssembliesScope,
-                DefaultAssetsAssemblyScope,
+                ALL_ASSEMBLIES_SCOPE,
+                DEFAULT_ASSETS_ASSEMBLY_SCOPE,
             };
 
             foreach (var assetPath in AssetDatabase.GetAllAssetPaths())
@@ -456,24 +437,24 @@ namespace Void2610.UnityTemplate.Editor
             _assemblyScopeOptions.Clear();
             _assemblyScopeOptions.AddRange(scopes.OrderBy(static scope => scope, StringComparer.Ordinal));
 
-            if (!_assemblyScopeOptions.Contains(AllAssembliesScope))
+            if (!_assemblyScopeOptions.Contains(ALL_ASSEMBLIES_SCOPE))
             {
-                _assemblyScopeOptions.Insert(0, AllAssembliesScope);
+                _assemblyScopeOptions.Insert(0, ALL_ASSEMBLIES_SCOPE);
             }
 
             if (selectedAssemblyScopes.Count == 0)
             {
-                selectedAssemblyScopes.Add(AllAssembliesScope);
+                selectedAssemblyScopes.Add(ALL_ASSEMBLIES_SCOPE);
             }
 
             selectedAssemblyScopes = selectedAssemblyScopes
-                .Where(scope => string.Equals(scope, AllAssembliesScope, StringComparison.Ordinal) || _assemblyScopeOptions.Contains(scope))
+                .Where(scope => string.Equals(scope, ALL_ASSEMBLIES_SCOPE, StringComparison.Ordinal) || _assemblyScopeOptions.Contains(scope))
                 .Distinct(StringComparer.Ordinal)
                 .ToList();
 
             if (selectedAssemblyScopes.Count == 0)
             {
-                selectedAssemblyScopes.Add(AllAssembliesScope);
+                selectedAssemblyScopes.Add(ALL_ASSEMBLIES_SCOPE);
             }
         }
 
@@ -490,7 +471,7 @@ namespace Void2610.UnityTemplate.Editor
 
         private void ToggleAssemblyScope(string scope)
         {
-            selectedAssemblyScopes.RemoveAll(value => string.Equals(value, AllAssembliesScope, StringComparison.Ordinal));
+            selectedAssemblyScopes.RemoveAll(value => string.Equals(value, ALL_ASSEMBLIES_SCOPE, StringComparison.Ordinal));
 
             if (!selectedAssemblyScopes.Remove(scope))
             {
@@ -499,7 +480,7 @@ namespace Void2610.UnityTemplate.Editor
 
             if (selectedAssemblyScopes.Count == 0)
             {
-                selectedAssemblyScopes.Add(AllAssembliesScope);
+                selectedAssemblyScopes.Add(ALL_ASSEMBLIES_SCOPE);
             }
 
             RefreshKnownKeys();
@@ -508,14 +489,14 @@ namespace Void2610.UnityTemplate.Editor
         private bool IsAllAssembliesSelected()
         {
             return selectedAssemblyScopes.Count == 0
-                || selectedAssemblyScopes.Contains(AllAssembliesScope);
+                || selectedAssemblyScopes.Contains(ALL_ASSEMBLIES_SCOPE);
         }
 
         private string BuildAssemblyScopeLabel()
         {
             if (IsAllAssembliesSelected())
             {
-                return AllAssembliesScope;
+                return ALL_ASSEMBLIES_SCOPE;
             }
 
             if (selectedAssemblyScopes.Count == 1)
@@ -557,7 +538,7 @@ namespace Void2610.UnityTemplate.Editor
             }
 
             return assetPath.StartsWith("Assets/", StringComparison.Ordinal)
-                ? DefaultAssetsAssemblyScope
+                ? DEFAULT_ASSETS_ASSEMBLY_SCOPE
                 : string.Empty;
         }
 
@@ -603,6 +584,24 @@ namespace Void2610.UnityTemplate.Editor
                     destination.Add(resolvedValue);
                 }
             }
+        }
+
+        private void OnEnable()
+        {
+            RefreshKnownKeys();
+            if (!string.IsNullOrEmpty(selectedKey))
+            {
+                LoadSelectedKey();
+            }
+        }
+
+        private void OnGUI()
+        {
+            DrawToolbar();
+
+            using var horizontalScope = new EditorGUILayout.HorizontalScope();
+            DrawKeyListPane();
+            DrawDetailPane();
         }
     }
 }

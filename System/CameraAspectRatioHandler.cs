@@ -12,38 +12,29 @@ namespace Void2610.UnityTemplate
         [Header("目標アスペクト比")]
         [SerializeField] private float aspectWidth = 16.0f;
         [SerializeField] private float aspectHeight = 9.0f;
-        
+
         [Header("レターボックス色")]
         [SerializeField] private Color letterboxColor = Color.black;
-        
+
         private float _targetAspect;
         private Camera _camera;
         private float _lastScreenWidth;
         private float _lastScreenHeight;
 
-        private void Awake()
-        {
-            _camera = GetComponent<Camera>();
-            _targetAspect = aspectWidth / aspectHeight;
-            
-            // 初期調整
-            AdjustCameraViewport();
-            
-            // 現在の画面サイズを保存
-            _lastScreenWidth = Screen.width;
-            _lastScreenHeight = Screen.height;
-        }
+        /// <summary>
+        /// 現在の目標アスペクト比を取得
+        /// </summary>
+        public float GetTargetAspectRatio() => _targetAspect;
 
-        private void Update()
+        /// <summary>
+        /// ランタイムで目標アスペクト比を設定
+        /// </summary>
+        public void SetAspectRatio(float width, float height)
         {
-            // 画面サイズが変更されたかチェック
-            if (Mathf.Abs(Screen.width - _lastScreenWidth) > 0.1f || 
-                Mathf.Abs(Screen.height - _lastScreenHeight) > 0.1f)
-            {
-                AdjustCameraViewport();
-                _lastScreenWidth = Screen.width;
-                _lastScreenHeight = Screen.height;
-            }
+            aspectWidth = width;
+            aspectHeight = height;
+            _targetAspect = width / height;
+            AdjustCameraViewport();
         }
 
         /// <summary>
@@ -85,23 +76,29 @@ namespace Void2610.UnityTemplate
             GL.Clear(true, true, letterboxColor);
         }
 
-        /// <summary>
-        /// ランタイムで目標アスペクト比を設定
-        /// </summary>
-        public void SetAspectRatio(float width, float height)
+        private void Awake()
         {
-            aspectWidth = width;
-            aspectHeight = height;
-            _targetAspect = width / height;
+            _camera = GetComponent<Camera>();
+            _targetAspect = aspectWidth / aspectHeight;
+
+            // 初期調整
             AdjustCameraViewport();
+
+            // 現在の画面サイズを保存
+            _lastScreenWidth = Screen.width;
+            _lastScreenHeight = Screen.height;
         }
 
-        /// <summary>
-        /// 現在の目標アスペクト比を取得
-        /// </summary>
-        public float GetTargetAspectRatio()
+        private void Update()
         {
-            return _targetAspect;
+            // 画面サイズが変更されたかチェック
+            if (Mathf.Abs(Screen.width - _lastScreenWidth) > 0.1f ||
+                Mathf.Abs(Screen.height - _lastScreenHeight) > 0.1f)
+            {
+                AdjustCameraViewport();
+                _lastScreenWidth = Screen.width;
+                _lastScreenHeight = Screen.height;
+            }
         }
     }
 }

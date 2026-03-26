@@ -19,27 +19,31 @@ namespace Void2610.UnityTemplate
 
         private TMP_InputField _inputField;
 
-        private void Awake()
+        /// <summary>
+        /// 手動で修正を実行
+        /// </summary>
+        public void FixCaretRaycast() => DisableCaretRaycast();
+
+        /// <summary>
+        /// InputFieldの参照を更新（動的に変更された場合用）
+        /// </summary>
+        public void RefreshInputField()
         {
             _inputField = GetComponent<TMP_InputField>();
-
-            if (fixOnSelect)
+            if (_inputField != null)
             {
-                // フォーカスを受け取ったタイミングで遅延実行
-                _inputField.onSelect.AddListener(_ => Invoke(nameof(DisableCaretRaycast), fixDelay));
-            }
-
-            if (fixOnAwake)
-            {
-                // Awake時にも実行（既に要素が存在する場合用）
-                Invoke(nameof(DisableCaretRaycast), fixDelay);
+                DisableCaretRaycast();
             }
         }
 
-        private void Start()
+        /// <summary>
+        /// 設定を変更
+        /// </summary>
+        public void UpdateSettings(bool fixOnAwakeNew, bool fixOnSelectNew, float fixDelayNew)
         {
-            // Start時にも一度実行（確実に修正するため）
-            Invoke(nameof(DisableCaretRaycast), fixDelay);
+            fixOnAwake = fixOnAwakeNew;
+            fixOnSelect = fixOnSelectNew;
+            fixDelay = fixDelayNew;
         }
 
         /// <summary>
@@ -97,34 +101,27 @@ namespace Void2610.UnityTemplate
             }
         }
 
-        /// <summary>
-        /// 手動で修正を実行
-        /// </summary>
-        public void FixCaretRaycast()
-        {
-            DisableCaretRaycast();
-        }
-
-        /// <summary>
-        /// InputFieldの参照を更新（動的に変更された場合用）
-        /// </summary>
-        public void RefreshInputField()
+        private void Awake()
         {
             _inputField = GetComponent<TMP_InputField>();
-            if (_inputField != null)
+
+            if (fixOnSelect)
             {
-                DisableCaretRaycast();
+                // フォーカスを受け取ったタイミングで遅延実行
+                _inputField.onSelect.AddListener(_ => Invoke(nameof(DisableCaretRaycast), fixDelay));
+            }
+
+            if (fixOnAwake)
+            {
+                // Awake時にも実行（既に要素が存在する場合用）
+                Invoke(nameof(DisableCaretRaycast), fixDelay);
             }
         }
 
-        /// <summary>
-        /// 設定を変更
-        /// </summary>
-        public void UpdateSettings(bool fixOnAwakeNew, bool fixOnSelectNew, float fixDelayNew)
+        private void Start()
         {
-            fixOnAwake = fixOnAwakeNew;
-            fixOnSelect = fixOnSelectNew;
-            fixDelay = fixDelayNew;
+            // Start時にも一度実行（確実に修正するため）
+            Invoke(nameof(DisableCaretRaycast), fixDelay);
         }
 
 #if UNITY_EDITOR

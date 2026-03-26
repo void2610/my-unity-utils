@@ -23,56 +23,29 @@ namespace Void2610.UnityTemplate
         private GUIStyle _guiStyle;
         private float _lastDeleteTime;
 
-        private void Awake()
+        /// <summary>
+        /// ログをクリア
+        /// </summary>
+        public void ClearLogs() => _logText = "";
+
+        /// <summary>
+        /// 表示設定を更新
+        /// </summary>
+        public void UpdateDisplaySettings(int newFontSize, Color newTextColor)
         {
-            // GUIスタイルを初期化
-            _guiStyle = new GUIStyle
-            {
-                fontSize = fontSize,
-                normal = { textColor = textColor }
-            };
-            
-            _lastDeleteTime = Time.time;
+            fontSize = newFontSize;
+            textColor = newTextColor;
+            _guiStyle.fontSize = fontSize;
+            _guiStyle.normal.textColor = textColor;
         }
 
-        private void Update()
-        {
-            // 一定間隔で古いログを削除
-            if (Time.time - _lastDeleteTime >= autoDeleteInterval)
-            {
-                DeleteFirstLine();
-                _lastDeleteTime = Time.time;
-            }
-        }
-
-        private void OnGUI()
-        {
-            if (!string.IsNullOrEmpty(_logText))
-            {
-                GUI.Label(new Rect(displayPosition.x, displayPosition.y, Screen.width - displayPosition.x, Screen.height - displayPosition.y), 
-                         _logText, _guiStyle);
-            }
-        }
-
-        private void OnEnable()
-        {
-            // デバッグログを表示するためのイベントハンドラを登録
-            Application.logMessageReceived += HandleLog;
-        }
-
-        private void OnDisable()
-        {
-            // イベントハンドラを解除
-            Application.logMessageReceived -= HandleLog;
-        }
-        
         /// <summary>
         /// ログメッセージを処理
         /// </summary>
         private void HandleLog(string logString, string stackTrace, LogType type)
         {
             // ログタイプに応じてフィルタリング
-            string formattedLog = type switch
+            var formattedLog = type switch
             {
                 LogType.Error or LogType.Exception when showErrors => $"<color=red>[Error] {logString}</color>\n",
                 LogType.Warning when showWarnings => $"<color=yellow>[Warning] {logString}</color>\n",
@@ -115,23 +88,47 @@ namespace Void2610.UnityTemplate
             }
         }
 
-        /// <summary>
-        /// ログをクリア
-        /// </summary>
-        public void ClearLogs()
+        private void Awake()
         {
-            _logText = "";
+            // GUIスタイルを初期化
+            _guiStyle = new GUIStyle
+            {
+                fontSize = fontSize,
+                normal = { textColor = textColor }
+            };
+
+            _lastDeleteTime = Time.time;
         }
 
-        /// <summary>
-        /// 表示設定を更新
-        /// </summary>
-        public void UpdateDisplaySettings(int newFontSize, Color newTextColor)
+        private void Update()
         {
-            fontSize = newFontSize;
-            textColor = newTextColor;
-            _guiStyle.fontSize = fontSize;
-            _guiStyle.normal.textColor = textColor;
+            // 一定間隔で古いログを削除
+            if (Time.time - _lastDeleteTime >= autoDeleteInterval)
+            {
+                DeleteFirstLine();
+                _lastDeleteTime = Time.time;
+            }
+        }
+
+        private void OnGUI()
+        {
+            if (!string.IsNullOrEmpty(_logText))
+            {
+                GUI.Label(new Rect(displayPosition.x, displayPosition.y, Screen.width - displayPosition.x, Screen.height - displayPosition.y),
+                         _logText, _guiStyle);
+            }
+        }
+
+        private void OnEnable()
+        {
+            // デバッグログを表示するためのイベントハンドラを登録
+            Application.logMessageReceived += HandleLog;
+        }
+
+        private void OnDisable()
+        {
+            // イベントハンドラを解除
+            Application.logMessageReceived -= HandleLog;
         }
     }
 }
