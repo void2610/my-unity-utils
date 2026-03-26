@@ -14,11 +14,20 @@ namespace Void2610.UnityTemplate.Editor
     /// </summary>
     public sealed class PlayerPrefsDebugWindow : EditorWindow
     {
+        private const string AllAssembliesScope = "All Assemblies";
+        private const string DefaultAssetsAssemblyScope = "Assembly-CSharp";
+
         private enum ValueType
         {
             Int,
             Float,
             String,
+        }
+
+        [Serializable]
+        private sealed class AssemblyDefinitionData
+        {
+            public string name;
         }
 
         private static readonly Regex ConstStringRegex = new(
@@ -33,12 +42,13 @@ namespace Void2610.UnityTemplate.Editor
         [SerializeField] private string searchText = string.Empty;
         [SerializeField] private string editValue = string.Empty;
         [SerializeField] private ValueType editType = ValueType.String;
-        [SerializeField] private bool includePackages;
+        [SerializeField] private List<string> selectedAssemblyScopes = new() { AllAssembliesScope };
         [SerializeField] private Vector2 keyListScrollPosition;
         [SerializeField] private Vector2 detailScrollPosition;
 
         private readonly HashSet<string> _sourceKnownKeys = new(StringComparer.Ordinal);
-        private readonly HashSet<string> _runtimeKnownKeys = new(StringComparer.Ordinal);
+        private readonly HashSet<string> _existingKeys = new(StringComparer.Ordinal);
+        private readonly List<string> _assemblyScopeOptions = new();
 
         [MenuItem("Tools/Utils/PlayerPrefs Debug Window")]
         private static void Open()
@@ -88,17 +98,11 @@ namespace Void2610.UnityTemplate.Editor
 
             GUILayout.FlexibleSpace();
 
-            var nextIncludePackages = GUILayout.Toggle(includePackages, "Packages", EditorStyles.toolbarButton);
-            if (nextIncludePackages != includePackages)
-            {
-                includePackages = nextIncludePackages;
-                RefreshKnownKeys();
-            }
+            DrawAssemblyScopeDropdown();
 
             if (GUILayout.Button("Refresh", EditorStyles.toolbarButton, GUILayout.Width(64f)))
             {
                 RefreshKnownKeys();
-                LoadSelectedKey();
             }
         }
 
@@ -110,7 +114,7 @@ namespace Void2610.UnityTemplate.Editor
             keyListScrollPosition = EditorGUILayout.BeginScrollView(keyListScrollPosition);
             DrawKeySection("From Code", _sourceKnownKeys);
             EditorGUILayout.Space(6f);
-            DrawKeySection("Created Here", _runtimeKnownKeys);
+            DrawKeySection("Existing Prefs", _existingKeys);
             EditorGUILayout.EndScrollView();
         }
 
@@ -219,6 +223,44 @@ namespace Void2610.UnityTemplate.Editor
             }
         }
 
+        private void DrawAssemblyScopeDropdown()
+        {
+            if (_assemblyScopeOptions.Count == 0)
+            {
+                RefreshAssemblyScopes();
+            }
+
+            var label = BuildAssemblyScopeLabel();
+            if (!GUILayout.Button(label, EditorStyles.toolbarDropDown, GUILayout.Width(180f)))
+            {
+                return;
+            }
+
+            var menu = new GenericMenu();
+            var allSelected = IsAllAssembliesSelected();
+            menu.AddItem(new GUIContent(AllAssembliesScope), allSelected, () =>
+            {
+                selectedAssemblyScopes.Clear();
+                selectedAssemblyScopes.Add(AllAssembliesScope);
+                RefreshKnownKeys();
+            });
+
+            menu.AddSeparator(string.Empty);
+
+            foreach (var scope in _assemblyScopeOptions)
+            {
+                if (string.Equals(scope, AllAssembliesScope, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                var isSelected = selectedAssemblyScopes.Contains(scope);
+                menu.AddItem(new GUIContent(scope), isSelected, () => ToggleAssemblyScope(scope));
+            }
+
+            menu.DropDown(GUILayoutUtility.GetLastRect());
+        }
+
         private void LoadSelectedKey()
         {
             if (string.IsNullOrWhiteSpace(selectedKey))
@@ -277,7 +319,7 @@ namespace Void2610.UnityTemplate.Editor
                 }
 
                 PlayerPrefs.Save();
-                if (_runtimeKnownKeys.Add(selectedKey))
+                if (_existingKeys.Add(selectedKey))
                 {
                     Repaint();
                 }
@@ -305,7 +347,7 @@ namespace Void2610.UnityTemplate.Editor
 
             PlayerPrefs.DeleteKey(selectedKey);
             PlayerPrefs.Save();
-            _runtimeKnownKeys.Remove(selectedKey);
+            _existingKeys.Remove(selectedKey);
             LoadSelectedKey();
             Repaint();
             ShowNotification(new GUIContent("Deleted"));
@@ -320,7 +362,7 @@ namespace Void2610.UnityTemplate.Editor
 
             PlayerPrefs.DeleteAll();
             PlayerPrefs.Save();
-            _runtimeKnownKeys.Clear();
+            _existingKeys.Clear();
             LoadSelectedKey();
             Repaint();
             ShowNotification(new GUIContent("Deleted All"));
@@ -328,6 +370,7 @@ namespace Void2610.UnityTemplate.Editor
 
         private void RefreshKnownKeys()
         {
+            RefreshAssemblyScopes();
             _sourceKnownKeys.Clear();
 
             foreach (var path in EnumerateScriptPaths())
@@ -335,7 +378,27 @@ namespace Void2610.UnityTemplate.Editor
                 CollectKeysFromFile(path, _sourceKnownKeys);
             }
 
+            RefreshExistingKeys();
+            LoadSelectedKey();
             Repaint();
+        }
+
+        private void RefreshExistingKeys()
+        {
+            _existingKeys.Clear();
+
+            foreach (var key in _sourceKnownKeys)
+            {
+                if (PlayerPrefs.HasKey(key))
+                {
+                    _existingKeys.Add(key);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(selectedKey) && PlayerPrefs.HasKey(selectedKey))
+            {
+                _existingKeys.Add(selectedKey);
+            }
         }
 
         private IEnumerable<string> EnumerateScriptPaths()
@@ -349,13 +412,166 @@ namespace Void2610.UnityTemplate.Editor
                 }
 
                 if (!path.StartsWith("Assets/", StringComparison.Ordinal)
-                    && !(includePackages && path.StartsWith("Packages/", StringComparison.Ordinal)))
+                    && !path.StartsWith("Packages/", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (!IsPathInSelectedAssemblyScope(path))
                 {
                     continue;
                 }
 
                 yield return path;
             }
+        }
+
+        private void RefreshAssemblyScopes()
+        {
+            var scopes = new HashSet<string>(StringComparer.Ordinal)
+            {
+                AllAssembliesScope,
+                DefaultAssetsAssemblyScope,
+            };
+
+            foreach (var assetPath in AssetDatabase.GetAllAssetPaths())
+            {
+                if (!assetPath.EndsWith(".asmdef", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (!assetPath.StartsWith("Assets/", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                var assemblyName = TryReadAssemblyName(assetPath);
+                if (!string.IsNullOrWhiteSpace(assemblyName))
+                {
+                    scopes.Add(assemblyName);
+                }
+            }
+
+            _assemblyScopeOptions.Clear();
+            _assemblyScopeOptions.AddRange(scopes.OrderBy(static scope => scope, StringComparer.Ordinal));
+
+            if (!_assemblyScopeOptions.Contains(AllAssembliesScope))
+            {
+                _assemblyScopeOptions.Insert(0, AllAssembliesScope);
+            }
+
+            if (selectedAssemblyScopes.Count == 0)
+            {
+                selectedAssemblyScopes.Add(AllAssembliesScope);
+            }
+
+            selectedAssemblyScopes = selectedAssemblyScopes
+                .Where(scope => string.Equals(scope, AllAssembliesScope, StringComparison.Ordinal) || _assemblyScopeOptions.Contains(scope))
+                .Distinct(StringComparer.Ordinal)
+                .ToList();
+
+            if (selectedAssemblyScopes.Count == 0)
+            {
+                selectedAssemblyScopes.Add(AllAssembliesScope);
+            }
+        }
+
+        private bool IsPathInSelectedAssemblyScope(string assetPath)
+        {
+            if (IsAllAssembliesSelected())
+            {
+                return true;
+            }
+
+            var resolvedAssembly = ResolveAssemblyScopeForPath(assetPath);
+            return selectedAssemblyScopes.Contains(resolvedAssembly);
+        }
+
+        private void ToggleAssemblyScope(string scope)
+        {
+            selectedAssemblyScopes.RemoveAll(value => string.Equals(value, AllAssembliesScope, StringComparison.Ordinal));
+
+            if (!selectedAssemblyScopes.Remove(scope))
+            {
+                selectedAssemblyScopes.Add(scope);
+            }
+
+            if (selectedAssemblyScopes.Count == 0)
+            {
+                selectedAssemblyScopes.Add(AllAssembliesScope);
+            }
+
+            RefreshKnownKeys();
+        }
+
+        private bool IsAllAssembliesSelected()
+        {
+            return selectedAssemblyScopes.Count == 0
+                || selectedAssemblyScopes.Contains(AllAssembliesScope);
+        }
+
+        private string BuildAssemblyScopeLabel()
+        {
+            if (IsAllAssembliesSelected())
+            {
+                return AllAssembliesScope;
+            }
+
+            if (selectedAssemblyScopes.Count == 1)
+            {
+                return selectedAssemblyScopes[0];
+            }
+
+            return $"{selectedAssemblyScopes.Count} Assemblies";
+        }
+
+        private static string ResolveAssemblyScopeForPath(string assetPath)
+        {
+            var directory = Path.GetDirectoryName(assetPath)?.Replace('\\', '/');
+            while (!string.IsNullOrEmpty(directory))
+            {
+                var asmdefPaths = AssetDatabase.FindAssets("t:AssemblyDefinitionAsset", new[] { directory });
+                foreach (var guid in asmdefPaths)
+                {
+                    var asmdefPath = AssetDatabase.GUIDToAssetPath(guid);
+                    if (!string.Equals(Path.GetDirectoryName(asmdefPath)?.Replace('\\', '/'), directory, StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
+                    var assemblyName = TryReadAssemblyName(asmdefPath);
+                    if (!string.IsNullOrWhiteSpace(assemblyName))
+                    {
+                        return assemblyName;
+                    }
+                }
+
+                var parentDirectory = Path.GetDirectoryName(directory)?.Replace('\\', '/');
+                if (string.Equals(parentDirectory, directory, StringComparison.Ordinal))
+                {
+                    break;
+                }
+
+                directory = parentDirectory;
+            }
+
+            return assetPath.StartsWith("Assets/", StringComparison.Ordinal)
+                ? DefaultAssetsAssemblyScope
+                : string.Empty;
+        }
+
+        private static string TryReadAssemblyName(string assetPath)
+        {
+            var fullPath = Path.GetFullPath(assetPath);
+            if (!File.Exists(fullPath))
+            {
+                return string.Empty;
+            }
+
+            var json = File.ReadAllText(fullPath);
+            var data = JsonUtility.FromJson<AssemblyDefinitionData>(json);
+            return data?.name ?? string.Empty;
         }
 
         private static void CollectKeysFromFile(string assetPath, ICollection<string> destination)
