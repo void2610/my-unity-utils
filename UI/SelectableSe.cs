@@ -98,21 +98,6 @@ namespace Void2610.UnityTemplate
             SeManager.Instance.PlaySe(clip, volume, pitch, important: isImportantButton);
         }
 
-#if UNITY_EDITOR
-        [ContextMenu("Test Select Sound")]
-        private void TestSelectSound()
-        {
-            if (Application.isPlaying)
-                PlaySelectSound();
-        }
-
-        [ContextMenu("Test Submit Sound")]
-        private void TestSubmitSound()
-        {
-            if (Application.isPlaying)
-                PlaySubmitSound();
-        }
-
         /// <summary>
         /// 選択時
         /// </summary>
@@ -127,6 +112,21 @@ namespace Void2610.UnityTemplate
         public void OnSubmit(BaseEventData eventData)
         {
             PlaySubmitSound();
+        }
+
+#if UNITY_EDITOR
+        [ContextMenu("Test Select Sound")]
+        private void TestSelectSound()
+        {
+            if (Application.isPlaying)
+                PlaySelectSound();
+        }
+
+        [ContextMenu("Test Submit Sound")]
+        private void TestSubmitSound()
+        {
+            if (Application.isPlaying)
+                PlaySubmitSound();
         }
 #endif
     }

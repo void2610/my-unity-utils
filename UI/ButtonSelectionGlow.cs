@@ -115,6 +115,11 @@ namespace Void2610.UnityTemplate
             }
         }
 
+        private void OnDestroy()
+        {
+            _currentMotion.TryCancel();
+        }
+
 #if UNITY_EDITOR
         /// <summary>
         /// エディタでの検証
@@ -125,11 +130,6 @@ namespace Void2610.UnityTemplate
             {
                 Debug.LogWarning($"ButtonSelectionGlow: Glow Imageが設定されていません ({gameObject.name})", this);
             }
-        }
-
-        private void OnDestroy()
-        {
-            _currentMotion.TryCancel();
         }
 #endif
     }
