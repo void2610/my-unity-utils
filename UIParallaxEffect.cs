@@ -4,6 +4,10 @@ using UnityEngine;
 
 namespace Utils
 {
+    /// <summary>
+    /// UI要素を入力座標に応じて視差移動させる。
+    /// マウス入力または外部から与えた疑似スクリーン座標を基準に動作する。
+    /// </summary>
     public class UIParallaxEffect : MonoBehaviour
     {
         [Serializable]
@@ -15,18 +19,40 @@ namespace Utils
 
         [SerializeField] private float multiplier = 1f;
         [SerializeField] private float smoothSpeed = 5f;
+        [SerializeField] private bool useMousePosition = true;
         [SerializeField] private List<ParallaxElement> elements = new();
 
         private List<Vector3> _basePositions = new();
+        private bool _hasEmulatedScreenPosition;
+        private Vector2 _emulatedScreenPosition;
+
+        /// <summary>
+        /// マウス位置を基準にするかどうかを切り替える。
+        /// </summary>
+        public void SetMousePositionEnabled(bool enabled) => useMousePosition = enabled;
+
+        /// <summary>
+        /// マウス位置の代わりに使用する疑似スクリーン座標を設定する。
+        /// </summary>
+        public void SetEmulatedScreenPosition(Vector2 screenPosition)
+        {
+            _emulatedScreenPosition = screenPosition;
+            _hasEmulatedScreenPosition = true;
+        }
+
+        /// <summary>
+        /// 疑似スクリーン座標の使用を解除する。
+        /// </summary>
+        public void ClearEmulatedScreenPosition() => _hasEmulatedScreenPosition = false;
 
         private void ApplyParallax()
         {
-            // マウス位置を正規化（中心が0、範囲 [-0.5, +0.5]）
-            var mousePosition = (Vector2)Input.mousePosition;
-            var normalizedX = (mousePosition.x / Screen.width) - 0.5f;
-            var normalizedY = (mousePosition.y / Screen.height) - 0.5f;
+            // 参照するスクリーン座標を正規化（中心が0、範囲 [-0.5, +0.5]）
+            var referenceScreenPosition = GetReferenceScreenPosition();
+            var normalizedX = (referenceScreenPosition.x / Screen.width) - 0.5f;
+            var normalizedY = (referenceScreenPosition.y / Screen.height) - 0.5f;
 
-            // マウスと逆方向に動かすベクトル
+            // 参照座標と逆方向に動かすベクトル
             var offsetDirection = new Vector3(-normalizedX, -normalizedY, 0f);
 
             // 各要素をスムーズに移動
@@ -49,12 +75,32 @@ namespace Utils
             }
         }
 
+        private Vector2 GetReferenceScreenPosition()
+        {
+            // 疑似座標があれば最優先で使用
+            if (_hasEmulatedScreenPosition)
+            {
+                return _emulatedScreenPosition;
+            }
+
+            // マウス入力が有効ならマウス位置を使用
+            if (useMousePosition)
+            {
+                return Input.mousePosition;
+            }
+
+            // どちらも使わない場合は画面中心を基準にする
+            return new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+        }
+
         private void Awake()
         {
             // 各要素の初期位置をキャッシュ
             _basePositions.Clear();
             foreach (var element in elements)
+            {
                 _basePositions.Add(element.target ? element.target.localPosition : Vector3.zero);
+            }
         }
 
         private void Update()
