@@ -1,9 +1,12 @@
 using System;
 using System.Diagnostics;
+using System.IO.Compression;
 using System.IO;
 using System.Linq;
+using UnityEditor.AddressableAssets.Settings;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
+using UnityEditor.ShortcutManagement;
 using UnityEngine;
 
 namespace Void2610.UnityTemplate
@@ -15,6 +18,8 @@ namespace Void2610.UnityTemplate
     public sealed class MultiPlatformBuildWindow : EditorWindow
     {
         private const string MenuPath = "Tools/Multi Platform Build";
+        private const string BuildAndRunShortcutId = "Main Menu/File/Build And Run";
+        private const string OpenWindowShortcutId = "Void2610/Multi Platform Build";
         private const string RootDirectoryKey = "Void2610.MultiPlatformBuild.RootDirectory";
         private const string AppNameKey = "Void2610.MultiPlatformBuild.AppName";
 
@@ -29,6 +34,12 @@ namespace Void2610.UnityTemplate
             window.titleContent = new GUIContent("Multi Build");
             window.minSize = new Vector2(520f, 210f);
             window.Show();
+        }
+
+        [Shortcut(OpenWindowShortcutId, KeyCode.B, ShortcutModifiers.Action)]
+        private static void OpenFromShortcut()
+        {
+            Open();
         }
 
         private void BuildAll()
@@ -46,6 +57,12 @@ namespace Void2610.UnityTemplate
             _generatedVersion = MultiPlatformBuildUtility.GenerateBuildVersion();
             PlayerSettings.bundleVersion = _generatedVersion;
 
+            if (!PrepareBuildTarget(BuildTarget.StandaloneWindows64, BuildTargetGroup.Standalone, _generatedVersion) ||
+                !PrepareBuildTarget(BuildTarget.StandaloneOSX, BuildTargetGroup.Standalone, _generatedVersion))
+            {
+                return;
+            }
+
             var windowsReport = BuildPlayer(
                 enabledScenes,
                 BuildTarget.StandaloneWindows64,
@@ -62,8 +79,10 @@ namespace Void2610.UnityTemplate
 
             var windowsSummary = FormatBuildSummary("Windows", windowsReport);
             var macSummary = FormatBuildSummary("macOS", macReport);
+            var windowsZipSummary = CreateZipSummary("Windows", windowsReport);
+            var macZipSummary = CreateZipSummary("macOS", macReport);
 
-            var message = $"{windowsSummary}\n{macSummary}";
+            var message = $"{windowsSummary}\n{windowsZipSummary}\n{macSummary}\n{macZipSummary}";
             var title = windowsReport.summary.result == BuildResult.Succeeded &&
                         macReport.summary.result == BuildResult.Succeeded
                 ? "Build Succeeded"
@@ -71,6 +90,33 @@ namespace Void2610.UnityTemplate
 
             UnityEngine.Debug.Log(message);
             EditorUtility.DisplayDialog(title, message, "OK");
+        }
+
+        private static bool PrepareBuildTarget(BuildTarget target, BuildTargetGroup targetGroup, string versionName)
+        {
+            if (!EditorUserBuildSettings.SwitchActiveBuildTarget(targetGroup, target))
+            {
+                EditorUtility.DisplayDialog("Build Failed", $"ビルドターゲットの切り替えに失敗しました: {target}", "OK");
+                return false;
+            }
+
+            var settings = UnityEditor.AddressableAssets.AddressableAssetSettingsDefaultObject.Settings;
+            if (settings == null)
+            {
+                EditorUtility.DisplayDialog("Build Failed", "Addressables Settings が見つかりません。", "OK");
+                return false;
+            }
+
+            settings.OverridePlayerVersion = versionName;
+            AddressableAssetSettings.BuildPlayerContent(out var result);
+
+            if (!string.IsNullOrEmpty(result.Error))
+            {
+                EditorUtility.DisplayDialog("Build Failed", $"Addressables ビルドに失敗しました: {target}\n{result.Error}", "OK");
+                return false;
+            }
+
+            return true;
         }
 
         private BuildReport BuildPlayer(
@@ -99,6 +145,17 @@ namespace Void2610.UnityTemplate
             var summary = report.summary;
             var duration = summary.totalTime.ToString(@"hh\:mm\:ss");
             return $"{platformName}: {summary.result} / {summary.outputPath} / {duration}";
+        }
+
+        private static string CreateZipSummary(string platformName, BuildReport report)
+        {
+            if (report.summary.result != BuildResult.Succeeded)
+            {
+                return $"{platformName} Zip: skipped";
+            }
+
+            var zipPath = MultiPlatformBuildUtility.CreatePlatformArchive(report.summary.outputPath);
+            return $"{platformName} Zip: {zipPath}";
         }
 
         private void SavePreferences()
@@ -176,6 +233,18 @@ namespace Void2610.UnityTemplate
             }
 
             SavePreferences();
+        }
+
+        [InitializeOnLoadMethod]
+        private static void DisableBuildAndRunShortcut()
+        {
+            var shortcutManager = ShortcutManager.instance;
+            if (!shortcutManager.GetAvailableShortcutIds().Contains(BuildAndRunShortcutId))
+            {
+                return;
+            }
+
+            shortcutManager.RebindShortcut(BuildAndRunShortcutId, ShortcutBinding.empty);
         }
     }
 
@@ -290,6 +359,29 @@ namespace Void2610.UnityTemplate
             var projectRoot = Directory.GetCurrentDirectory();
             var relativePath = Path.GetRelativePath(projectRoot, absolutePath);
             return relativePath.StartsWith("..", StringComparison.Ordinal) ? absolutePath : relativePath;
+        }
+
+        /// <summary>
+        /// 各プラットフォームの出力ディレクトリを丸ごと zip 化する。
+        /// </summary>
+        public static string CreatePlatformArchive(string buildOutputPath)
+        {
+            var outputDirectory = Path.GetDirectoryName(buildOutputPath);
+            if (string.IsNullOrWhiteSpace(outputDirectory))
+            {
+                throw new InvalidOperationException($"Build output path is invalid: {buildOutputPath}");
+            }
+
+            var directoryInfo = new DirectoryInfo(outputDirectory);
+            var zipPath = Path.Combine(directoryInfo.Parent?.FullName ?? outputDirectory, $"{directoryInfo.Name}.zip");
+
+            if (File.Exists(zipPath))
+            {
+                File.Delete(zipPath);
+            }
+
+            ZipFile.CreateFromDirectory(outputDirectory, zipPath, System.IO.Compression.CompressionLevel.Optimal, false);
+            return zipPath;
         }
 
         private static string RunGitCommand(string arguments)
