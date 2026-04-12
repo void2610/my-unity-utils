@@ -17,7 +17,7 @@ namespace Void2610.UnityTemplate
     /// </summary>
     public sealed class MultiPlatformBuildWindow : EditorWindow
     {
-        private const string MenuPath = "Tools/Multi Platform Build";
+        private const string MenuPath = "Tools/Utils/Multi Platform Build";
         private const string BuildAndRunShortcutId = "Main Menu/File/Build And Run";
         private const string OpenWindowShortcutId = "Void2610/Multi Platform Build";
         private const string RootDirectoryKey = "Void2610.MultiPlatformBuild.RootDirectory";
@@ -26,6 +26,20 @@ namespace Void2610.UnityTemplate
         private string _rootDirectory;
         private string _appName;
         private string _generatedVersion;
+
+        private readonly struct BuildExecutionResult
+        {
+            public BuildExecutionResult(BuildResult result, string outputPath, string durationText)
+            {
+                Result = result;
+                OutputPath = outputPath;
+                DurationText = durationText;
+            }
+
+            public BuildResult Result { get; }
+            public string OutputPath { get; }
+            public string DurationText { get; }
+        }
 
         [MenuItem(MenuPath)]
         private static void Open()
@@ -57,34 +71,42 @@ namespace Void2610.UnityTemplate
             _generatedVersion = MultiPlatformBuildUtility.GenerateBuildVersion();
             PlayerSettings.bundleVersion = _generatedVersion;
 
-            if (!PrepareBuildTarget(BuildTarget.StandaloneWindows64, BuildTargetGroup.Standalone, _generatedVersion) ||
-                !PrepareBuildTarget(BuildTarget.StandaloneOSX, BuildTargetGroup.Standalone, _generatedVersion))
-            {
-                return;
-            }
-
-            var windowsReport = BuildPlayer(
-                enabledScenes,
-                BuildTarget.StandaloneWindows64,
-                BuildTargetGroup.Standalone,
-                _generatedVersion,
-                _appName);
-
-            var macReport = BuildPlayer(
+            if (!BuildTargetWithAddressables(
                 enabledScenes,
                 BuildTarget.StandaloneOSX,
                 BuildTargetGroup.Standalone,
                 _generatedVersion,
-                _appName);
+                _appName,
+                out var macBuildResult))
+            {
+                return;
+            }
 
-            var windowsSummary = FormatBuildSummary("Windows", windowsReport);
-            var macSummary = FormatBuildSummary("macOS", macReport);
-            var windowsZipSummary = CreateZipSummary("Windows", windowsReport);
-            var macZipSummary = CreateZipSummary("macOS", macReport);
+            if (!BuildTargetWithAddressables(
+                enabledScenes,
+                BuildTarget.StandaloneWindows64,
+                BuildTargetGroup.Standalone,
+                _generatedVersion,
+                _appName,
+                out var windowsBuildResult))
+            {
+                return;
+            }
 
-            var message = $"{windowsSummary}\n{windowsZipSummary}\n{macSummary}\n{macZipSummary}";
-            var title = windowsReport.summary.result == BuildResult.Succeeded &&
-                        macReport.summary.result == BuildResult.Succeeded
+            var macSummary = FormatBuildSummary("macOS", macBuildResult);
+            var windowsSummary = FormatBuildSummary("Windows", windowsBuildResult);
+            var macZipSummary = CreateZipSummary(
+                "macOS",
+                macBuildResult,
+                MultiPlatformBuildUtility.GetPlatformBuildDirectory(_rootDirectory, _generatedVersion, BuildTarget.StandaloneOSX));
+            var windowsZipSummary = CreateZipSummary(
+                "Windows",
+                windowsBuildResult,
+                MultiPlatformBuildUtility.GetPlatformBuildDirectory(_rootDirectory, _generatedVersion, BuildTarget.StandaloneWindows64));
+
+            var message = $"{macSummary}\n{macZipSummary}\n{windowsSummary}\n{windowsZipSummary}";
+            var title = windowsBuildResult.Result == BuildResult.Succeeded &&
+                        macBuildResult.Result == BuildResult.Succeeded
                 ? "Build Succeeded"
                 : "Build Finished With Errors";
 
@@ -92,8 +114,16 @@ namespace Void2610.UnityTemplate
             EditorUtility.DisplayDialog(title, message, "OK");
         }
 
-        private static bool PrepareBuildTarget(BuildTarget target, BuildTargetGroup targetGroup, string versionName)
+        private bool BuildTargetWithAddressables(
+            string[] scenes,
+            BuildTarget target,
+            BuildTargetGroup targetGroup,
+            string versionName,
+            string appName,
+            out BuildExecutionResult buildResult)
         {
+            buildResult = default;
+
             if (!EditorUserBuildSettings.SwitchActiveBuildTarget(targetGroup, target))
             {
                 EditorUtility.DisplayDialog("Build Failed", $"ビルドターゲットの切り替えに失敗しました: {target}", "OK");
@@ -116,6 +146,12 @@ namespace Void2610.UnityTemplate
                 return false;
             }
 
+            var report = BuildPlayer(scenes, target, targetGroup, versionName, appName);
+            var summary = report.summary;
+            buildResult = new BuildExecutionResult(
+                summary.result,
+                summary.outputPath,
+                summary.totalTime.ToString(@"hh\:mm\:ss"));
             return true;
         }
 
@@ -140,22 +176,28 @@ namespace Void2610.UnityTemplate
             return BuildPipeline.BuildPlayer(options);
         }
 
-        private static string FormatBuildSummary(string platformName, BuildReport report)
+        private static string FormatBuildSummary(string platformName, BuildExecutionResult buildResult)
         {
-            var summary = report.summary;
-            var duration = summary.totalTime.ToString(@"hh\:mm\:ss");
-            return $"{platformName}: {summary.result} / {summary.outputPath} / {duration}";
+            return $"{platformName}: {buildResult.Result} / {buildResult.OutputPath} / {buildResult.DurationText}";
         }
 
-        private static string CreateZipSummary(string platformName, BuildReport report)
+        private static string CreateZipSummary(string platformName, BuildExecutionResult buildResult, string buildDirectory)
         {
-            if (report.summary.result != BuildResult.Succeeded)
+            if (buildResult.Result != BuildResult.Succeeded)
             {
                 return $"{platformName} Zip: skipped";
             }
 
-            var zipPath = MultiPlatformBuildUtility.CreatePlatformArchive(report.summary.outputPath);
-            return $"{platformName} Zip: {zipPath}";
+            try
+            {
+                var zipPath = MultiPlatformBuildUtility.CreatePlatformArchive(buildDirectory);
+                return $"{platformName} Zip: {zipPath}";
+            }
+            catch (Exception e)
+            {
+                UnityEngine.Debug.LogError($"Failed to create {platformName} zip archive: {e}");
+                return $"{platformName} Zip: failed";
+            }
         }
 
         private void SavePreferences()
@@ -364,24 +406,69 @@ namespace Void2610.UnityTemplate
         /// <summary>
         /// 各プラットフォームの出力ディレクトリを丸ごと zip 化する。
         /// </summary>
-        public static string CreatePlatformArchive(string buildOutputPath)
+        public static string GetPlatformBuildDirectory(string rootDirectory, string versionName, BuildTarget target)
         {
-            var outputDirectory = Path.GetDirectoryName(buildOutputPath);
-            if (string.IsNullOrWhiteSpace(outputDirectory))
+            var normalizedDirectory = ResolveOutputDirectory(rootDirectory);
+            var normalizedVersion = NormalizeVersionForPath(versionName);
+            var platformDirectory = GetPlatformDirectoryName(normalizedVersion, target);
+            return Path.Combine(normalizedDirectory, platformDirectory);
+        }
+
+        public static string CreatePlatformArchive(string buildDirectory)
+        {
+            if (string.IsNullOrWhiteSpace(buildDirectory) || !Directory.Exists(buildDirectory))
             {
-                throw new InvalidOperationException($"Build output path is invalid: {buildOutputPath}");
+                throw new DirectoryNotFoundException($"Build directory not found: {buildDirectory}");
             }
 
-            var directoryInfo = new DirectoryInfo(outputDirectory);
-            var zipPath = Path.Combine(directoryInfo.Parent?.FullName ?? outputDirectory, $"{directoryInfo.Name}.zip");
+            var directoryInfo = new DirectoryInfo(buildDirectory);
+            var zipPath = Path.Combine(directoryInfo.Parent?.FullName ?? buildDirectory, $"{directoryInfo.Name}.zip");
 
             if (File.Exists(zipPath))
             {
                 File.Delete(zipPath);
             }
 
-            ZipFile.CreateFromDirectory(outputDirectory, zipPath, System.IO.Compression.CompressionLevel.Optimal, false);
+            if (Application.platform == RuntimePlatform.OSXEditor)
+            {
+                CreateZipWithDitto(buildDirectory, zipPath);
+            }
+            else
+            {
+                ZipFile.CreateFromDirectory(buildDirectory, zipPath, System.IO.Compression.CompressionLevel.Optimal, false);
+            }
+
             return zipPath;
+        }
+
+        private static void CreateZipWithDitto(string buildDirectory, string zipPath)
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "/usr/bin/ditto",
+                Arguments = $"-c -k --sequesterRsrc --keepParent \"{buildDirectory}\" \"{zipPath}\"",
+                WorkingDirectory = Directory.GetCurrentDirectory(),
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+
+            using var process = Process.Start(startInfo);
+            if (process == null)
+            {
+                throw new InvalidOperationException("Failed to start ditto process.");
+            }
+
+            var stdout = process.StandardOutput.ReadToEnd();
+            var stderr = process.StandardError.ReadToEnd();
+            process.WaitForExit();
+
+            if (process.ExitCode != 0)
+            {
+                throw new InvalidOperationException(
+                    $"ditto failed with exit code {process.ExitCode}. stdout: {stdout} stderr: {stderr}");
+            }
         }
 
         private static string RunGitCommand(string arguments)
