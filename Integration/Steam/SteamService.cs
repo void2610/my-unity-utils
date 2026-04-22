@@ -12,12 +12,13 @@ using VContainer.Unity;
 
 namespace Void2610.UnityTemplate.Steam
 {
-    public class SteamService : IDisposable, ITickable
+    public class SteamService : ISteamService, IDisposable, ITickable
     {
         private static bool _everInitialized;
         private bool _initialized;
 
         public static bool Initialized => _everInitialized;
+        public bool IsInitialized => _initialized;
 
         [AOT.MonoPInvokeCallback(typeof(SteamAPIWarningMessageHook_t))]
         private static void SteamAPIDebugTextHook(int nSeverity, System.Text.StringBuilder pchDebugText)
@@ -158,10 +159,12 @@ using VContainer.Unity;
 
 namespace Void2610.UnityTemplate.Steam
 {
-    public class SteamService : IDisposable, ITickable
+    public class SteamService : ISteamService, IDisposable, ITickable
     {
         public static bool Initialized => false;
+        public bool IsInitialized => false;
         public SteamService() { }
+        public SteamService(int appId) { }
         public bool UnlockAchievement(string achievementName) => false;
         public bool SetStat(string statName, int value) => false;
         public bool SetStat(string statName, float value) => false;

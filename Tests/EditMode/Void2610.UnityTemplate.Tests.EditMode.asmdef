@@ -1,0 +1,22 @@
+{
+    "name": "Void2610.UnityTemplate.Tests.EditMode",
+    "rootNamespace": "Void2610.UnityTemplate.Tests",
+    "references": [
+        "GUID:602cca619fac04b2f9de6bcaefed88e9"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
