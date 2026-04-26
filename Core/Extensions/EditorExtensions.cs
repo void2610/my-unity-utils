@@ -24,8 +24,10 @@ namespace Void2610.UnityTemplate
             List<T> targetList,
             Func<T, string> sortKeySelector = null) where T : ScriptableObject
         {
-            // このScriptableObjectと同じディレクトリパスを取得
+            // このScriptableObjectと同じディレクトリパスを取得。
+            // インメモリ生成の ScriptableObject (テスト用途等) は空パスになるため早期 return。
             var path = AssetDatabase.GetAssetPath(targetObject);
+            if (string.IsNullOrEmpty(path)) return;
             path = System.IO.Path.GetDirectoryName(path);
 
             // 指定ディレクトリ内の指定した型のアセットを検索
