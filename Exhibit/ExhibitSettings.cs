@@ -29,11 +29,8 @@ namespace Void2610.UnityTemplate
         [SerializeField] private float thanksIdleToTitleSeconds = 10f;
 
         [Header("タイトル画面PV再生")]
-        [SerializeField] private bool enableTitleIdlePV = true;
-        [SerializeField] private float titleIdleToPVSeconds = 30f;
-
-        [Header("Thanks画面アイドル戻り")]
-        [SerializeField] private float thanksIdleToTitleSeconds = 10f;
+        [SerializeField] private bool enableTitleIdlePv = true;
+        [SerializeField] private float titleIdleToPvSeconds = 30f;
 
         /// <summary>展示モード有効か</summary>
         public bool EnableExhibitMode => enableExhibitMode;
@@ -61,11 +58,8 @@ namespace Void2610.UnityTemplate
         public float ThanksIdleToTitleSeconds => thanksIdleToTitleSeconds;
 
         /// <summary>タイトルPV再生が有効か</summary>
-        public bool EnableTitleIdlePV => enableExhibitMode && enableTitleIdlePV;
+        public bool EnableTitleIdlePv => enableExhibitMode && enableTitleIdlePv;
         /// <summary>タイトルでアイドル→PV再生までの秒数</summary>
-        public float TitleIdleToPVSeconds => titleIdleToPVSeconds;
-
-        /// <summary>Thanksでアイドル→タイトル戻りまでの秒数</summary>
-        public float ThanksIdleToTitleSeconds => thanksIdleToTitleSeconds;
+        public float TitleIdleToPvSeconds => titleIdleToPvSeconds;
     }
 }
