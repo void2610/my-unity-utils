@@ -25,6 +25,9 @@ namespace Void2610.UnityTemplate
         [SerializeField] private bool enableSessionTimeLimit = true;
         [SerializeField] private float sessionTimeLimitSeconds = 600f;
 
+        [Header("Thanks画面アイドル→タイトル戻り")]
+        [SerializeField] private float thanksIdleToTitleSeconds = 10f;
+
         [Header("タイトル画面PV再生")]
         [SerializeField] private bool enableTitleIdlePV = true;
         [SerializeField] private float titleIdleToPVSeconds = 30f;
@@ -53,6 +56,9 @@ namespace Void2610.UnityTemplate
         public bool EnableSessionTimeLimit => enableExhibitMode && enableSessionTimeLimit;
         /// <summary>セッション制限秒数</summary>
         public float SessionTimeLimitSeconds => sessionTimeLimitSeconds;
+
+        /// <summary>Thanks画面でアイドル→タイトル戻りまでの秒数（0以下で無効）</summary>
+        public float ThanksIdleToTitleSeconds => thanksIdleToTitleSeconds;
 
         /// <summary>タイトルPV再生が有効か</summary>
         public bool EnableTitleIdlePV => enableExhibitMode && enableTitleIdlePV;
