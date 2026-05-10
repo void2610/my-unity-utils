@@ -24,15 +24,7 @@ namespace Void2610.UnityTemplate.Editor.CI
             GetBuildOutputPath(Path.Combine("builds", "StandaloneOSX", $"{GetBuildName()}.app")),
             BuildOptions.None);
 
-        public static void BuildWebGL() => BuildWebGLInternal(BuildOptions.None);
-
-        // Development Build を有効化した WebGL ビルド。DEVELOPMENT_BUILD シンボルが
-        // 定義されるため、defineConstraints: UNITY_EDITOR || DEVELOPMENT_BUILD のアセンブリ
-        // (デバッグツール / ランタイムコマンドパレット 等) が配信ビルドに含まれる。
-        // 製品リリース時は BuildWebGL を使う。
-        public static void BuildWebGLDevelopment() => BuildWebGLInternal(BuildOptions.Development);
-
-        private static void BuildWebGLInternal(BuildOptions extraOptions)
+        public static void BuildWebGL()
         {
             // セルフホストランナーで Library が古い WebGL 圧縮設定を保持していると
             // ProjectSettings 側の Brotli 指定が反映されず非圧縮成果物が出るため、
@@ -40,22 +32,13 @@ namespace Void2610.UnityTemplate.Editor.CI
             PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Brotli;
             PlayerSettings.WebGL.decompressionFallback = true;
 
-            // Development Build はデフォルトで debug symbol を WASM 内に埋め込むため、
-            // Cloudflare Pages の 25MB / ファイル上限を超える (実測 141MB)。
-            // CI では DEVELOPMENT_BUILD シンボル定義だけが必要 (Debug.asmdef を有効化する目的) で、
-            // ブラウザでの C# デバッガ接続用 DWARF / SourceMap までは不要なので Off にする。
-            PlayerSettings.WebGL.debugSymbolMode =
-                (extraOptions & BuildOptions.Development) != 0
-                    ? WebGLDebugSymbolMode.Off
-                    : WebGLDebugSymbolMode.External;
-
             // PlayerDataCache が古い状態で残っているとビルドが失敗することがあるため、念のため削除する。
             DeleteIfExists("Library/PlayerDataCache");
 
             Build(
                 BuildTarget.WebGL,
                 GetBuildOutputPath(Path.Combine("CIBuilds", "WebGL", "build")),
-                extraOptions);
+                BuildOptions.None);
         }
 
         private static void DeleteIfExists(string path)
