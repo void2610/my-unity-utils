@@ -40,6 +40,15 @@ namespace Void2610.UnityTemplate.Editor.CI
             PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Brotli;
             PlayerSettings.WebGL.decompressionFallback = true;
 
+            // Development Build はデフォルトで debug symbol を WASM 内に埋め込むため、
+            // Cloudflare Pages の 25MB / ファイル上限を超える (実測 141MB)。
+            // CI では DEVELOPMENT_BUILD シンボル定義だけが必要 (Debug.asmdef を有効化する目的) で、
+            // ブラウザでの C# デバッガ接続用 DWARF / SourceMap までは不要なので Off にする。
+            PlayerSettings.WebGL.debugSymbolMode =
+                (extraOptions & BuildOptions.Development) != 0
+                    ? WebGLDebugSymbolMode.Off
+                    : WebGLDebugSymbolMode.External;
+
             // PlayerDataCache が古い状態で残っているとビルドが失敗することがあるため、念のため削除する。
             DeleteIfExists("Library/PlayerDataCache");
 
