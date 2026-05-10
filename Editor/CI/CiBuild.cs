@@ -16,13 +16,23 @@ namespace Void2610.UnityTemplate.Editor.CI
     {
         public static void BuildWindows() => Build(
             BuildTarget.StandaloneWindows64,
-            GetBuildOutputPath(Path.Combine("builds", "StandaloneWindows64", $"{GetBuildName()}.exe")));
+            GetBuildOutputPath(Path.Combine("builds", "StandaloneWindows64", $"{GetBuildName()}.exe")),
+            BuildOptions.None);
 
         public static void BuildMac() => Build(
             BuildTarget.StandaloneOSX,
-            GetBuildOutputPath(Path.Combine("builds", "StandaloneOSX", $"{GetBuildName()}.app")));
+            GetBuildOutputPath(Path.Combine("builds", "StandaloneOSX", $"{GetBuildName()}.app")),
+            BuildOptions.None);
 
-        public static void BuildWebGL()
+        public static void BuildWebGL() => BuildWebGLInternal(BuildOptions.None);
+
+        // Development Build を有効化した WebGL ビルド。DEVELOPMENT_BUILD シンボルが
+        // 定義されるため、defineConstraints: UNITY_EDITOR || DEVELOPMENT_BUILD のアセンブリ
+        // (デバッグツール / ランタイムコマンドパレット 等) が配信ビルドに含まれる。
+        // 製品リリース時は BuildWebGL を使う。
+        public static void BuildWebGLDevelopment() => BuildWebGLInternal(BuildOptions.Development);
+
+        private static void BuildWebGLInternal(BuildOptions extraOptions)
         {
             // セルフホストランナーで Library が古い WebGL 圧縮設定を保持していると
             // ProjectSettings 側の Brotli 指定が反映されず非圧縮成果物が出るため、
@@ -35,7 +45,8 @@ namespace Void2610.UnityTemplate.Editor.CI
 
             Build(
                 BuildTarget.WebGL,
-                GetBuildOutputPath(Path.Combine("CIBuilds", "WebGL", "build")));
+                GetBuildOutputPath(Path.Combine("CIBuilds", "WebGL", "build")),
+                extraOptions);
         }
 
         private static void DeleteIfExists(string path)
@@ -46,7 +57,7 @@ namespace Void2610.UnityTemplate.Editor.CI
             }
         }
 
-        private static void Build(BuildTarget target, string locationPathName)
+        private static void Build(BuildTarget target, string locationPathName, BuildOptions extraOptions)
         {
             ApplyBuildVersion();
 
@@ -64,7 +75,7 @@ namespace Void2610.UnityTemplate.Editor.CI
                     .ToArray(),
                 locationPathName = locationPathName,
                 target = target,
-                options = BuildOptions.None,
+                options = extraOptions,
             };
 
             var report = BuildPipeline.BuildPlayer(options);
