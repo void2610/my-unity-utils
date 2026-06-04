@@ -163,6 +163,23 @@ namespace Void2610.UnityTemplate
         }
 
         /// <summary>
+        /// CanvasGroupの透明度をLitMotionでフェードさせる
+        /// </summary>
+        public static MotionHandle FadeTo(this CanvasGroup canvasGroup, float duration, float alpha, Ease ease = Ease.Linear, bool ignoreTimeScale = false)
+        {
+            return LMotion.Create(canvasGroup.alpha, alpha, duration)
+                .WithEase(ease)
+                .WithScheduler(ignoreTimeScale ? MotionScheduler.UpdateIgnoreTimeScale : MotionScheduler.Update)
+                .WithOnComplete(() =>
+                {
+                    canvasGroup.interactable = false;
+                    canvasGroup.blocksRaycasts = false;
+                })
+                .BindToAlpha(canvasGroup)
+                .AddTo(canvasGroup.gameObject);
+        }
+
+        /// <summary>
         /// TextMeshProUGUIの色をLitMotionで変更
         /// </summary>
         public static MotionHandle ColorTo(this TextMeshProUGUI text, Color targetColor, float duration, Ease ease = Ease.Linear, bool ignoreTimeScale = false)
