@@ -9,6 +9,7 @@ Unityゲーム開発で頻繁に使用するユーティリティスクリプト
 ## 📂 スクリプト一覧
 
 ### UI/ (11ファイル)
+
 - **ButtonSe.cs** - ボタンSE自動再生コンポーネント
 - **ButtonSelectionGlow.cs** - ボタン選択/ホバー時のグロー効果
 - **ButtonTween.cs** - ボタンアニメーション
@@ -22,25 +23,30 @@ Unityゲーム開発で頻繁に使用するユーティリティスクリプト
 - **UILineRenderer.cs** - UI用ライン描画
 
 ### Animation/ (2ファイル)
+
 - **FloatMove.cs** - オブジェクトの浮遊アニメーション
 - **SpriteSheetAnimator.cs** - スプライトシートアニメーション再生
 
 ### Core/ (4ファイル)
+
 - **ExtendedMethods.cs** - 拡張メソッド集（Transform, Image, Text等）
 - **SerializableDictionary.cs** - Unity-serializable Dictionary実装
 - **SingletonMonoBehaviour.cs** - スレッドセーフシングルトン
 - **Utils.cs** - 汎用ユーティリティ関数
 
 ### Audio/ (2ファイル)
+
 - **BgmManager.cs** - BGM再生管理（LitMotionフェード、ダッキング対応）
 - **SeManager.cs** - SE再生管理（20チャンネル、重要度制御）
 
 ### Debug/ (3ファイル)
+
 - **CurrentSelectedGameObjectChecker.cs** - UI選択状態デバッグツール
 - **DebugLogDisplay.cs** - ゲーム画面上へのログ表示
 - **GameViewCapture.cs** - ゲームビュースクリーンショット撮影
 
 ### System/ (12ファイル)
+
 - **CameraAspectRatioHandler.cs** - カメラアスペクト比管理
 - **CameraShake.cs** - カメラシェイク効果
 - **CanvasAspectRatioFitter.cs** - Canvasアスペクト比調整
