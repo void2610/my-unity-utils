@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using LitMotion;
 using UnityEditor;
 using UnityEngine;
-using Void2610.UnityTemplate;
 
 namespace Void2610.UnityTemplate.Editor
 {

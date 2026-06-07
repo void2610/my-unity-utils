@@ -1,5 +1,4 @@
 using LitMotion;
-using LitMotion.Extensions;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;

@@ -1,10 +1,6 @@
 using TMPro;
 using UnityEngine;
 
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
-
 /// <summary>
 /// カーブの傾きで1文字ずつ再配置するアーチ状テキスト（アライメント対応）
 /// </summary>

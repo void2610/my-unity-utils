@@ -1,5 +1,4 @@
 using NUnit.Framework;
-using Void2610.UnityTemplate.Steam;
 
 namespace Void2610.UnityTemplate.Tests
 {

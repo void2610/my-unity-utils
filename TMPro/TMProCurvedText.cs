@@ -2,10 +2,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
-
 /// <summary>
 /// AnimationCurveとcurveScaleでシンプルにカーブさせるテキスト
 /// </summary>
