@@ -3,7 +3,9 @@ using System.Diagnostics;
 using System.IO.Compression;
 using System.IO;
 using System.Linq;
+#if ENABLE_ADDRESSABLES
 using UnityEditor.AddressableAssets.Settings;
+#endif
 using UnityEditor;
 using UnityEditor.Build.Reporting;
 using UnityEditor.ShortcutManagement;
@@ -124,6 +126,7 @@ namespace Void2610.UnityTemplate
         {
             buildResult = default;
 
+#if ENABLE_ADDRESSABLES
             if (!EditorUserBuildSettings.SwitchActiveBuildTarget(targetGroup, target))
             {
                 EditorUtility.DisplayDialog("Build Failed", $"ビルドターゲットの切り替えに失敗しました: {target}", "OK");
@@ -153,6 +156,9 @@ namespace Void2610.UnityTemplate
                 summary.outputPath,
                 summary.totalTime.ToString(@"hh\:mm\:ss"));
             return true;
+#else
+            throw new Exception("Addressablesが必要です");
+#endif
         }
 
         private BuildReport BuildPlayer(

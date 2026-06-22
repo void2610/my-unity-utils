@@ -1,4 +1,4 @@
-#if LISENCE_MASTER_ENABLED
+#if LICENCE_MASTER_ENABLED
 using SyskenTLib.LicenseMaster;
 
 namespace Void2610.UnityTemplate
