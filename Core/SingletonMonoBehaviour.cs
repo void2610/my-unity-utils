@@ -43,7 +43,8 @@ namespace Void2610.UnityTemplate
             if (_instance == null)
             {
                 _instance = this as T;
-                if (IsDontDestroyOnLoad) DontDestroyOnLoad(gameObject);
+                // 子オブジェクトにはDDOLが効かないので警告を避ける
+                if (IsDontDestroyOnLoad && transform.parent == null) DontDestroyOnLoad(gameObject);
             }
             // 既に別のインスタンスが存在する場合は自分を破棄
             else if (_instance != this)
