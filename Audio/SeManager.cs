@@ -46,6 +46,9 @@ namespace Void2610.UnityTemplate
         private const string SE_VOLUME_KEY = "SeVolume";
 
         private AudioSource[] _seAudioSourceList;
+        // 各チャンネルで現在再生中の再生ハンドル (StopSe(handle) で「その再生だけ」を狙い撃ちするため)。0 = 無効
+        private int[] _seHandles;
+        private int _handleSeq;
         private float _seVolume = 0.5f;
 
         /// <summary>
@@ -81,24 +84,56 @@ namespace Void2610.UnityTemplate
         /// <param name="volume">音量倍率</param>
         /// <param name="pitch">ピッチ</param>
         /// <param name="important">重要なSEフラグ（チャンネル不足時に強制再生）</param>
-        public void PlaySe(AudioClip clip, float volume = 1.0f, float pitch = 1.0f, bool important = false)
+        /// <returns>この再生の再生ハンドル (<see cref="StopSe(int)"/> で停止可能。失敗時は 0)</returns>
+        public int PlaySe(AudioClip clip, float volume = 1.0f, float pitch = 1.0f, bool important = false)
         {
             var audioSource = GetAvailableAudioSource(important);
             if (!clip)
             {
                 Debug.LogError("AudioClip could not be found.");
-                return;
+                return 0;
             }
             if (!audioSource)
             {
                 Debug.LogWarning("There is no available AudioSource.");
-                return;
+                return 0;
             }
 
             audioSource.clip = clip;
             audioSource.volume = volume;
             audioSource.pitch = pitch;
             audioSource.Play();
+            return AssignHandle(audioSource);
+        }
+
+        /// <summary>
+        /// 再生したチャンネルに一意の再生ハンドルを割り当てて返す (プール内部は隠蔽したまま狙い撃ち停止を可能にする)
+        /// </summary>
+        private int AssignHandle(AudioSource source)
+        {
+            var index = System.Array.IndexOf(_seAudioSourceList, source);
+            if (index < 0) return 0;
+            var handle = ++_handleSeq;
+            _seHandles[index] = handle;
+            return handle;
+        }
+
+        /// <summary>
+        /// 再生ハンドルを指定してその再生だけを停止する。
+        /// 既にそのチャンネルが別の SE に再利用されていればハンドルが一致せず何もしない (誤って他の音を切らない)。
+        /// </summary>
+        /// <param name="handle"><see cref="PlaySe(string, float, float, bool)"/> 等が返した再生ハンドル</param>
+        public void StopSe(int handle)
+        {
+            if (handle <= 0) return;
+
+            for (var i = 0; i < _seAudioSourceList.Length; i++)
+            {
+                if (_seHandles[i] != handle) continue;
+                if (_seAudioSourceList[i].isPlaying) _seAudioSourceList[i].Stop();
+                _seHandles[i] = 0;
+                return;
+            }
         }
 
         /// <summary>
@@ -108,7 +143,8 @@ namespace Void2610.UnityTemplate
         /// <param name="volume">音量倍率</param>
         /// <param name="pitch">ピッチ（-1でランダム）</param>
         /// <param name="important">重要なSEフラグ</param>
-        public void PlaySe(string seName, float volume = 1.0f, float pitch = -1.0f, bool important = false)
+        /// <returns>この再生の再生ハンドル (<see cref="StopSe(int)"/> で停止可能。失敗時は 0)</returns>
+        public int PlaySe(string seName, float volume = 1.0f, float pitch = -1.0f, bool important = false)
         {
             var data = soundData.FirstOrDefault(t => t.name == seName);
             var audioSource = GetAvailableAudioSource(important);
@@ -116,9 +152,9 @@ namespace Void2610.UnityTemplate
             if (data == null)
             {
                 Debug.LogWarning($"SE '{seName}' が見つかりません。");
-                return;
+                return 0;
             }
-            if (!audioSource) return;
+            if (!audioSource) return 0;
 
             audioSource.clip = data.audioClip;
             audioSource.volume = data.volume * volume;
@@ -126,6 +162,7 @@ namespace Void2610.UnityTemplate
             // ピッチがマイナスの場合はランダム化
             audioSource.pitch = pitch < 0.0f ? UnityEngine.Random.Range(0.8f, 1.2f) : pitch;
             audioSource.Play();
+            return AssignHandle(audioSource);
         }
 
         /// <summary>
@@ -268,6 +305,7 @@ namespace Void2610.UnityTemplate
 
             // AudioSourceリストを初期化
             _seAudioSourceList = new AudioSource[maxChannels];
+            _seHandles = new int[maxChannels];
             for (var i = 0; i < _seAudioSourceList.Length; ++i)
             {
                 _seAudioSourceList[i] = gameObject.AddComponent<AudioSource>();
