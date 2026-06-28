@@ -14,6 +14,12 @@ public sealed class ScreenFadeEffect : ConfigurableCinematicEffectBase<ScreenFad
     public override string EffectName => "スクリーンフェード";
     private readonly Image _overlayImage;
 
+    /// <summary>
+    /// オーバーレイ Image を自動取得するコンストラクタ。 <see cref="CinematicOverlay"/> が
+    /// 必要な Canvas + Image をシーン上に自動生成するため、 事前配置は不要。
+    /// </summary>
+    public ScreenFadeEffect() : this(CinematicOverlay.Instance.Image) { }
+
     public ScreenFadeEffect(Image overlayImage) : base()
     {
         _overlayImage = overlayImage;

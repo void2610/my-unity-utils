@@ -16,6 +16,12 @@ public sealed class ImageFlashEffect : ConfigurableCinematicEffectBase<ImageFlas
     public override string EffectName => "フラッシュ";
     private readonly Image _overlayImage;
 
+    /// <summary>
+    /// オーバーレイ Image を自動取得するコンストラクタ。 <see cref="CinematicOverlay"/> が
+    /// 必要な Canvas + Image をシーン上に自動生成するため、 事前配置は不要。
+    /// </summary>
+    public ImageFlashEffect() : this(CinematicOverlay.Instance.Image) { }
+
     public ImageFlashEffect(Image overlayImage) : base()
     {
         _overlayImage = overlayImage;
