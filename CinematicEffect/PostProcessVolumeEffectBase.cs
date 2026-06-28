@@ -18,14 +18,18 @@ public abstract class PostProcessVolumeEffectBase<TComponent, TConfig>
 {
     protected TConfig CurrentConfig { get; private set; }
 
-    private readonly GameObject _owner;
+    private GameObject _owner;
     private Volume _volume;
     private VolumeProfile _runtimeProfile;
     private TComponent _component;
     private float _currentBlend;
     private readonly TConfig _defaultConfig = new();
 
-    protected PostProcessVolumeEffectBase(GameObject owner)
+    /// <summary>
+    /// owner を省略すると <see cref="CinematicPostProcessHost"/> Singleton が初回再生時に
+    /// 自動生成され、 シーン上の事前配置は不要になる。
+    /// </summary>
+    protected PostProcessVolumeEffectBase(GameObject owner = null)
     {
         _owner = owner;
         ResetConfig();
@@ -103,7 +107,10 @@ public abstract class PostProcessVolumeEffectBase<TComponent, TConfig>
     protected void EnsureInitialized()
     {
         if (_volume) return;
-        if (!_owner) throw new InvalidOperationException($"{GetType().Name} の owner が設定されていません。");
+        // owner 未指定なら Host Singleton を lazy 解決 (シーン上の事前配置を不要にする)
+        if (!_owner) _owner = CinematicPostProcessHost.Instance.gameObject;
+        // URP カメラの renderPostProcessing が OFF だと Volume が画面に反映されないため、 初回再生時に強制 ON
+        CinematicPostProcessHost.EnsureCameraPostProcessingEnabled();
 
         _volume = _owner.AddComponent<Volume>();
         _volume.isGlobal = true;

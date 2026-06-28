@@ -8,7 +8,7 @@ public sealed class VignetteEffect : PostProcessVolumeEffectBase<Vignette, Vigne
 {
     public override string EffectName => "ビネット";
 
-    public VignetteEffect(GameObject owner) : base(owner) { }
+    public VignetteEffect(GameObject owner = null) : base(owner) { }
 
     protected override void ApplyComponent(Vignette component, VignetteConfig config, float blend)
     {
@@ -27,7 +27,7 @@ public sealed class ChromaticAberrationEffect : PostProcessVolumeEffectBase<Chro
 {
     public override string EffectName => "色収差";
 
-    public ChromaticAberrationEffect(GameObject owner) : base(owner) { }
+    public ChromaticAberrationEffect(GameObject owner = null) : base(owner) { }
 
     protected override void ApplyComponent(ChromaticAberration component, ChromaticAberrationConfig config, float blend)
     {
@@ -44,7 +44,7 @@ public sealed class LensDistortionEffect : PostProcessVolumeEffectBase<LensDisto
 {
     public override string EffectName => "レンズ歪み";
 
-    public LensDistortionEffect(GameObject owner) : base(owner) { }
+    public LensDistortionEffect(GameObject owner = null) : base(owner) { }
 
     protected override void ApplyComponent(LensDistortion component, LensDistortionConfig config, float blend)
     {
@@ -61,7 +61,7 @@ public sealed class FilmGrainEffect : PostProcessVolumeEffectBase<FilmGrain, Fil
 {
     public override string EffectName => "フィルムグレイン";
 
-    public FilmGrainEffect(GameObject owner) : base(owner) { }
+    public FilmGrainEffect(GameObject owner = null) : base(owner) { }
 
     protected override void InitializeComponent(FilmGrain component)
     {
@@ -86,7 +86,7 @@ public sealed class FilmNoiseEffect : PostProcessVolumeEffectBase<FilmNoise, Fil
 
     private Texture2D _defaultFilmDartTexture;
 
-    public FilmNoiseEffect(GameObject owner) : base(owner) { }
+    public FilmNoiseEffect(GameObject owner = null) : base(owner) { }
 
     protected override void InitializeComponent(FilmNoise component)
     {
@@ -129,7 +129,7 @@ public sealed class ContrastEffect : PostProcessVolumeEffectBase<ColorAdjustment
 {
     public override string EffectName => "コントラスト";
 
-    public ContrastEffect(GameObject owner) : base(owner) { }
+    public ContrastEffect(GameObject owner = null) : base(owner) { }
 
     protected override void InitializeComponent(ColorAdjustments component)
     {
@@ -156,7 +156,7 @@ public sealed class SaturationEffect : PostProcessVolumeEffectBase<ColorAdjustme
 {
     public override string EffectName => "彩度";
 
-    public SaturationEffect(GameObject owner) : base(owner) { }
+    public SaturationEffect(GameObject owner = null) : base(owner) { }
 
     protected override void InitializeComponent(ColorAdjustments component)
     {
@@ -182,7 +182,7 @@ public sealed class ColorFilterEffect : PostProcessVolumeEffectBase<ColorAdjustm
 {
     public override string EffectName => "カラーフィルター";
 
-    public ColorFilterEffect(GameObject owner) : base(owner) { }
+    public ColorFilterEffect(GameObject owner = null) : base(owner) { }
 
     protected override void InitializeComponent(ColorAdjustments component)
     {
@@ -211,7 +211,7 @@ public sealed class PulseVignetteEffect : PostProcessVolumeEffectBase<Vignette, 
 {
     public override string EffectName => "脈動ビネット";
 
-    public PulseVignetteEffect(GameObject owner) : base(owner) { }
+    public PulseVignetteEffect(GameObject owner = null) : base(owner) { }
 
     protected override void ApplyComponent(Vignette component, PulseVignetteConfig config, float blend)
     {
@@ -235,7 +235,7 @@ public sealed class DepthOfFieldEffect : PostProcessVolumeEffectBase<DepthOfFiel
     private const float FOCAL_LENGTH = 300f;
     private const float APERTURE = 16f;
 
-    public DepthOfFieldEffect(GameObject owner) : base(owner) { }
+    public DepthOfFieldEffect(GameObject owner = null) : base(owner) { }
 
     protected override void InitializeComponent(DepthOfField component)
     {
@@ -274,7 +274,7 @@ public sealed class DoFDizzinessEffect : PostProcessVolumeEffectBase<DepthOfFiel
     private const float FOCAL_LENGTH = 300f;
     private const float APERTURE = 16f;
 
-    public DoFDizzinessEffect(GameObject owner) : base(owner) { }
+    public DoFDizzinessEffect(GameObject owner = null) : base(owner) { }
 
     protected override void InitializeComponent(DepthOfField component)
     {
