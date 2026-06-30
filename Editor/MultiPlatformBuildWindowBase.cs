@@ -292,7 +292,14 @@ namespace Void2610.UnityTemplate
                 return;
             }
 
-            shortcutManager.RebindShortcut(BuildAndRunShortcutId, ShortcutBinding.empty);
+            // デフォルトプロファイルは read-only で RebindShortcut が例外を投げるためスキップ
+            try
+            {
+                shortcutManager.RebindShortcut(BuildAndRunShortcutId, ShortcutBinding.empty);
+            }
+            catch (System.InvalidOperationException)
+            {
+            }
         }
     }
 
