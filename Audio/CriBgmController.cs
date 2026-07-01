@@ -106,6 +106,13 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
     public void PlayBgm(string bgmName)
     {
         var bgmData = bgmList.Find(x => x.Name == bgmName);
+        // ACB ロード失敗 (CI 環境) や不明な bgmName で bgmData/AcbAsset が無い場合は無音再生扱いにする。
+        // 呼び出し側は再生成否を分岐しないので、no-op で通す方が失敗モードとして安全。
+        if (bgmData?.CueReference?.AcbAsset == null || !bgmData.CueReference.AcbAsset.Loaded)
+        {
+            CurrentBgmName = bgmName;
+            return;
+        }
         CurrentBgmName = bgmName;
         PlayBgmInternal(bgmData.CueReference).Forget();
     }
@@ -208,51 +215,67 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
 
     /// <summary>
     /// CRIWAREの初期化待機
-    /// キューシートのロードが完了するまで待機し、タイムアウト処理を行う
+    /// キューシートのロードが完了するまで待機し、タイムアウトしても IsInitialized=true にして
+    /// 呼び出し側 (TitlePresenter / GameInitializer の WaitUntil) をハングさせない。
+    /// タイムアウト時は BGM 無しで進行する (CI 環境や ACB 未配置ビルドでの graceful degradation)。
     /// </summary>
     private async UniTaskVoid InitializeCri()
     {
-        var startTime = Time.realtimeSinceStartup;
-
-        // CRIWARE全体の初期化（ACF登録含む）が完了するまで待機
-        while (CriAtom.CueSheetsAreLoading)
+        try
         {
-            if (Time.realtimeSinceStartup - startTime > 10f)
-                throw new TimeoutException("CRI初期化タイムアウト");
-            await UniTask.Yield();
-        }
+            var startTime = Time.realtimeSinceStartup;
 
-        // 全BGMのACBアセットがロードされるまで待機
-        foreach (var bgmData in bgmList)
-        {
-            if (bgmData.CueReference.AcbAsset != null)
+            // CRIWARE全体の初期化（ACF登録含む）が完了するまで待機
+            while (CriAtom.CueSheetsAreLoading)
             {
-                var acb = bgmData.CueReference.AcbAsset;
+                if (Time.realtimeSinceStartup - startTime > 10f)
+                    throw new TimeoutException("CRI初期化タイムアウト");
+                await UniTask.Yield();
+            }
+
+            // 全BGMのACBアセットがロードされるまで待機
+            foreach (var bgmData in bgmList)
+            {
+                if (bgmData.CueReference.AcbAsset != null)
+                {
+                    var acb = bgmData.CueReference.AcbAsset;
 
 #if UNITY_EDITOR
-                // ドメインリロード無効時、ACBアセットのLoadRequestedがtrueのまま残るため
-                // 強制的にUnloadして再ロード可能にする
-                if (acb.LoadRequested)
-                {
-                    acb.Unload();
-                }
+                    // ドメインリロード無効時、ACBアセットのLoadRequestedがtrueのまま残るため
+                    // 強制的にUnloadして再ロード可能にする
+                    if (acb.LoadRequested)
+                    {
+                        acb.Unload();
+                    }
 
-                // ロードを要求
-                acb.LoadAsync();
+                    // ロードを要求
+                    acb.LoadAsync();
 #endif
 
-                // ACBのロード完了を待機
-                while (!acb.Loaded)
-                {
-                    if (Time.realtimeSinceStartup - startTime > 10f)
-                        throw new TimeoutException("ACBロードタイムアウト");
-                    await UniTask.Yield();
+                    // ACBのロード完了を待機
+                    while (!acb.Loaded)
+                    {
+                        if (Time.realtimeSinceStartup - startTime > 10f)
+                            throw new TimeoutException($"ACBロードタイムアウト: {bgmData.Name}");
+                        await UniTask.Yield();
+                    }
                 }
             }
-        }
 
-        _currentFadeVolume = 0f;
-        IsInitialized = true;
+            _currentFadeVolume = 0f;
+        }
+        catch (TimeoutException ex)
+        {
+            // CI 環境 (self-hosted runner でオーディオデバイス無し等) や ACB 未配置ビルドで発生しうる。
+            // ここで例外を握り潰さないと IsInitialized が永久に false になり、
+            // TitlePresenter/GameInitializer の WaitUntil(IsInitialized) がハング → PlayMode テストが全滅する。
+            // BGM 無しで進行させる方が失敗モードとして安全。
+            Debug.LogWarning($"[CriBgmController] {ex.Message} — BGM 無しで進行します (CI / ACB 未配置環境の可能性)");
+        }
+        finally
+        {
+            IsInitialized = true;
+        }
     }
 
     /// <summary>
