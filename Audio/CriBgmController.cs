@@ -108,7 +108,8 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
         var bgmData = bgmList.Find(x => x.Name == bgmName);
         // ACB ロード失敗 (CI 環境) や不明な bgmName で bgmData/AcbAsset が無い場合は無音再生扱いにする。
         // 呼び出し側は再生成否を分岐しないので、no-op で通す方が失敗モードとして安全。
-        if (bgmData?.CueReference?.AcbAsset == null || !bgmData.CueReference.AcbAsset.Loaded)
+        // CriAtomCueReference は struct のため ?. が使えないので順に null チェック。
+        if (bgmData == null || bgmData.CueReference.AcbAsset == null || !bgmData.CueReference.AcbAsset.Loaded)
         {
             CurrentBgmName = bgmName;
             return;
