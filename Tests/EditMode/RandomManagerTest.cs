@@ -4,9 +4,7 @@ using NUnit.Framework;
 namespace Void2610.UnityTemplate.Tests
 {
     /// <summary>
-    /// System 版 RandomManager (Void2610.UnityTemplate) のシード再現性の検証。
-    /// Core 版 (グローバル名前空間、ILogger 依存) も同じ StableHash + System.Random 構成のため、
-    /// シード化の契約はここで代表して固定する。
+    /// RandomManager のシード再現性の検証。
     /// </summary>
     [TestFixture]
     public class RandomManagerTest
