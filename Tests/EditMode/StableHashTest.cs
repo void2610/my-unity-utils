@@ -20,6 +20,14 @@ namespace Void2610.UnityTemplate.Tests
         }
 
         [Test]
+        public void 非ASCII文字列もUTF8バイト列の既知値と一致する()
+        {
+            // UTF-8 バイト列に対する FNV-1a 32bit (外部計算による参照値)
+            Assert.That(StableHash.Fnv1a("あ"), Is.EqualTo(unchecked((int)0xe02c1bb1)));
+            Assert.That(StableHash.Fnv1a("シード値"), Is.EqualTo(unchecked((int)0xe19512ed)));
+        }
+
+        [Test]
         public void 同一文字列は常に同じハッシュになる()
         {
             Assert.That(StableHash.Fnv1a("e2e_fixed_001"), Is.EqualTo(StableHash.Fnv1a("e2e_fixed_001")));
