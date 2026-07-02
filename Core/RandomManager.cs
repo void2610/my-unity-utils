@@ -1,5 +1,6 @@
 using System;
 using Microsoft.Extensions.Logging;
+using Void2610.UnityTemplate;
 using ZLogger;
 using Random = System.Random;
 
@@ -43,7 +44,8 @@ public class RandomManager
             _logger.ZLogInformation($"[RandomManager] 指定シード使用: {_seedText}");
         }
 
-        var seed = _seedText.GetHashCode();
+        // GetHashCode はプロセス・ランタイムごとに値が変わりうるため、環境を跨いだ再現に安定ハッシュを使う
+        var seed = StableHash.Fnv1a(_seedText);
         _random = new Random(seed);
     }
 
