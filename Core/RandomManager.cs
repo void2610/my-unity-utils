@@ -56,6 +56,13 @@ namespace Void2610.UnityTemplate
         /// <param name="seedText">シード文字列（空の場合は自動生成）</param>
         public void Initialize(string seedText = "") => Initialize(null, seedText);
 
+        // 暗黙の自動初期化はシード管理の一元化を壊すため、未初期化は原因が明確な例外にする
+        private void EnsureInitialized()
+        {
+            if (_random == null)
+                throw new InvalidOperationException("RandomManager が未初期化です。使用前に Initialize を呼んでください。");
+        }
+
         /// <summary>
         /// 指定された確率でtrueを返す
         /// </summary>
@@ -63,6 +70,7 @@ namespace Void2610.UnityTemplate
         /// <returns>確率判定結果</returns>
         public bool Chance(float probability)
         {
+            EnsureInitialized();
             var r = _random.NextDouble();
             _logger?.ZLogTrace($"[RandomManager] Chance: r={r}, probability={probability}, result={(r < probability)}");
             return r < probability;
@@ -76,6 +84,7 @@ namespace Void2610.UnityTemplate
         /// <returns>指定範囲内のランダムfloat値</returns>
         public float RandomFloat(float min, float max)
         {
+            EnsureInitialized();
             var r = (float)(_random.NextDouble() * (max - min) + min);
             _logger?.ZLogTrace($"RandomManager: RandomFloat: r={r} in [{min}, {max})");
             return r;
@@ -89,6 +98,7 @@ namespace Void2610.UnityTemplate
         /// <returns>指定範囲内のランダムint値</returns>
         public int RandomInt(int min, int max)
         {
+            EnsureInitialized();
             var r = _random.Next(min, max);
             _logger?.ZLogTrace($"[RandomManager] RandomInt: r={r} in [{min}, {max})");
             return r;
