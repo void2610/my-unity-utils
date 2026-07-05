@@ -392,7 +392,8 @@ namespace Void2610.UnityTemplate
 
         private void Update()
         {
-            if (!_isPlaying || _currentBGM == null) return;
+            // clip はシーン遷移中などに一時的に null になりうる (isPlaying=true のまま clip.length 参照で NRE を起こすため防ぐ)
+            if (!_isPlaying || _currentBGM == null || _audioSource.clip == null) return;
 
             // イントロ付きループBGMの処理
             if (_currentBGM.loopStartSeconds > 0f)
