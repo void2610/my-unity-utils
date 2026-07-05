@@ -574,3 +574,25 @@ public sealed class DoFDizzinessConfig : VolumeEffectConfig
         VolumeWeight, focusDistance,
         transitionDuration, holdBlur, holdClear, EnterDuration, ExitDuration, Ease);
 }
+
+/// <summary>放射状 (ズーム) ブラー演出の設定。</summary>
+[Serializable]
+public sealed class RadialBlurConfig : TimedEffectConfig
+{
+    [SerializeField] private float strength = 0.18f;
+    [SerializeField] private Vector2 center = new(0.5f, 0.5f);
+
+    public float Strength => strength;
+    public Vector2 Center => center;
+
+    public RadialBlurConfig() { }
+
+    public RadialBlurConfig(float strength, Vector2 center, float enterDuration, float exitDuration, Ease ease = Ease.InOutSine)
+        : base(enterDuration, exitDuration, ease)
+    {
+        this.strength = strength;
+        this.center = center;
+    }
+
+    public override CinematicEffectConfig Clone() => new RadialBlurConfig(strength, center, EnterDuration, ExitDuration, Ease);
+}
