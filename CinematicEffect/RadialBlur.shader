@@ -14,7 +14,9 @@ Shader "Hidden/CinematicEffect/RadialBlur"
             #pragma vertex Vert
             #pragma fragment Frag
 
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/PostProcessing/Common.hlsl"
+            // TEXTURE2D_X は URP の Core.hlsl が定義するため Blit.hlsl より先に include する (内蔵 PP シェーダと同順)
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.core/Runtime/Utilities/Blit.hlsl"
 
             float _Strength;   // 中心へ寄せる最大割合 (0=無効, 0.3 程度で強い)
             float2 _Center;    // 収束中心 (UV, 既定 0.5,0.5)
