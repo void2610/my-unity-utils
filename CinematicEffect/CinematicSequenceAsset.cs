@@ -31,6 +31,10 @@ public class CinematicSequenceAsset : ScriptableObject
         [InspectorName("波打ち歪み")] WaveDistortion,
         [InspectorName("明滅")] Blink,
         [InspectorName("カメラ揺れ（パーリン）")] CameraPerlinShake,
+        [InspectorName("彩度脈動→白黒")] SaturationPulse,
+        [InspectorName("カラーグレード")] ColorGrade,
+        [InspectorName("フラッシュバック")] Flashback,
+        [InspectorName("視界歪み")] VisionWarp,
     }
 
     /// <summary>インスペクターからシリアライズ可能な演出ステップ。</summary>
@@ -62,6 +66,10 @@ public class CinematicSequenceAsset : ScriptableObject
         [SerializeField] public WaveDistortionConfig waveDistortionConfig = new();
         [SerializeField] public BlinkConfig blinkConfig = new();
         [SerializeField] public CameraPerlinShakeConfig cameraPerlinShakeConfig = new();
+        [SerializeField] public SaturationPulseConfig saturationPulseConfig = new();
+        [SerializeField] public ColorGradeConfig colorGradeConfig = new();
+        [SerializeField] public FlashbackConfig flashbackConfig = new();
+        [SerializeField] public VisionWarpConfig visionWarpConfig = new();
 
         /// <summary>
         /// 選択中のエフェクト設定を返す。<see cref="useCustomConfig"/> が false の場合は null。
@@ -94,6 +102,10 @@ public class CinematicSequenceAsset : ScriptableObject
                 EffectKind.WaveDistortion => waveDistortionConfig,
                 EffectKind.Blink => blinkConfig,
                 EffectKind.CameraPerlinShake => cameraPerlinShakeConfig,
+                EffectKind.SaturationPulse => saturationPulseConfig,
+                EffectKind.ColorGrade => colorGradeConfig,
+                EffectKind.Flashback => flashbackConfig,
+                EffectKind.VisionWarp => visionWarpConfig,
                 _ => null,
             };
         }
@@ -122,6 +134,10 @@ public class CinematicSequenceAsset : ScriptableObject
                 EffectKind.WaveDistortion => typeof(WaveDistortionEffect),
                 EffectKind.Blink => typeof(BlinkEffect),
                 EffectKind.CameraPerlinShake => typeof(CameraPerlinShakeEffect),
+                EffectKind.SaturationPulse => typeof(SaturationPulseEffect),
+                EffectKind.ColorGrade => typeof(ColorGradeEffect),
+                EffectKind.Flashback => typeof(FlashbackEffect),
+                EffectKind.VisionWarp => typeof(VisionWarpEffect),
                 _ => throw new InvalidOperationException($"不明なエフェクト種別: {effect}"),
             };
         }

@@ -18,6 +18,7 @@ public class CinematicEffectDirector : MonoBehaviour
     [SerializeField] private Image imageFlashOverlay;
     [SerializeField] private Image blinkOverlay;
     [SerializeField] private Material waveDistortionMaterial;
+    [SerializeField] private Material visionWarpMaterial;
     /// <summary>
     /// 演出の有効/無効フラグ。false の場合 RunAsync は即座に返る。
     /// </summary>
@@ -204,6 +205,7 @@ public class CinematicEffectDirector : MonoBehaviour
         Register(new ScreenFadeEffect(screenFadeOverlay));
         Register(new ImageFlashEffect(imageFlashOverlay));
         Register(new WaveDistortionEffect(waveDistortionMaterial));
+        Register(new VisionWarpEffect(visionWarpMaterial));
         Register(new BlinkEffect(blinkOverlay));
         Register(new CameraShakeEffect());
         Register(new CameraPerlinShakeEffect());
@@ -217,6 +219,9 @@ public class CinematicEffectDirector : MonoBehaviour
         Register(new FilmNoiseEffect(gameObject));
         Register(new ContrastEffect(gameObject));
         Register(new SaturationEffect(gameObject));
+        Register(new SaturationPulseEffect(gameObject));
+        Register(new ColorGradeEffect(gameObject));
+        Register(new FlashbackEffect(gameObject));
         Register(new ColorFilterEffect(gameObject));
         Register(new DepthOfFieldEffect(gameObject));
         Register(new DoFDizzinessEffect(gameObject));

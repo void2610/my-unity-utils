@@ -596,3 +596,152 @@ public sealed class RadialBlurConfig : TimedEffectConfig
 
     public override CinematicEffectConfig Clone() => new RadialBlurConfig(strength, center, EnterDuration, ExitDuration, Ease);
 }
+
+/// <summary>彩度が動悸のように激しく上下したのち白黒へ収束する演出の設定。</summary>
+[Serializable]
+public sealed class SaturationPulseConfig : VolumeEffectConfig
+{
+    [SerializeField] private float pulseAmplitude = 100f;
+    [SerializeField] private float pulseFrequency = 2.5f;
+    [SerializeField] private float pulseDuration = 2f;
+    [SerializeField] private float settleDuration = 0.8f;
+    [SerializeField] private float monochromeSaturation = -100f;
+
+    /// <summary>脈動時の彩度振れ幅（±。ColorAdjustments.saturation 単位、-100..100）。</summary>
+    public float PulseAmplitude => pulseAmplitude;
+
+    /// <summary>脈動（動悸）の周波数（Hz）。</summary>
+    public float PulseFrequency => pulseFrequency;
+
+    /// <summary>脈動を続ける時間（秒）。この後に白黒へ収束する。</summary>
+    public float PulseDuration => pulseDuration;
+
+    /// <summary>脈動終了から白黒へ収束するまでの時間（秒）。</summary>
+    public float SettleDuration => settleDuration;
+
+    /// <summary>収束先の彩度（-100 で完全モノクロ）。</summary>
+    public float MonochromeSaturation => monochromeSaturation;
+
+    public SaturationPulseConfig() { }
+
+    public SaturationPulseConfig(float volumeWeight, float pulseAmplitude, float pulseFrequency, float pulseDuration, float settleDuration, float monochromeSaturation, float enterDuration, float exitDuration, Ease ease = Ease.InOutSine)
+        : base(volumeWeight, enterDuration, exitDuration, ease)
+    {
+        this.pulseAmplitude = pulseAmplitude;
+        this.pulseFrequency = pulseFrequency;
+        this.pulseDuration = pulseDuration;
+        this.settleDuration = settleDuration;
+        this.monochromeSaturation = monochromeSaturation;
+    }
+
+    public override CinematicEffectConfig Clone() => new SaturationPulseConfig(VolumeWeight, pulseAmplitude, pulseFrequency, pulseDuration, settleDuration, monochromeSaturation, EnterDuration, ExitDuration, Ease);
+}
+
+/// <summary>彩度・カラーフィルター・コントラスト・露出をまとめて制御する汎用カラーグレード演出の設定。</summary>
+[Serializable]
+public sealed class ColorGradeConfig : VolumeEffectConfig
+{
+    [SerializeField] private float saturation = -40f;
+    [SerializeField] private Color colorFilter = new(1f, 0.85f, 0.65f, 1f);
+    [SerializeField] private float contrast = 10f;
+    [SerializeField] private float postExposure;
+
+    /// <summary>彩度（-100..100）。</summary>
+    public float Saturation => saturation;
+
+    /// <summary>乗算カラーフィルター。白でフィルターなし。</summary>
+    public Color ColorFilter => colorFilter;
+
+    /// <summary>コントラスト（-100..100）。</summary>
+    public float Contrast => contrast;
+
+    /// <summary>露出補正（EV。0 で変化なし）。</summary>
+    public float PostExposure => postExposure;
+
+    public ColorGradeConfig() { }
+
+    public ColorGradeConfig(float volumeWeight, float saturation, Color colorFilter, float contrast, float postExposure, float enterDuration, float exitDuration, Ease ease = Ease.InOutSine)
+        : base(volumeWeight, enterDuration, exitDuration, ease)
+    {
+        this.saturation = saturation;
+        this.colorFilter = colorFilter;
+        this.contrast = contrast;
+        this.postExposure = postExposure;
+    }
+
+    public override CinematicEffectConfig Clone() => new ColorGradeConfig(VolumeWeight, saturation, colorFilter, contrast, postExposure, EnterDuration, ExitDuration, Ease);
+}
+
+/// <summary>回想（フラッシュバック）を表す複合演出の設定。カラーグレード＋フィルムグレイン＋ビネット＋白フラッシュを束ねる。</summary>
+[Serializable]
+public sealed class FlashbackConfig : TimedEffectConfig
+{
+    [SerializeField] private float holdDuration;
+    [SerializeField] private bool flashOnEnter = true;
+    [SerializeField] private float saturation = -55f;
+    [SerializeField] private Color colorFilter = new(1f, 0.82f, 0.6f, 1f);
+    [SerializeField] private float contrast = 12f;
+    [SerializeField] private float postExposure = 0.15f;
+    [SerializeField] private float grainIntensity = 0.5f;
+    [SerializeField] private float vignetteIntensity = 0.38f;
+
+    /// <summary>グレード維持時間（秒）。0 なら Stop まで持続する。</summary>
+    public float HoldDuration => holdDuration;
+
+    /// <summary>開始時に白フラッシュを差し込むか。</summary>
+    public bool FlashOnEnter => flashOnEnter;
+
+    public float Saturation => saturation;
+    public Color ColorFilter => colorFilter;
+    public float Contrast => contrast;
+    public float PostExposure => postExposure;
+    public float GrainIntensity => grainIntensity;
+    public float VignetteIntensity => vignetteIntensity;
+
+    public FlashbackConfig() { }
+
+    public FlashbackConfig(float holdDuration, bool flashOnEnter, float saturation, Color colorFilter, float contrast, float postExposure, float grainIntensity, float vignetteIntensity, float enterDuration, float exitDuration, Ease ease = Ease.InOutSine)
+        : base(enterDuration, exitDuration, ease)
+    {
+        this.holdDuration = holdDuration;
+        this.flashOnEnter = flashOnEnter;
+        this.saturation = saturation;
+        this.colorFilter = colorFilter;
+        this.contrast = contrast;
+        this.postExposure = postExposure;
+        this.grainIntensity = grainIntensity;
+        this.vignetteIntensity = vignetteIntensity;
+    }
+
+    public override CinematicEffectConfig Clone() => new FlashbackConfig(holdDuration, flashOnEnter, saturation, colorFilter, contrast, postExposure, grainIntensity, vignetteIntensity, EnterDuration, ExitDuration, Ease);
+}
+
+/// <summary>フルスクリーンシェーダーで視界を歪ませる（陽炎・酩酊感）演出の設定。</summary>
+[Serializable]
+public sealed class VisionWarpConfig : TimedEffectConfig
+{
+    [SerializeField] private float strength = 0.02f;
+    [SerializeField] private float frequency = 12f;
+    [SerializeField] private float speed = 2f;
+
+    /// <summary>UV 変位の最大量（画面比。0.02 程度で顕著）。</summary>
+    public float Strength => strength;
+
+    /// <summary>歪みの空間周波数（大きいほど細かい波）。</summary>
+    public float Frequency => frequency;
+
+    /// <summary>歪みの時間変化速度。</summary>
+    public float Speed => speed;
+
+    public VisionWarpConfig() { }
+
+    public VisionWarpConfig(float strength, float frequency, float speed, float enterDuration, float exitDuration, Ease ease = Ease.InOutSine)
+        : base(enterDuration, exitDuration, ease)
+    {
+        this.strength = strength;
+        this.frequency = frequency;
+        this.speed = speed;
+    }
+
+    public override CinematicEffectConfig Clone() => new VisionWarpConfig(strength, frequency, speed, EnterDuration, ExitDuration, Ease);
+}
