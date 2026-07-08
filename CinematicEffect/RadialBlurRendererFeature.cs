@@ -33,7 +33,8 @@ public sealed class RadialBlurRendererFeature : ScriptableRendererFeature
         public RadialBlurPass(Material material)
         {
             _material = material;
-            requiresIntermediateTexture = true; // バックバッファ直書きだと ping-pong できないため中間テクスチャを要求
+            requiresIntermediateTexture = true; // 3D Renderer 向けの保険 (Renderer2D はこのフラグを無視する)
+            ConfigureInput(ScriptableRenderPassInput.Color); // 2D Renderer で中間カラーテクスチャを確保させる唯一の手段
         }
 
         public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
@@ -42,7 +43,7 @@ public sealed class RadialBlurRendererFeature : ScriptableRendererFeature
             if (cameraData.cameraType != CameraType.Game) return;
 
             var resourceData = frameData.Get<UniversalResourceData>();
-            if (resourceData.isActiveTargetBackBuffer) return; // 中間テクスチャが無い (バックバッファ直描画) フレームはスキップ
+            if (resourceData.isActiveTargetBackBuffer) return; // ConfigureInput が効かず中間テクスチャ未確保のフレームに対する保険
 
             var cameraTexture = resourceData.activeColorTexture;
 
