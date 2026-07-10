@@ -15,10 +15,21 @@ public abstract class CinematicEffectBase : ICinematicEffect, IDisposable
     private CancellationTokenSource _playingCts;
 
     /// <inheritdoc/>
+    /// <summary>再生開始時に見た目を即座に初期化するか。false なら直前の見た目を保ったまま新演出へ遷移する。</summary>
+    protected virtual bool ResetVisualsOnReplay => true;
+
     public async UniTask PlayAsync(CancellationToken ct = default)
     {
-        // 前の再生を即座に中断してリセット
-        ResetImmediate();
+        // 連続 Play で見た目を引き継ぎたい派生 (彩度パルス等) は中断のみ。ハードリセットは基準値への飛びを生む
+        if (ResetVisualsOnReplay)
+        {
+            ResetImmediate();
+        }
+        else
+        {
+            _playingCts?.Cancel();
+            IsPlaying = false;
+        }
 
         var myCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         _playingCts = myCts;

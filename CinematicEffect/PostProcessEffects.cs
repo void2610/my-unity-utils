@@ -156,6 +156,8 @@ public sealed class SaturationEffect : PostProcessVolumeEffectBase<ColorAdjustme
 {
     public override string EffectName => "彩度";
 
+    private float _fromSaturation;
+
     public SaturationEffect(GameObject owner = null) : base(owner) { }
 
     protected override void InitializeComponent(ColorAdjustments component)
@@ -166,9 +168,11 @@ public sealed class SaturationEffect : PostProcessVolumeEffectBase<ColorAdjustme
         component.hueShift.overrideState = false;
     }
 
+    protected override void CaptureStart(ColorAdjustments component) => _fromSaturation = component.saturation.value;
+
     protected override void ApplyComponent(ColorAdjustments component, SaturationConfig config, float blend)
     {
-        component.saturation.value = config.Saturation * blend;
+        component.saturation.value = Mathf.Lerp(_fromSaturation, config.Saturation, blend);
     }
 
     protected override void ResetComponent(ColorAdjustments component)
@@ -191,10 +195,11 @@ public sealed class ColorGradeEffect : PostProcessVolumeEffectBase<ColorAdjustme
 
     protected override void ApplyComponent(ColorAdjustments component, ColorGradeConfig config, float blend)
     {
-        component.saturation.value = config.Saturation * blend;
-        component.contrast.value = config.Contrast * blend;
-        component.postExposure.value = config.PostExposure * blend;
-        component.colorFilter.value = Color.Lerp(Color.white, config.ColorFilter, blend);
+        // 値を blend で補間すると開始直後にデフォルト彩度へ引っ張られるため、遷移は weight のランプに委ねる
+        component.saturation.value = config.Saturation;
+        component.contrast.value = config.Contrast;
+        component.postExposure.value = config.PostExposure;
+        component.colorFilter.value = config.ColorFilter;
     }
 
     protected override void ResetComponent(ColorAdjustments component)

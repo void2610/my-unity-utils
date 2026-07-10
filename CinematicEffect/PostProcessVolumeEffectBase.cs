@@ -49,14 +49,31 @@ public abstract class PostProcessVolumeEffectBase<TComponent, TConfig>
 
     // ── テンプレートメソッド ──────────────────────────────────
 
+    // 連続 Play では毎回ハードリセットせず、値を現在→ターゲットへ補間して基準値への飛びを防ぐ
+    protected override bool ResetVisualsOnReplay => false;
+
     protected override async UniTask OnPlayAsync(CancellationToken ct)
     {
         EnsureInitialized();
-        await AnimateBlendAsync(_currentBlend, 1f, CurrentConfig.EnterDuration, ct);
 
+        var startWeight = _volume.weight;
+        // weight が残っている = 前の再生を引き継ぐ。weight は保ち値のみ補間 (無効時はベースから weight を立ち上げ値は即ターゲット)
+        var carryOver = startWeight > 0.0001f;
+        CaptureStart(_component);
+
+        var targetWeight = CurrentConfig.VolumeWeight;
+        await AnimateBlendAsync(0f, 1f, CurrentConfig.EnterDuration, CurrentConfig.Ease, t =>
+        {
+            _currentBlend = carryOver ? 1f : t;
+            _volume.weight = carryOver ? targetWeight : Mathf.Lerp(startWeight, targetWeight, t);
+            ApplyComponent(_component, CurrentConfig, carryOver ? t : 1f);
+        }, ct);
+
+        _currentBlend = 1f;
         while (!ct.IsCancellationRequested)
         {
-            Apply(_currentBlend);
+            _volume.weight = targetWeight;
+            ApplyComponent(_component, CurrentConfig, 1f);
             await UniTask.Yield(PlayerLoopTiming.Update, ct);
         }
     }
@@ -88,13 +105,16 @@ public abstract class PostProcessVolumeEffectBase<TComponent, TConfig>
     /// <summary>VolumeComponent の初期設定（サブクラスで必要な場合にオーバーライド）。</summary>
     protected virtual void InitializeComponent(TComponent component) { }
 
+    /// <summary>再生開始時の現在値を記録する。連続 Play で現在値からターゲットへ補間する派生が使う。</summary>
+    protected virtual void CaptureStart(TComponent component) { }
+
     /// <summary>blend 値に応じて VolumeComponent のパラメータを適用する。</summary>
     protected abstract void ApplyComponent(TComponent component, TConfig config, float blend);
 
     /// <summary>VolumeComponent のパラメータをデフォルト値に戻す。</summary>
     protected abstract void ResetComponent(TComponent component);
 
-    /// <summary>インスタンス固有の 4 引数ラッパー。共通静的ヘルパーに委譲する。</summary>
+    /// <summary>blend で weight と値の両方を駆動する 4 引数ラッパー。ON/OFF をループさせる派生 (DoF 眩暈等) が使う。</summary>
     protected UniTask AnimateBlendAsync(float from, float to, float duration, CancellationToken ct)
     {
         return AnimateBlendAsync(from, to, duration, CurrentConfig.Ease, value =>
