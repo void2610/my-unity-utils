@@ -20,12 +20,13 @@ public abstract class CinematicEffectBase : ICinematicEffect, IDisposable
         // 前の再生を即座に中断してリセット
         ResetImmediate();
 
-        _playingCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        var myCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        _playingCts = myCts;
         IsPlaying = true;
 
         try
         {
-            await OnPlayAsync(_playingCts.Token);
+            await OnPlayAsync(myCts.Token);
         }
         catch (OperationCanceledException)
         {
@@ -33,9 +34,13 @@ public abstract class CinematicEffectBase : ICinematicEffect, IDisposable
         }
         finally
         {
-            _playingCts?.Dispose();
-            _playingCts = null;
-            IsPlaying = false;
+            myCts.Dispose();
+            // 後続 Play に置き換わった古い世代は共有状態を触らない (新しい再生の IsPlaying=true を上書きしないため)
+            if (_playingCts == myCts)
+            {
+                _playingCts = null;
+                IsPlaying = false;
+            }
         }
     }
 
