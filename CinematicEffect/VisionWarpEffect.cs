@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using LitMotion;
@@ -16,13 +17,27 @@ public sealed class VisionWarpEffect : ConfigurableCinematicEffectBase<VisionWar
     private static readonly int FrequencyId = Shader.PropertyToID("_Frequency");
     private static readonly int SpeedId = Shader.PropertyToID("_Speed");
 
+    private const string DefaultMaterialResourcePath = "VisionWarp";
+
     private readonly Material _material;
     private float _currentStrength;
+
+    // 未配線時は同梱マテリアルを自己ロードする (ScreenFade/ImageFlash と同じ自己調達フォールバック。事前配置不要)
+    public VisionWarpEffect() : this(LoadDefaultMaterial()) { }
 
     public VisionWarpEffect(Material visionWarpMaterial) : base()
     {
         _material = visionWarpMaterial;
         OnResetImmediate();
+    }
+
+    // RendererFeature と同一マテリアルアセットを共有する。パス設定ミスを後段の NRE ではなくロード時点で顕在化させる
+    private static Material LoadDefaultMaterial()
+    {
+        var material = Resources.Load<Material>(DefaultMaterialResourcePath);
+        if (material == null) throw new InvalidOperationException($"Resources から VisionWarp マテリアルをロードできません: {DefaultMaterialResourcePath}");
+
+        return material;
     }
 
     protected override async UniTask OnPlayAsync(CancellationToken ct)

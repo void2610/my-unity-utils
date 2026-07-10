@@ -212,7 +212,7 @@ public class CinematicEffectDirector : MonoBehaviour
         Register(screenFadeOverlay ? new ScreenFadeEffect(screenFadeOverlay) : new ScreenFadeEffect());
         Register(imageFlashOverlay ? new ImageFlashEffect(imageFlashOverlay) : new ImageFlashEffect());
         if (waveDistortionMaterial) Register(new WaveDistortionEffect(waveDistortionMaterial));
-        if (visionWarpMaterial) Register(new VisionWarpEffect(visionWarpMaterial));
+        Register(visionWarpMaterial ? new VisionWarpEffect(visionWarpMaterial) : new VisionWarpEffect());
         if (blinkOverlay) Register(new BlinkEffect(blinkOverlay));
         Register(new CameraShakeEffect());
         Register(new CameraPerlinShakeEffect());
