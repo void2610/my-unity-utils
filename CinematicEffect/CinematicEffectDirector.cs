@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.UI;
 
 /// <summary>
 /// 映画的演出の薄いオーケストレータ。
@@ -12,13 +11,6 @@ using UnityEngine.UI;
 /// </summary>
 public class CinematicEffectDirector : MonoBehaviour
 {
-    [SerializeField] private RectTransform letterboxTopBar;
-    [SerializeField] private RectTransform letterboxBottomBar;
-    [SerializeField] private Image screenFadeOverlay;
-    [SerializeField] private Image imageFlashOverlay;
-    [SerializeField] private Image blinkOverlay;
-    [SerializeField] private Material waveDistortionMaterial;
-    [SerializeField] private Material visionWarpMaterial;
     /// <summary>
     /// 演出の有効/無効フラグ。false の場合 RunAsync は即座に返る。
     /// </summary>
@@ -207,13 +199,13 @@ public class CinematicEffectDirector : MonoBehaviour
 
         _effects = new Dictionary<Type, ICinematicEffect>();
 
-        // ── 純粋 C# エフェクト（参照を注入。 overlay 未割当なら CinematicOverlay Singleton へ自動フォールバック）
-        if (letterboxTopBar && letterboxBottomBar) Register(new LetterboxEffect(letterboxTopBar, letterboxBottomBar));
-        Register(screenFadeOverlay ? new ScreenFadeEffect(screenFadeOverlay) : new ScreenFadeEffect());
-        Register(imageFlashOverlay ? new ImageFlashEffect(imageFlashOverlay) : new ImageFlashEffect());
-        if (waveDistortionMaterial) Register(new WaveDistortionEffect(waveDistortionMaterial));
-        Register(visionWarpMaterial ? new VisionWarpEffect(visionWarpMaterial) : new VisionWarpEffect());
-        if (blinkOverlay) Register(new BlinkEffect(blinkOverlay));
+        // ── 純粋 C# エフェクト（全て自己調達コンストラクタで構築。overlay / 材質はシーン配線せず CinematicOverlay Singleton か Resources から自動取得する）
+        Register(new LetterboxEffect());
+        Register(new ScreenFadeEffect());
+        Register(new ImageFlashEffect());
+        Register(new WaveDistortionEffect());
+        Register(new VisionWarpEffect());
+        Register(new BlinkEffect());
         Register(new CameraShakeEffect());
         Register(new CameraPerlinShakeEffect());
         Register(new CameraDisorientationEffect());
