@@ -103,6 +103,13 @@ public class CinematicEffectDirector : MonoBehaviour
         }
     }
 
+    /// <summary>指定した型の演出が再生中かを返す（観測用。未登録なら false）。</summary>
+    public bool IsPlaying(Type effectType)
+    {
+        EnsureEffectsRegistered();
+        return _effects.TryGetValue(effectType, out var effect) && effect.IsPlaying;
+    }
+
     /// <summary>全演出を即座にリセットする。</summary>
     public void ResetAll()
     {
@@ -200,13 +207,13 @@ public class CinematicEffectDirector : MonoBehaviour
 
         _effects = new Dictionary<Type, ICinematicEffect>();
 
-        // ── 純粋 C# エフェクト（コンストラクターで参照を注入）
-        Register(new LetterboxEffect(letterboxTopBar, letterboxBottomBar));
-        Register(new ScreenFadeEffect(screenFadeOverlay));
-        Register(new ImageFlashEffect(imageFlashOverlay));
-        Register(new WaveDistortionEffect(waveDistortionMaterial));
-        Register(new VisionWarpEffect(visionWarpMaterial));
-        Register(new BlinkEffect(blinkOverlay));
+        // ── 純粋 C# エフェクト（参照を注入。 overlay 未割当なら CinematicOverlay Singleton へ自動フォールバック）
+        if (letterboxTopBar && letterboxBottomBar) Register(new LetterboxEffect(letterboxTopBar, letterboxBottomBar));
+        Register(screenFadeOverlay ? new ScreenFadeEffect(screenFadeOverlay) : new ScreenFadeEffect());
+        Register(imageFlashOverlay ? new ImageFlashEffect(imageFlashOverlay) : new ImageFlashEffect());
+        if (waveDistortionMaterial) Register(new WaveDistortionEffect(waveDistortionMaterial));
+        if (visionWarpMaterial) Register(new VisionWarpEffect(visionWarpMaterial));
+        if (blinkOverlay) Register(new BlinkEffect(blinkOverlay));
         Register(new CameraShakeEffect());
         Register(new CameraPerlinShakeEffect());
         Register(new CameraDisorientationEffect());
