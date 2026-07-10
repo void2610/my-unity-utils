@@ -177,58 +177,6 @@ public sealed class SaturationEffect : PostProcessVolumeEffectBase<ColorAdjustme
     }
 }
 
-/// <summary>
-/// 彩度を動悸のごとく激しく上下させたのち、白黒（モノクロ）へ収束させる演出。
-/// Time.unscaledTime を基準に脈動位相を算出するため TimeScale の影響を受けない。
-/// </summary>
-public sealed class SaturationPulseEffect : PostProcessVolumeEffectBase<ColorAdjustments, SaturationPulseConfig>
-{
-    public override string EffectName => "彩度脈動→白黒";
-
-    private float _pulseStartTime;
-
-    public SaturationPulseEffect(GameObject owner = null) : base(owner) { }
-
-    protected override void InitializeComponent(ColorAdjustments component)
-    {
-        // 自分が担当しないパラメータは Override しない
-        component.contrast.overrideState = false;
-        component.colorFilter.overrideState = false;
-        component.postExposure.overrideState = false;
-        component.hueShift.overrideState = false;
-    }
-
-    protected override UniTask OnPlayAsync(CancellationToken ct)
-    {
-        _pulseStartTime = Time.unscaledTime;
-        return base.OnPlayAsync(ct);
-    }
-
-    protected override void ApplyComponent(ColorAdjustments component, SaturationPulseConfig config, float blend)
-    {
-        var elapsed = Time.unscaledTime - _pulseStartTime;
-        float saturation;
-        if (elapsed < config.PulseDuration)
-        {
-            saturation = Mathf.Sin(elapsed * config.PulseFrequency * Mathf.PI * 2f) * config.PulseAmplitude;
-        }
-        else
-        {
-            // 脈動終了時点の彩度から白黒へ滑らかに収束させる（波形の不連続を避ける）
-            var saturationAtPulseEnd = Mathf.Sin(config.PulseDuration * config.PulseFrequency * Mathf.PI * 2f) * config.PulseAmplitude;
-            var settle = config.SettleDuration > 0f ? Mathf.Clamp01((elapsed - config.PulseDuration) / config.SettleDuration) : 1f;
-            saturation = Mathf.Lerp(saturationAtPulseEnd, config.MonochromeSaturation, settle);
-        }
-
-        component.saturation.value = Mathf.Clamp(saturation, -100f, 100f) * blend;
-    }
-
-    protected override void ResetComponent(ColorAdjustments component)
-    {
-        component.saturation.value = 0f;
-    }
-}
-
 /// <summary>彩度・カラーフィルター・コントラスト・露出をまとめて制御する汎用カラーグレード。回想やムード演出の下地に使う。</summary>
 public sealed class ColorGradeEffect : PostProcessVolumeEffectBase<ColorAdjustments, ColorGradeConfig>
 {

@@ -32,7 +32,6 @@ public class CinematicSequenceStepDrawer : PropertyDrawer
     private const string PROP_WAVE_DISTORTION_CONFIG = "waveDistortionConfig";
     private const string PROP_BLINK_CONFIG = "blinkConfig";
     private const string PROP_CAMERA_PERLIN_SHAKE_CONFIG = "cameraPerlinShakeConfig";
-    private const string PROP_SATURATION_PULSE_CONFIG = "saturationPulseConfig";
     private const string PROP_COLOR_GRADE_CONFIG = "colorGradeConfig";
     private const string PROP_FLASHBACK_CONFIG = "flashbackConfig";
     private const string PROP_VISION_WARP_CONFIG = "visionWarpConfig";
@@ -78,7 +77,8 @@ public class CinematicSequenceStepDrawer : PropertyDrawer
     private static SerializedProperty GetActiveConfigProperty(SerializedProperty property)
     {
         var effectProp = property.FindPropertyRelative(PROP_EFFECT);
-        var effectKind = (CinematicSequenceAsset.EffectKind)effectProp.enumValueIndex;
+        // EffectKind は欠番 (削除済み SaturationPulse=19) を含むため序数でなく実値でマッチする
+        var effectKind = (CinematicSequenceAsset.EffectKind)effectProp.intValue;
 
         var propName = effectKind switch
         {
@@ -101,7 +101,6 @@ public class CinematicSequenceStepDrawer : PropertyDrawer
             CinematicSequenceAsset.EffectKind.WaveDistortion => PROP_WAVE_DISTORTION_CONFIG,
             CinematicSequenceAsset.EffectKind.Blink => PROP_BLINK_CONFIG,
             CinematicSequenceAsset.EffectKind.CameraPerlinShake => PROP_CAMERA_PERLIN_SHAKE_CONFIG,
-            CinematicSequenceAsset.EffectKind.SaturationPulse => PROP_SATURATION_PULSE_CONFIG,
             CinematicSequenceAsset.EffectKind.ColorGrade => PROP_COLOR_GRADE_CONFIG,
             CinematicSequenceAsset.EffectKind.Flashback => PROP_FLASHBACK_CONFIG,
             CinematicSequenceAsset.EffectKind.VisionWarp => PROP_VISION_WARP_CONFIG,

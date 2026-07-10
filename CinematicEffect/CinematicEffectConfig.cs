@@ -597,46 +597,6 @@ public sealed class RadialBlurConfig : TimedEffectConfig
     public override CinematicEffectConfig Clone() => new RadialBlurConfig(strength, center, EnterDuration, ExitDuration, Ease);
 }
 
-/// <summary>彩度が動悸のように激しく上下したのち白黒へ収束する演出の設定。</summary>
-[Serializable]
-public sealed class SaturationPulseConfig : VolumeEffectConfig
-{
-    [SerializeField] private float pulseAmplitude = 100f;
-    [SerializeField] private float pulseFrequency = 2.5f;
-    [SerializeField] private float pulseDuration = 2f;
-    [SerializeField] private float settleDuration = 0.8f;
-    [SerializeField] private float monochromeSaturation = -100f;
-
-    /// <summary>脈動時の彩度振れ幅（±。ColorAdjustments.saturation 単位、-100..100）。</summary>
-    public float PulseAmplitude => pulseAmplitude;
-
-    /// <summary>脈動（動悸）の周波数（Hz）。</summary>
-    public float PulseFrequency => pulseFrequency;
-
-    /// <summary>脈動を続ける時間（秒）。この後に白黒へ収束する。</summary>
-    public float PulseDuration => pulseDuration;
-
-    /// <summary>脈動終了から白黒へ収束するまでの時間（秒）。</summary>
-    public float SettleDuration => settleDuration;
-
-    /// <summary>収束先の彩度（-100 で完全モノクロ）。</summary>
-    public float MonochromeSaturation => monochromeSaturation;
-
-    public SaturationPulseConfig() { }
-
-    public SaturationPulseConfig(float volumeWeight, float pulseAmplitude, float pulseFrequency, float pulseDuration, float settleDuration, float monochromeSaturation, float enterDuration, float exitDuration, Ease ease = Ease.InOutSine)
-        : base(volumeWeight, enterDuration, exitDuration, ease)
-    {
-        this.pulseAmplitude = pulseAmplitude;
-        this.pulseFrequency = pulseFrequency;
-        this.pulseDuration = pulseDuration;
-        this.settleDuration = settleDuration;
-        this.monochromeSaturation = monochromeSaturation;
-    }
-
-    public override CinematicEffectConfig Clone() => new SaturationPulseConfig(VolumeWeight, pulseAmplitude, pulseFrequency, pulseDuration, settleDuration, monochromeSaturation, EnterDuration, ExitDuration, Ease);
-}
-
 /// <summary>彩度・カラーフィルター・コントラスト・露出をまとめて制御する汎用カラーグレード演出の設定。</summary>
 [Serializable]
 public sealed class ColorGradeConfig : VolumeEffectConfig

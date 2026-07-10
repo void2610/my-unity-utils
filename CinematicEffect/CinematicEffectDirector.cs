@@ -236,7 +236,6 @@ public class CinematicEffectDirector : MonoBehaviour
         Register(new FilmNoiseEffect(gameObject));
         Register(new ContrastEffect(gameObject));
         Register(new SaturationEffect(gameObject));
-        Register(new SaturationPulseEffect(gameObject));
         Register(new ColorGradeEffect(gameObject));
         Register(new FlashbackEffect(gameObject));
         Register(new ColorFilterEffect(gameObject));

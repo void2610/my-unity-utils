@@ -9,32 +9,31 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "NewCinematicSequence", menuName = "Cinematic/Sequence Asset")]
 public class CinematicSequenceAsset : ScriptableObject
 {
-    /// <summary>操作対象のエフェクト種別。</summary>
+    /// <summary>操作対象のエフェクト種別。値はシリアライズされる asset の effect 値と対応するため、削除・並べ替えで既存値をズラさないよう明示的に固定する。19 は削除済み SaturationPulse の欠番。</summary>
     public enum EffectKind
     {
-        [InspectorName("レターボックス")] Letterbox,
-        [InspectorName("スクリーンフェード")] ScreenFade,
-        [InspectorName("カメラ振動")] CameraShake,
-        [InspectorName("カメラ歪み")] CameraDisorientation,
-        [InspectorName("ビネット")] Vignette,
-        [InspectorName("色収差")] ChromaticAberration,
-        [InspectorName("レンズ歪み")] LensDistortion,
-        [InspectorName("フィルムグレイン")] FilmGrain,
-        [InspectorName("フィルムノイズ")] FilmNoise,
-        [InspectorName("コントラスト")] Contrast,
-        [InspectorName("彩度")] Saturation,
-        [InspectorName("カラーフィルター")] ColorFilter,
-        [InspectorName("被写界深度")] DepthOfField,
-        [InspectorName("フラッシュ")] ImageFlash,
-        [InspectorName("めまい")] DoFDizziness,
-        [InspectorName("脈動ビネット")] PulseVignette,
-        [InspectorName("波打ち歪み")] WaveDistortion,
-        [InspectorName("明滅")] Blink,
-        [InspectorName("カメラ揺れ（パーリン）")] CameraPerlinShake,
-        [InspectorName("彩度脈動→白黒")] SaturationPulse,
-        [InspectorName("カラーグレード")] ColorGrade,
-        [InspectorName("フラッシュバック")] Flashback,
-        [InspectorName("視界歪み")] VisionWarp,
+        [InspectorName("レターボックス")] Letterbox = 0,
+        [InspectorName("スクリーンフェード")] ScreenFade = 1,
+        [InspectorName("カメラ振動")] CameraShake = 2,
+        [InspectorName("カメラ歪み")] CameraDisorientation = 3,
+        [InspectorName("ビネット")] Vignette = 4,
+        [InspectorName("色収差")] ChromaticAberration = 5,
+        [InspectorName("レンズ歪み")] LensDistortion = 6,
+        [InspectorName("フィルムグレイン")] FilmGrain = 7,
+        [InspectorName("フィルムノイズ")] FilmNoise = 8,
+        [InspectorName("コントラスト")] Contrast = 9,
+        [InspectorName("彩度")] Saturation = 10,
+        [InspectorName("カラーフィルター")] ColorFilter = 11,
+        [InspectorName("被写界深度")] DepthOfField = 12,
+        [InspectorName("フラッシュ")] ImageFlash = 13,
+        [InspectorName("めまい")] DoFDizziness = 14,
+        [InspectorName("脈動ビネット")] PulseVignette = 15,
+        [InspectorName("波打ち歪み")] WaveDistortion = 16,
+        [InspectorName("明滅")] Blink = 17,
+        [InspectorName("カメラ揺れ（パーリン）")] CameraPerlinShake = 18,
+        [InspectorName("カラーグレード")] ColorGrade = 20,
+        [InspectorName("フラッシュバック")] Flashback = 21,
+        [InspectorName("視界歪み")] VisionWarp = 22,
     }
 
     /// <summary>インスペクターからシリアライズ可能な演出ステップ。</summary>
@@ -66,7 +65,6 @@ public class CinematicSequenceAsset : ScriptableObject
         [SerializeField] public WaveDistortionConfig waveDistortionConfig = new();
         [SerializeField] public BlinkConfig blinkConfig = new();
         [SerializeField] public CameraPerlinShakeConfig cameraPerlinShakeConfig = new();
-        [SerializeField] public SaturationPulseConfig saturationPulseConfig = new();
         [SerializeField] public ColorGradeConfig colorGradeConfig = new();
         [SerializeField] public FlashbackConfig flashbackConfig = new();
         [SerializeField] public VisionWarpConfig visionWarpConfig = new();
@@ -102,7 +100,6 @@ public class CinematicSequenceAsset : ScriptableObject
                 EffectKind.WaveDistortion => waveDistortionConfig,
                 EffectKind.Blink => blinkConfig,
                 EffectKind.CameraPerlinShake => cameraPerlinShakeConfig,
-                EffectKind.SaturationPulse => saturationPulseConfig,
                 EffectKind.ColorGrade => colorGradeConfig,
                 EffectKind.Flashback => flashbackConfig,
                 EffectKind.VisionWarp => visionWarpConfig,
@@ -134,7 +131,6 @@ public class CinematicSequenceAsset : ScriptableObject
                 EffectKind.WaveDistortion => typeof(WaveDistortionEffect),
                 EffectKind.Blink => typeof(BlinkEffect),
                 EffectKind.CameraPerlinShake => typeof(CameraPerlinShakeEffect),
-                EffectKind.SaturationPulse => typeof(SaturationPulseEffect),
                 EffectKind.ColorGrade => typeof(ColorGradeEffect),
                 EffectKind.Flashback => typeof(FlashbackEffect),
                 EffectKind.VisionWarp => typeof(VisionWarpEffect),
