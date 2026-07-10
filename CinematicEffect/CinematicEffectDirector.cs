@@ -23,6 +23,9 @@ public class CinematicEffectDirector : MonoBehaviour
     private Dictionary<Type, ICinematicEffect> _effects;
 #if UNITY_EDITOR
     private CancellationTokenSource _testCts;
+
+    /// <summary>再生中のステップ番号（CinematicTestWindow のハイライト用）。非再生時は -1。</summary>
+    public int CurrentStepIndex { get; private set; } = -1;
 #endif
 
     public UniTask RunAsync(CinematicSequenceAsset sequenceAsset, CancellationToken ct = default) => RunAsync(sequenceAsset.Build(), ct);
@@ -40,8 +43,16 @@ public class CinematicEffectDirector : MonoBehaviour
         // 演出が無効の場合は何もしない
         if (!IsEffectsEnabled) return;
 
-        foreach (var step in sequence.Steps)
+#if UNITY_EDITOR
+        try
         {
+#endif
+        for (var i = 0; i < sequence.Steps.Count; i++)
+        {
+            var step = sequence.Steps[i];
+#if UNITY_EDITOR
+            CurrentStepIndex = i;
+#endif
             if (ct.IsCancellationRequested)
             {
                 break;
@@ -93,6 +104,13 @@ public class CinematicEffectDirector : MonoBehaviour
                     break;
             }
         }
+#if UNITY_EDITOR
+        }
+        finally
+        {
+            CurrentStepIndex = -1;
+        }
+#endif
     }
 
     /// <summary>指定した型の演出が再生中かを返す（観測用。未登録なら false）。</summary>

@@ -116,6 +116,12 @@ public class CinematicTestWindow : EditorWindow
                 rect.yMin += 2f;
                 rect.yMax -= 2f;
 
+                // 再生中のステップを強調表示する
+                if (Application.isPlaying && _director != null && _director.CurrentStepIndex == index)
+                {
+                    EditorGUI.DrawRect(rect, new Color(0.25f, 0.6f, 1f, 0.22f));
+                }
+
                 // [InspectorName] を反映した enumDisplayNames でラベルを構築
                 var kindProp = elem.FindPropertyRelative("kind");
                 var effectProp = elem.FindPropertyRelative("effect");
@@ -290,11 +296,22 @@ public class CinematicTestWindow : EditorWindow
         TryFindDirector();
         RebuildList();
         EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+        EditorApplication.update += OnEditorUpdate;
     }
 
     private void OnDisable()
     {
         EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+        EditorApplication.update -= OnEditorUpdate;
+    }
+
+    // 再生位置ハイライトを追従させるため、再生中は毎ティック再描画する（非同期開始直後の遷移も取りこぼさない）
+    private void OnEditorUpdate()
+    {
+        if (Application.isPlaying && _director != null && _director.CurrentStepIndex >= 0)
+        {
+            Repaint();
+        }
     }
 
     // ── 描画 ───────────────────────────────────────────────
