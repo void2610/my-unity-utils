@@ -35,7 +35,8 @@ public sealed class LetterboxEffect : ConfigurableCinematicEffectBase<LetterboxC
         var edge = top ? 1f : 0f;
         rt.anchorMin = new Vector2(0f, edge);
         rt.anchorMax = new Vector2(1f, edge);
-        rt.pivot = new Vector2(0.5f, edge);
+        // pivot は帯の内側の辺に置く。可視位置 (top:y=-150 / bottom:y=+150) で画面端から内側へ 150px せり出す
+        rt.pivot = new Vector2(0.5f, top ? 0f : 1f);
         rt.sizeDelta = new Vector2(0f, 150f);
         var img = go.GetComponent<Image>();
         img.color = Color.black;
