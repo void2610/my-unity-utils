@@ -17,6 +17,9 @@ public sealed class BlinkEffect : ConfigurableCinematicEffectBase<BlinkConfig>
 
     private readonly Image _overlayImage;
 
+    // 未配線時は CinematicOverlay の全画面 Image を共用する (ScreenFade/ImageFlash と同じ自己調達。事前配置不要)
+    public BlinkEffect() : this(CinematicOverlay.Instance.Image) { }
+
     public BlinkEffect(Image overlayImage) : base()
     {
         _overlayImage = overlayImage;

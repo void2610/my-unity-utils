@@ -3,6 +3,7 @@ using Cysharp.Threading.Tasks;
 using LitMotion;
 using LitMotion.Extensions;
 using UnityEngine;
+using UnityEngine.UI;
 using Void2610.UnityTemplate;
 
 /// <summary>
@@ -15,11 +16,32 @@ public sealed class LetterboxEffect : ConfigurableCinematicEffectBase<LetterboxC
     private readonly RectTransform _topBar;
     private readonly RectTransform _bottomBar;
 
+    // 未配線時はオーバーレイ Canvas 配下に黒帯を自己生成する (事前配置不要)
+    public LetterboxEffect() : this(CreateBar("LetterboxTopBar", true), CreateBar("LetterboxBottomBar", false)) { }
+
     public LetterboxEffect(RectTransform topBar, RectTransform bottomBar) : base()
     {
         _topBar = topBar;
         _bottomBar = bottomBar;
         OnResetImmediate();
+    }
+
+    // 画面上端/下端に張り付く全幅の黒帯を生成する。表示位置は OnPlay/OnStop が anchoredPosition.y で制御する
+    private static RectTransform CreateBar(string name, bool top)
+    {
+        var go = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        var rt = (RectTransform)go.transform;
+        rt.SetParent(CinematicOverlay.Instance.Canvas.transform, false);
+        var edge = top ? 1f : 0f;
+        rt.anchorMin = new Vector2(0f, edge);
+        rt.anchorMax = new Vector2(1f, edge);
+        // pivot は帯の内側の辺に置く。可視位置 (top:y=-150 / bottom:y=+150) で画面端から内側へ 150px せり出す
+        rt.pivot = new Vector2(0.5f, top ? 0f : 1f);
+        rt.sizeDelta = new Vector2(0f, 150f);
+        var img = go.GetComponent<Image>();
+        img.color = Color.black;
+        img.raycastTarget = false;
+        return rt;
     }
 
     protected override async UniTask OnPlayAsync(CancellationToken ct)

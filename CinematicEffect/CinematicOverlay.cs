@@ -13,6 +13,7 @@ using Void2610.UnityTemplate;
 public sealed class CinematicOverlay : SingletonMonoBehaviour<CinematicOverlay>
 {
     private Image _image;
+    private Canvas _canvas;
 
     /// <summary>フェード / フラッシュの塗りつぶし対象となる全画面 Image。</summary>
     public Image Image
@@ -21,6 +22,16 @@ public sealed class CinematicOverlay : SingletonMonoBehaviour<CinematicOverlay>
         {
             if (_image == null) BuildOverlay();
             return _image;
+        }
+    }
+
+    /// <summary>レターボックス帯など子オブジェクトの親にする、このオーバーレイの Canvas。</summary>
+    public Canvas Canvas
+    {
+        get
+        {
+            if (_image == null) BuildOverlay();
+            return _canvas;
         }
     }
 
@@ -40,6 +51,7 @@ public sealed class CinematicOverlay : SingletonMonoBehaviour<CinematicOverlay>
         if (canvas == null) canvas = gameObject.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = short.MaxValue; // 通常 UI より常に手前
+        _canvas = canvas;
         if (gameObject.GetComponent<CanvasScaler>() == null) gameObject.AddComponent<CanvasScaler>();
 
         var imgGo = new GameObject("Image", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
