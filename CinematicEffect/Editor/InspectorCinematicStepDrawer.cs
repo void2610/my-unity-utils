@@ -33,7 +33,6 @@ public class CinematicSequenceStepDrawer : PropertyDrawer
     private const string PROP_BLINK_CONFIG = "blinkConfig";
     private const string PROP_CAMERA_PERLIN_SHAKE_CONFIG = "cameraPerlinShakeConfig";
     private const string PROP_COLOR_GRADE_CONFIG = "colorGradeConfig";
-    private const string PROP_FLASHBACK_CONFIG = "flashbackConfig";
     private const string PROP_VISION_WARP_CONFIG = "visionWarpConfig";
 
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
@@ -102,7 +101,6 @@ public class CinematicSequenceStepDrawer : PropertyDrawer
             CinematicSequenceAsset.EffectKind.Blink => PROP_BLINK_CONFIG,
             CinematicSequenceAsset.EffectKind.CameraPerlinShake => PROP_CAMERA_PERLIN_SHAKE_CONFIG,
             CinematicSequenceAsset.EffectKind.ColorGrade => PROP_COLOR_GRADE_CONFIG,
-            CinematicSequenceAsset.EffectKind.Flashback => PROP_FLASHBACK_CONFIG,
             CinematicSequenceAsset.EffectKind.VisionWarp => PROP_VISION_WARP_CONFIG,
             _ => null,
         };

@@ -632,50 +632,6 @@ public sealed class ColorGradeConfig : VolumeEffectConfig
     public override CinematicEffectConfig Clone() => new ColorGradeConfig(VolumeWeight, saturation, colorFilter, contrast, postExposure, EnterDuration, ExitDuration, Ease);
 }
 
-/// <summary>回想（フラッシュバック）を表す複合演出の設定。カラーグレード＋フィルムグレイン＋ビネット＋白フラッシュを束ねる。</summary>
-[Serializable]
-public sealed class FlashbackConfig : TimedEffectConfig
-{
-    [SerializeField] private float holdDuration;
-    [SerializeField] private bool flashOnEnter = true;
-    [SerializeField] private float saturation = -55f;
-    [SerializeField] private Color colorFilter = new(1f, 0.82f, 0.6f, 1f);
-    [SerializeField] private float contrast = 12f;
-    [SerializeField] private float postExposure = 0.15f;
-    [SerializeField] private float grainIntensity = 0.5f;
-    [SerializeField] private float vignetteIntensity = 0.38f;
-
-    /// <summary>グレード維持時間（秒）。0 なら Stop まで持続する。</summary>
-    public float HoldDuration => holdDuration;
-
-    /// <summary>開始時に白フラッシュを差し込むか。</summary>
-    public bool FlashOnEnter => flashOnEnter;
-
-    public float Saturation => saturation;
-    public Color ColorFilter => colorFilter;
-    public float Contrast => contrast;
-    public float PostExposure => postExposure;
-    public float GrainIntensity => grainIntensity;
-    public float VignetteIntensity => vignetteIntensity;
-
-    public FlashbackConfig() { }
-
-    public FlashbackConfig(float holdDuration, bool flashOnEnter, float saturation, Color colorFilter, float contrast, float postExposure, float grainIntensity, float vignetteIntensity, float enterDuration, float exitDuration, Ease ease = Ease.InOutSine)
-        : base(enterDuration, exitDuration, ease)
-    {
-        this.holdDuration = holdDuration;
-        this.flashOnEnter = flashOnEnter;
-        this.saturation = saturation;
-        this.colorFilter = colorFilter;
-        this.contrast = contrast;
-        this.postExposure = postExposure;
-        this.grainIntensity = grainIntensity;
-        this.vignetteIntensity = vignetteIntensity;
-    }
-
-    public override CinematicEffectConfig Clone() => new FlashbackConfig(holdDuration, flashOnEnter, saturation, colorFilter, contrast, postExposure, grainIntensity, vignetteIntensity, EnterDuration, ExitDuration, Ease);
-}
-
 /// <summary>フルスクリーンシェーダーで視界を歪ませる（陽炎・酩酊感）演出の設定。</summary>
 [Serializable]
 public sealed class VisionWarpConfig : TimedEffectConfig

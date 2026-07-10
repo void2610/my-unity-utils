@@ -9,7 +9,7 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "NewCinematicSequence", menuName = "Cinematic/Sequence Asset")]
 public class CinematicSequenceAsset : ScriptableObject
 {
-    /// <summary>操作対象のエフェクト種別。値はシリアライズされる asset の effect 値と対応するため、削除・並べ替えで既存値をズラさないよう明示的に固定する。19 は削除済み SaturationPulse の欠番。</summary>
+    /// <summary>操作対象のエフェクト種別。値はシリアライズされる asset の effect 値と対応するため、削除・並べ替えで既存値をズラさないよう明示的に固定する。19=SaturationPulse / 21=Flashback は削除済みの欠番。</summary>
     public enum EffectKind
     {
         [InspectorName("レターボックス")] Letterbox = 0,
@@ -32,7 +32,8 @@ public class CinematicSequenceAsset : ScriptableObject
         [InspectorName("明滅")] Blink = 17,
         [InspectorName("カメラ揺れ（パーリン）")] CameraPerlinShake = 18,
         [InspectorName("カラーグレード")] ColorGrade = 20,
-        [InspectorName("フラッシュバック")] Flashback = 21,
+
+        // 21 は削除された Flashback の欠番 (プリミティブ合成へ移行)。
         [InspectorName("視界歪み")] VisionWarp = 22,
     }
 
@@ -66,7 +67,6 @@ public class CinematicSequenceAsset : ScriptableObject
         [SerializeField] public BlinkConfig blinkConfig = new();
         [SerializeField] public CameraPerlinShakeConfig cameraPerlinShakeConfig = new();
         [SerializeField] public ColorGradeConfig colorGradeConfig = new();
-        [SerializeField] public FlashbackConfig flashbackConfig = new();
         [SerializeField] public VisionWarpConfig visionWarpConfig = new();
 
         /// <summary>
@@ -101,7 +101,6 @@ public class CinematicSequenceAsset : ScriptableObject
                 EffectKind.Blink => blinkConfig,
                 EffectKind.CameraPerlinShake => cameraPerlinShakeConfig,
                 EffectKind.ColorGrade => colorGradeConfig,
-                EffectKind.Flashback => flashbackConfig,
                 EffectKind.VisionWarp => visionWarpConfig,
                 _ => null,
             };
@@ -132,7 +131,6 @@ public class CinematicSequenceAsset : ScriptableObject
                 EffectKind.Blink => typeof(BlinkEffect),
                 EffectKind.CameraPerlinShake => typeof(CameraPerlinShakeEffect),
                 EffectKind.ColorGrade => typeof(ColorGradeEffect),
-                EffectKind.Flashback => typeof(FlashbackEffect),
                 EffectKind.VisionWarp => typeof(VisionWarpEffect),
                 _ => throw new InvalidOperationException($"不明なエフェクト種別: {effect}"),
             };
