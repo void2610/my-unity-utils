@@ -661,3 +661,23 @@ public sealed class VisionWarpConfig : TimedEffectConfig
 
     public override CinematicEffectConfig Clone() => new VisionWarpConfig(strength, frequency, speed, EnterDuration, ExitDuration, Ease);
 }
+
+[Serializable]
+public sealed class RadialMonochromeConfig : HoldableEffectConfig
+{
+    [SerializeField] private float softness = 0.12f;
+
+    /// <summary>カラー/白黒の境界のぼかし幅。</summary>
+    public float Softness => softness;
+
+    // EnterDuration=色が広がる時間, HoldDuration=保持, ExitDuration=白黒へ収縮する時間
+    public RadialMonochromeConfig() : base(0.25f, 1.2f, Ease.InOutSine, 0.1f, true) { }
+
+    public RadialMonochromeConfig(float softness, float enterDuration, float holdDuration, float exitDuration, Ease ease)
+        : base(enterDuration, exitDuration, ease, holdDuration, true)
+    {
+        this.softness = softness;
+    }
+
+    public override CinematicEffectConfig Clone() => new RadialMonochromeConfig(softness, EnterDuration, HoldDuration, ExitDuration, Ease);
+}

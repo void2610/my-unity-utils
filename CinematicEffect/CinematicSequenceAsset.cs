@@ -35,6 +35,7 @@ public class CinematicSequenceAsset : ScriptableObject
 
         // 21 は削除された Flashback の欠番 (プリミティブ合成へ移行)。
         [InspectorName("視界歪み")] VisionWarp = 22,
+        [InspectorName("モノクロ収縮")] RadialMonochrome = 23,
     }
 
     /// <summary>インスペクターからシリアライズ可能な演出ステップ。</summary>
@@ -68,6 +69,7 @@ public class CinematicSequenceAsset : ScriptableObject
         [SerializeField] public CameraPerlinShakeConfig cameraPerlinShakeConfig = new();
         [SerializeField] public ColorGradeConfig colorGradeConfig = new();
         [SerializeField] public VisionWarpConfig visionWarpConfig = new();
+        [SerializeField] public RadialMonochromeConfig radialMonochromeConfig = new();
 
         /// <summary>
         /// 選択中のエフェクト設定を返す。<see cref="useCustomConfig"/> が false の場合は null。
@@ -102,6 +104,7 @@ public class CinematicSequenceAsset : ScriptableObject
                 EffectKind.CameraPerlinShake => cameraPerlinShakeConfig,
                 EffectKind.ColorGrade => colorGradeConfig,
                 EffectKind.VisionWarp => visionWarpConfig,
+                EffectKind.RadialMonochrome => radialMonochromeConfig,
                 _ => null,
             };
         }
@@ -132,6 +135,7 @@ public class CinematicSequenceAsset : ScriptableObject
                 EffectKind.CameraPerlinShake => typeof(CameraPerlinShakeEffect),
                 EffectKind.ColorGrade => typeof(ColorGradeEffect),
                 EffectKind.VisionWarp => typeof(VisionWarpEffect),
+                EffectKind.RadialMonochrome => typeof(RadialMonochromeEffect),
                 _ => throw new InvalidOperationException($"不明なエフェクト種別: {effect}"),
             };
         }

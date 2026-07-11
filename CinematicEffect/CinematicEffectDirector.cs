@@ -223,6 +223,7 @@ public class CinematicEffectDirector : MonoBehaviour
         Register(new ImageFlashEffect());
         Register(new WaveDistortionEffect());
         Register(new VisionWarpEffect());
+        Register(new RadialMonochromeEffect());
         Register(new BlinkEffect());
         Register(new CameraShakeEffect());
         Register(new CameraPerlinShakeEffect());
