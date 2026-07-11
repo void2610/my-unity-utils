@@ -1,9 +1,10 @@
+using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using LitMotion;
 using UnityEngine;
 
-/// <summary>放射状 (ズーム) ブラーを LitMotion でフェードイン/アウトする演出。RadialBlur.shader のマテリアルをコンストラクターで受け取る。</summary>
+/// <summary>放射状 (ズーム) ブラーを LitMotion でフェードイン/アウトする演出。マテリアル (RadialBlur.shader) は未配線時 Resources から自己調達する。</summary>
 public sealed class RadialBlurEffect : ConfigurableCinematicEffectBase<RadialBlurConfig>
 {
     public override string EffectName => "放射状ブラー";
@@ -11,8 +12,13 @@ public sealed class RadialBlurEffect : ConfigurableCinematicEffectBase<RadialBlu
     private static readonly int StrengthId = Shader.PropertyToID("_Strength");
     private static readonly int CenterId = Shader.PropertyToID("_Center");
 
+    private const string DefaultMaterialResourcePath = "RadialBlur";
+
     private readonly Material _material;
     private float _currentStrength;
+
+    // 未配線時は同梱マテリアルを自己ロードする (VisionWarp と同じ自己調達フォールバック。事前配置不要)
+    public RadialBlurEffect() : this(LoadDefaultMaterial()) { }
 
     public RadialBlurEffect(Material radialBlurMaterial) : base()
     {
@@ -20,8 +26,20 @@ public sealed class RadialBlurEffect : ConfigurableCinematicEffectBase<RadialBlu
         OnResetImmediate();
     }
 
+    // RendererFeature と同一マテリアルアセットを共有する。パス設定ミスを後段の NRE ではなくロード時点で顕在化させる
+    private static Material LoadDefaultMaterial()
+    {
+        var material = Resources.Load<Material>(DefaultMaterialResourcePath);
+        if (material == null) throw new InvalidOperationException($"Resources から RadialBlur マテリアルをロードできません: {DefaultMaterialResourcePath}");
+
+        return material;
+    }
+
     protected override async UniTask OnPlayAsync(CancellationToken ct)
     {
+        // RendererFeature はレンダラ資産へ事前配置せず、初回再生時にコードで注入する (可搬性優先)
+        CinematicRendererFeatureInjector.EnsureFeature<RadialBlurRendererFeature>();
+
         _material.SetVector(CenterId, CurrentConfig.Center);
         RadialBlurRendererFeature.Active = true;
 

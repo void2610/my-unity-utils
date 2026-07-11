@@ -41,6 +41,9 @@ public sealed class RadialMonochromeEffect : ConfigurableCinematicEffectBase<Rad
     // 一発完結: 広げる→保持→収縮まで走らせて自然終了する (PlayAndAwait 前提)
     protected override async UniTask OnPlayAsync(CancellationToken ct)
     {
+        // RendererFeature はレンダラ資産へ事前配置せず、初回再生時にコードで注入する (可搬性優先)
+        CinematicRendererFeatureInjector.EnsureFeature<RadialMonochromeRendererFeature>();
+
         _material.SetVector(CenterId, new Vector4(0.5f, 0.5f, 0f, 0f));
         _material.SetFloat(SoftnessId, CurrentConfig.Softness);
         var aspect = (float)Screen.width / Screen.height;

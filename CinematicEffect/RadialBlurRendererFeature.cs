@@ -10,19 +10,23 @@ public sealed class RadialBlurRendererFeature : ScriptableRendererFeature
     /// <summary>演出中のみ true にしてパスを有効化する (RadialBlurEffect が切り替える)。</summary>
     public static bool Active;
 
-    [SerializeField] private Material material;
     [SerializeField] private RenderPassEvent injectionPoint = RenderPassEvent.BeforeRenderingPostProcessing;
 
+    private const string MaterialResourcePath = "RadialBlur";
+
+    private Material _material;
     private RadialBlurPass _pass;
 
+    // マテリアルはレンダラに配線せず Resources から自己調達する (RadialBlurEffect / TimeLapseView と同一アセット = 同一インスタンスを共有し _Strength 書き換えを描画へ反映する)
     public override void Create()
     {
-        _pass = new RadialBlurPass(material) { renderPassEvent = injectionPoint };
+        _material = Resources.Load<Material>(MaterialResourcePath);
+        _pass = new RadialBlurPass(_material) { renderPassEvent = injectionPoint };
     }
 
     public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
     {
-        if (!Active || material == null) return;
+        if (!Active || _material == null) return;
         renderer.EnqueuePass(_pass);
     }
 

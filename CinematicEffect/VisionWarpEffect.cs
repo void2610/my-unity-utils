@@ -42,6 +42,9 @@ public sealed class VisionWarpEffect : ConfigurableCinematicEffectBase<VisionWar
 
     protected override async UniTask OnPlayAsync(CancellationToken ct)
     {
+        // RendererFeature はレンダラ資産へ事前配置せず、初回再生時にコードで注入する (可搬性優先)
+        CinematicRendererFeatureInjector.EnsureFeature<VisionWarpRendererFeature>();
+
         _material.SetFloat(FrequencyId, CurrentConfig.Frequency);
         _material.SetFloat(SpeedId, CurrentConfig.Speed);
         VisionWarpRendererFeature.Active = true;

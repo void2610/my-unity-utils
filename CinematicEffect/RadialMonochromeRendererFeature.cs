@@ -10,19 +10,23 @@ public sealed class RadialMonochromeRendererFeature : ScriptableRendererFeature
     /// <summary>演出中のみ true にしてパスを有効化する (RadialMonochromeEffect が切り替える)。</summary>
     public static bool Active;
 
-    [SerializeField] private Material material;
     [SerializeField] private RenderPassEvent injectionPoint = RenderPassEvent.BeforeRenderingPostProcessing;
 
+    private const string MaterialResourcePath = "RadialMonochrome";
+
+    private Material _material;
     private RadialMonochromePass _pass;
 
+    // マテリアルはシーン/レンダラに配線せず Resources から自己調達する (RadialMonochromeEffect と同一アセット = 同一インスタンスを共有し、_Radius 書き換えを描画へ反映する)
     public override void Create()
     {
-        _pass = new RadialMonochromePass(material) { renderPassEvent = injectionPoint };
+        _material = Resources.Load<Material>(MaterialResourcePath);
+        _pass = new RadialMonochromePass(_material) { renderPassEvent = injectionPoint };
     }
 
     public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
     {
-        if (!Active || material == null) return;
+        if (!Active || _material == null) return;
         renderer.EnqueuePass(_pass);
     }
 
