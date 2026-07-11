@@ -31,16 +31,35 @@ namespace Void2610.UnityTemplate.Editor.CI
             PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Brotli;
             PlayerSettings.WebGL.decompressionFallback = true;
 
-            // PR プレビュー等で wasm 最適化を弱めてビルドを高速化できるようにする (BuildTimes / RuntimeSpeed / DiskSize)。
-            var codeOptimization = Environment.GetEnvironmentVariable("UNITY_WEBGL_CODE_OPTIMIZATION");
-            if (!string.IsNullOrEmpty(codeOptimization))
-            {
-                EditorUserBuildSettings.SetPlatformSettings("WebGL", "CodeOptimization", codeOptimization);
-            }
-
             // PlayerDataCache が古い状態で残っているとビルドが失敗することがあるため、念のため削除する。
             DeleteIfExists("Library/PlayerDataCache");
 
+            // PR プレビュー等で wasm 最適化を弱めてビルドを高速化できるようにする (BuildTimes / RuntimeSpeed / DiskSize)。
+            var codeOptimization = Environment.GetEnvironmentVariable("UNITY_WEBGL_CODE_OPTIMIZATION")?.Trim();
+            if (string.IsNullOrEmpty(codeOptimization))
+            {
+                BuildWebGLPlayer();
+                return;
+            }
+
+            var allowedValues = new[] { "BuildTimes", "RuntimeSpeed", "DiskSize" };
+            if (!allowedValues.Contains(codeOptimization)) throw new ArgumentException($"UNITY_WEBGL_CODE_OPTIMIZATION が無効です: '{codeOptimization}' (許容値: {string.Join(", ", allowedValues)})");
+
+            // EditorUserBuildSettings は Library に永続化するため、退避・復元しないと次回以降のビルド (本番含む) に漏れる。
+            var originalCodeOptimization = EditorUserBuildSettings.GetPlatformSettings("WebGL", "CodeOptimization");
+            EditorUserBuildSettings.SetPlatformSettings("WebGL", "CodeOptimization", codeOptimization);
+            try
+            {
+                BuildWebGLPlayer();
+            }
+            finally
+            {
+                EditorUserBuildSettings.SetPlatformSettings("WebGL", "CodeOptimization", originalCodeOptimization);
+            }
+        }
+
+        private static void BuildWebGLPlayer()
+        {
             Build(
                 BuildTarget.WebGL,
                 GetBuildOutputPath(Path.Combine("CIBuilds", "WebGL", "build")),
