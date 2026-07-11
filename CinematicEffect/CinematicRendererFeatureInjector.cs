@@ -6,8 +6,7 @@ using UnityEngine.Rendering.Universal;
 
 /// <summary>
 /// フルスクリーンシェーダー系エフェクトの <see cref="ScriptableRendererFeature"/> を、
-/// URP レンダラ資産へ事前配置せずコードから実行時注入する。プロジェクト間の可搬性を保つため、
-/// レンダラ資産 (Renderer2D.asset 等) を人手で編集しない (materal / overlay と同じ「自己調達」方針)。
+/// URP レンダラ資産へ事前配置せずコードから実行時注入する。プロジェクト間の可搬性を保つため、レンダラ等を人手で編集しない
 /// </summary>
 public static class CinematicRendererFeatureInjector
 {
