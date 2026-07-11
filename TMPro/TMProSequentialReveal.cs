@@ -36,6 +36,9 @@ namespace Void2610.UnityTemplate
         /// <summary>各文字の出現アニメ。未設定ならアルファフェード (<see cref="AlphaFade"/>) を使う。外部から差し替え可能。</summary>
         public CharacterTween Tween { get; set; }
 
+        /// <summary>順次表示の途中か (全文表示しきる前)。送り側が「1回目のクリックは全文表示」ゲートに使う</summary>
+        public bool IsRevealing { get; private set; }
+
         private readonly List<int> _newlineIndices = new();
         private CancellationTokenSource _cts;
 
@@ -105,6 +108,7 @@ namespace Void2610.UnityTemplate
         public void Complete()
         {
             _cts?.Cancel();
+            IsRevealing = false;
             ApplyReveal(text.textInfo.characterCount + Mathf.Max(0.01f, fadeCharSpan));
         }
 
@@ -130,6 +134,7 @@ namespace Void2610.UnityTemplate
             var total = text.textInfo.characterCount;
             if (total <= 0) return;
 
+            IsRevealing = true;
             ApplyReveal(0f); // 開始時は全文字を透明に
             var span = Mathf.Max(0.01f, fadeCharSpan);
 
@@ -148,6 +153,7 @@ namespace Void2610.UnityTemplate
             }
             // 末尾の文字もフェードしきるよう total+span まで送る
             await AnimateHead(head, total + span, ct);
+            IsRevealing = false;
         }
 
         private UniTask AnimateHead(float from, float to, CancellationToken ct)
