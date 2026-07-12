@@ -1,7 +1,6 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using LitMotion;
-using UnityEngine;
 using UnityEngine.UI;
 using Void2610.UnityTemplate;
 
