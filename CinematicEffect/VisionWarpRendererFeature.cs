@@ -51,12 +51,13 @@ public sealed class VisionWarpRendererFeature : ScriptableRendererFeature
 
             var cameraTexture = resourceData.activeColorTexture;
 
-            var tempDesc = renderGraph.GetTextureDesc(cameraTexture);
-            tempDesc.name = "_VisionWarpTempTexture";
-            var tempTexture = renderGraph.CreateTexture(tempDesc);
+            var destDesc = renderGraph.GetTextureDesc(cameraTexture);
+            destDesc.name = "_VisionWarpTexture";
+            var destination = renderGraph.CreateTexture(destDesc);
 
-            renderGraph.AddBlitPass(new RenderGraphUtils.BlitMaterialParameters(cameraTexture, tempTexture, _material, 0), "Vision Warp Effect");
-            renderGraph.AddCopyPass(tempTexture, cameraTexture, passName: "Vision Warp Copy");
+            renderGraph.AddBlitPass(new RenderGraphUtils.BlitMaterialParameters(cameraTexture, destination, _material, 0), "Vision Warp Effect");
+            // AddCopyPass での書き戻しは framebuffer fetch 非対応の WebGL で動かないため、カメラカラーを差し替える
+            resourceData.cameraColor = destination;
         }
     }
 }
