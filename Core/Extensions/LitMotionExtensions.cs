@@ -129,10 +129,11 @@ namespace Void2610.UnityTemplate
         /// </summary>
         public static MotionHandle FadeIn(this CanvasGroup canvasGroup, float duration, Ease ease = Ease.Linear, bool ignoreTimeScale = false)
         {
+            CancelActiveFade(canvasGroup);
             canvasGroup.interactable = false;
             canvasGroup.blocksRaycasts = false;
 
-            return LMotion.Create(canvasGroup.alpha, 1f, duration)
+            return TrackFade(canvasGroup, LMotion.Create(canvasGroup.alpha, 1f, duration)
                 .WithEase(ease)
                 .WithScheduler(ignoreTimeScale ? MotionScheduler.UpdateIgnoreTimeScale : MotionScheduler.Update)
                 .WithOnComplete(() =>
@@ -141,7 +142,7 @@ namespace Void2610.UnityTemplate
                     canvasGroup.blocksRaycasts = true;
                 })
                 .BindToAlpha(canvasGroup)
-                .AddTo(canvasGroup.gameObject);
+                .AddTo(canvasGroup.gameObject));
         }
 
         /// <summary>
@@ -150,7 +151,8 @@ namespace Void2610.UnityTemplate
         /// </summary>
         public static MotionHandle FadeOut(this CanvasGroup canvasGroup, float duration, Ease ease = Ease.Linear, bool ignoreTimeScale = false)
         {
-            return LMotion.Create(canvasGroup.alpha, 0f, duration)
+            CancelActiveFade(canvasGroup);
+            return TrackFade(canvasGroup, LMotion.Create(canvasGroup.alpha, 0f, duration)
                 .WithEase(ease)
                 .WithScheduler(ignoreTimeScale ? MotionScheduler.UpdateIgnoreTimeScale : MotionScheduler.Update)
                 .WithOnComplete(() =>
@@ -159,7 +161,7 @@ namespace Void2610.UnityTemplate
                     canvasGroup.blocksRaycasts = false;
                 })
                 .BindToAlpha(canvasGroup)
-                .AddTo(canvasGroup.gameObject);
+                .AddTo(canvasGroup.gameObject));
         }
 
         /// <summary>
@@ -167,7 +169,8 @@ namespace Void2610.UnityTemplate
         /// </summary>
         public static MotionHandle FadeTo(this CanvasGroup canvasGroup, float duration, float alpha, Ease ease = Ease.Linear, bool ignoreTimeScale = false)
         {
-            return LMotion.Create(canvasGroup.alpha, alpha, duration)
+            CancelActiveFade(canvasGroup);
+            return TrackFade(canvasGroup, LMotion.Create(canvasGroup.alpha, alpha, duration)
                 .WithEase(ease)
                 .WithScheduler(ignoreTimeScale ? MotionScheduler.UpdateIgnoreTimeScale : MotionScheduler.Update)
                 .WithOnComplete(() =>
@@ -176,7 +179,7 @@ namespace Void2610.UnityTemplate
                     canvasGroup.blocksRaycasts = false;
                 })
                 .BindToAlpha(canvasGroup)
-                .AddTo(canvasGroup.gameObject);
+                .AddTo(canvasGroup.gameObject));
         }
 
         /// <summary>
@@ -540,6 +543,22 @@ namespace Void2610.UnityTemplate
                 }
             }
         }
+        // 同一 CanvasGroup 上の Fade 競合対策。同フレームで FadeOut→FadeIn が重なると
+        // 完了順の不定性で「閉じ勝ち」に固着するため、新しい Fade が常に前の Fade を打ち切る
+        private static readonly System.Collections.Generic.Dictionary<CanvasGroup, MotionHandle> ActiveFades = new();
+
+        private static void CancelActiveFade(CanvasGroup canvasGroup)
+        {
+            if (ActiveFades.TryGetValue(canvasGroup, out var handle) && handle.IsActive()) handle.Cancel();
+            ActiveFades.Remove(canvasGroup);
+        }
+
+        private static MotionHandle TrackFade(CanvasGroup canvasGroup, MotionHandle handle)
+        {
+            ActiveFades[canvasGroup] = handle;
+            return handle;
+        }
+
     }
 #pragma warning restore VUA3001
 }
