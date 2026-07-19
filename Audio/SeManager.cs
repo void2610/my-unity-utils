@@ -244,14 +244,18 @@ namespace Void2610.UnityTemplate
         /// <param name="pitchMin">ピッチの最小値</param>
         /// <param name="pitchMax">ピッチの最大値</param>
         /// <param name="ignoreTimeScale">タイムスケールを無視するか</param>
+        /// <param name="count">再生回数 (-1 で無限。キャンセルまで繰り返す)</param>
         /// <param name="cancellationToken">キャンセルトークン</param>
-        public async UniTaskVoid PlaySeLoop(string seName, float interval = 0.08f, float volume = 1.0f, float pitchMin = 0.95f, float pitchMax = 1.05f, bool ignoreTimeScale = false, CancellationToken cancellationToken = default)
+        public async UniTaskVoid PlaySeLoop(string seName, float interval = 0.08f, float volume = 1.0f, float pitchMin = 0.95f, float pitchMax = 1.05f, bool ignoreTimeScale = false, int count = -1, CancellationToken cancellationToken = default)
         {
             try
             {
-                while (!cancellationToken.IsCancellationRequested)
+                var played = 0;
+                while (!cancellationToken.IsCancellationRequested && (count < 0 || played < count))
                 {
                     PlaySe(seName, volume, UnityEngine.Random.Range(pitchMin, pitchMax));
+                    played++;
+                    if (count >= 0 && played >= count) return;
                     await UniTask.Delay(TimeSpan.FromSeconds(interval), ignoreTimeScale ? DelayType.UnscaledDeltaTime : DelayType.DeltaTime, cancellationToken: cancellationToken);
                 }
             }
