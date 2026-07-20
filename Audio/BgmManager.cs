@@ -81,12 +81,18 @@ namespace Void2610.UnityTemplate
         // PlayerPrefsキー
         private const string BGM_VOLUME_KEY = "BgmVolume";
 
+        // AudioMixer の expose 済みローパスカットオフパラメータ名
+        private const string BGM_LOWPASS_PARAM = "BgmLowpassCutoff";
+        // ローパス実質無効 (可聴域全通し) のカットオフ周波数
+        private const float LOWPASS_OPEN_HZ = 22000f;
+
         private AudioSource _audioSource;
         private bool _isPlaying;
         private float _bgmVolume = 1.0f;
         private SoundData _currentBGM;
         private MotionHandle _fadeHandle;
         private MotionHandle _duckingHandle;
+        private MotionHandle _lowpassHandle;
         private float _originalVolume = 1.0f;
         private bool _currentLoop = true;
         // イントロループ検知用：ループ開始点を通過済みかどうか
@@ -225,6 +231,39 @@ namespace Void2610.UnityTemplate
                 .AddTo(this);
 
             await _duckingHandle.ToUniTask();
+        }
+
+        /// <summary>
+        /// BGMにローパスフィルタを掛ける (くぐもった音にする演出用)
+        /// AudioMixer の BGM グループに Lowpass エフェクトと expose 済みパラメータ BgmLowpassCutoff が必要
+        /// </summary>
+        /// <param name="cutoffHz">カットオフ周波数 (Hz、1000前後でこもった音)</param>
+        /// <param name="fadeTime">遷移時間（秒）</param>
+        public void ApplyLowPass(float cutoffHz, float fadeTime = 0.5f) => TweenLowPass(cutoffHz, fadeTime);
+
+        /// <summary>
+        /// ローパスフィルタを解除して元の音に戻す
+        /// ApplyLowPassと対で使用します
+        /// </summary>
+        /// <param name="fadeTime">遷移時間（秒）</param>
+        public void ReleaseLowPass(float fadeTime = 0.5f) => TweenLowPass(LOWPASS_OPEN_HZ, fadeTime);
+
+        private void TweenLowPass(float targetHz, float fadeTime)
+        {
+            var mixer = bgmMixerGroup.audioMixer;
+            if (!mixer.GetFloat(BGM_LOWPASS_PARAM, out var current))
+            {
+                Debug.LogWarning($"AudioMixer に '{BGM_LOWPASS_PARAM}' が expose されていません。");
+                return;
+            }
+
+            _lowpassHandle.TryCancel();
+            // 周波数は対数感覚なので log スケールで補間する (線形だと高域側の変化がほぼ聞こえない)
+            _lowpassHandle = LMotion.Create(Mathf.Log(current), Mathf.Log(targetHz), fadeTime)
+                .WithEase(Ease.InOutQuad)
+                .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
+                .Bind(v => mixer.SetFloat(BGM_LOWPASS_PARAM, Mathf.Exp(v)))
+                .AddTo(this);
         }
 
         /// <summary>
@@ -432,6 +471,7 @@ namespace Void2610.UnityTemplate
         {
             _fadeHandle.TryCancel();
             _duckingHandle.TryCancel();
+            _lowpassHandle.TryCancel();
             base.OnDestroy();
         }
     }
