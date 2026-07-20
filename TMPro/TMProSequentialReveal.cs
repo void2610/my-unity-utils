@@ -41,6 +41,7 @@ namespace Void2610.UnityTemplate
 
         private readonly List<int> _newlineIndices = new();
         private CancellationTokenSource _cts;
+        private string _pendingMessage; // フェードアウト完了前に Complete された場合に差し替える予約テキスト
 
         /// <summary>既定の出現アニメ: 頂点アルファを 0→255 に補間する。</summary>
         public static void AlphaFade(TextMeshProUGUI text, int charIndex, float t)
@@ -89,6 +90,9 @@ namespace Void2610.UnityTemplate
         /// <summary>指定テキストを先頭から順次フェード表示する。進行中の演出があれば打ち切って上書きする。</summary>
         public void Play(string message) => StartReveal(message).Forget();
 
+        /// <summary>表示中の文字を fadeOutDuration 秒でフェードアウトさせてから、指定テキストを順次フェード表示する。</summary>
+        public void PlayWithFadeOut(string message, float fadeOutDuration) => StartRevealWithFadeOut(message, fadeOutDuration).Forget();
+
         /// <summary>順次表示の完了を待つ (キャンセル時は最後まで表示して抜ける)。</summary>
         public async UniTask PlayAsync(string message, CancellationToken ct)
         {
@@ -109,7 +113,53 @@ namespace Void2610.UnityTemplate
         {
             _cts?.Cancel();
             IsRevealing = false;
+            // フェードアウト中の打ち切りで旧テキストが残らないよう、未反映のメッセージがあれば差し替えてから全表示する
+            if (_pendingMessage != null)
+            {
+                text.text = _pendingMessage;
+                _pendingMessage = null;
+                text.ForceMeshUpdate();
+            }
             ApplyReveal(text.textInfo.characterCount + Mathf.Max(0.01f, fadeCharSpan));
+        }
+
+        private async UniTaskVoid StartRevealWithFadeOut(string message, float fadeOutDuration)
+        {
+            var token = ResetToken(CancellationToken.None);
+            _pendingMessage = message;
+            try
+            {
+                await FadeOutCore(fadeOutDuration, token);
+                await RevealCore(message, token);
+            }
+            catch (OperationCanceledException)
+            {
+                // 上書き再生や破棄によるキャンセルは正常系
+            }
+        }
+
+        // 表示中の全文字を一様にフェードアウトさせる (表示するものが無ければ即帰る)
+        private async UniTask FadeOutCore(float duration, CancellationToken ct)
+        {
+            if (duration <= 0f || text.textInfo.characterCount <= 0) return;
+            IsRevealing = true;
+            await LMotion.Create(1f, 0f, duration)
+                .WithScheduler(ignoreTimeScale ? MotionScheduler.UpdateIgnoreTimeScale : MotionScheduler.Update)
+                .Bind(ApplyUniformAlpha)
+                .AddTo(gameObject)
+                .ToUniTask(cancellationToken: ct);
+        }
+
+        // 全可視文字へ同じ進捗 t のアルファを適用する (フェードアウト用)
+        private void ApplyUniformAlpha(float t)
+        {
+            var info = text.textInfo;
+            for (var i = 0; i < info.characterCount; i++)
+            {
+                if (!info.characterInfo[i].isVisible) continue;
+                AlphaFade(text, i, t);
+            }
+            text.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
         }
 
         private async UniTaskVoid StartReveal(string message)
@@ -130,6 +180,7 @@ namespace Void2610.UnityTemplate
         {
             text.maxVisibleCharacters = int.MaxValue; // 可視制御はアルファで行うため字形は全部出す
             text.text = message;
+            _pendingMessage = null;
             text.ForceMeshUpdate();
             var total = text.textInfo.characterCount;
             if (total <= 0) return;
