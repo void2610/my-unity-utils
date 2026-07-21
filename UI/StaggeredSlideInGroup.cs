@@ -21,8 +21,8 @@ namespace Void2610.UnityTemplate
 
         [Header("スライド設定")]
         [SerializeField] private Vector2 slideOffset = new(0, 50f);
-        [SerializeField] private float duration = 0.2f;
-        [SerializeField] private float staggerDelay = 0.05f;
+        [SerializeField] private float duration = 0.5f;
+        [SerializeField] private float staggerDelay = 0.15f;
 
         [Header("イージング設定")]
         [SerializeField] private Ease moveEase = Ease.OutCubic;
