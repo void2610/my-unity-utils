@@ -165,6 +165,18 @@ namespace Void2610.UnityTemplate
         }
 
         /// <summary>
+        /// フェード中のモーションを止めて即座に非表示状態 (alpha 0 / 入力無効) にする
+        /// View の初期化など、フェードの過渡フレームすら見せたくない場面で使う
+        /// </summary>
+        public static void HideImmediate(this CanvasGroup canvasGroup)
+        {
+            CancelActiveFade(canvasGroup);
+            canvasGroup.alpha = 0f;
+            canvasGroup.interactable = false;
+            canvasGroup.blocksRaycasts = false;
+        }
+
+        /// <summary>
         /// CanvasGroupの透明度をLitMotionでフェードさせる
         /// </summary>
         public static MotionHandle FadeTo(this CanvasGroup canvasGroup, float duration, float alpha, Ease ease = Ease.Linear, bool ignoreTimeScale = false)
