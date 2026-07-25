@@ -178,17 +178,19 @@ namespace Void2610.UnityTemplate
 
         /// <summary>
         /// CanvasGroupの透明度をLitMotionでフェードさせる
+        /// 完了時のinteractable / blocksRaycastsは目標alphaから導出する (0なら無効、それ以外は有効)
         /// </summary>
         public static MotionHandle FadeTo(this CanvasGroup canvasGroup, float duration, float alpha, Ease ease = Ease.Linear, bool ignoreTimeScale = false)
         {
             CancelActiveFade(canvasGroup);
+            var visible = alpha > 0f;
             return TrackFade(canvasGroup, LMotion.Create(canvasGroup.alpha, alpha, duration)
                 .WithEase(ease)
                 .WithScheduler(ignoreTimeScale ? MotionScheduler.UpdateIgnoreTimeScale : MotionScheduler.Update)
                 .WithOnComplete(() =>
                 {
-                    canvasGroup.interactable = false;
-                    canvasGroup.blocksRaycasts = false;
+                    canvasGroup.interactable = visible;
+                    canvasGroup.blocksRaycasts = visible;
                 })
                 .BindToAlpha(canvasGroup)
                 .AddTo(canvasGroup.gameObject));
