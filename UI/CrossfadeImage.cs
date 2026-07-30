@@ -1,3 +1,5 @@
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using LitMotion;
 using UnityEngine;
 using UnityEngine.UI;
@@ -35,6 +37,13 @@ namespace Void2610.UnityTemplate
             SetAlpha(imageA, 1f);
             SetAlpha(imageB, 0f);
             _frontIsB = false;
+        }
+
+        /// <summary>クロスフェードで差し替え、完了まで待機する。同一スプライトなら即完了</summary>
+        public UniTask CrossfadeAsync(Sprite sprite, CancellationToken ct = default)
+        {
+            Crossfade(sprite);
+            return _handle.IsActive() ? _handle.ToUniTask(cancellationToken: ct) : UniTask.CompletedTask;
         }
 
         /// <summary>クロスフェードで差し替える。同一スプライトなら no-op</summary>
