@@ -314,6 +314,54 @@ namespace Void2610.UnityTemplate
         }
 
         /// <summary>
+        /// リッチテキストを含む文字列にタイプライター効果を適用（1文字ずつ表示）
+        /// TypewriterAnimationは文字列を切り詰めるためタグが途中まで見えてしまう。こちらはタグを崩さない
+        /// </summary>
+        /// <param name="text">対象のTextMeshProUGUI</param>
+        /// <param name="message">表示するメッセージ（TMPタグを含んでよい）</param>
+        /// <param name="charSpeed">1文字あたりの表示時間（秒）</param>
+        /// <param name="cancellationToken">キャンセル用トークン</param>
+        public static async UniTask RichTextTypewriterAnimation(
+            this TextMeshProUGUI text,
+            string message,
+            float charSpeed = 0.05f,
+            CancellationToken cancellationToken = default
+            )
+        {
+            if (!text || string.IsNullOrEmpty(message)) return;
+
+            text.text = message;
+
+            // タグを除いた実際の表示文字数はメッシュ更新後にしか分からない
+            text.ForceMeshUpdate();
+            var total = text.textInfo.characterCount;
+            if (total <= 0) return;
+
+            text.maxVisibleCharacters = 0;
+
+            var motion = LMotion.Create(0f, total, charSpeed * total)
+                .WithEase(Ease.Linear)
+                .Bind(value =>
+                {
+                    if (text) text.maxVisibleCharacters = Mathf.Min(Mathf.FloorToInt(value), total);
+                })
+                .AddTo(text.gameObject);
+
+            try
+            {
+                await motion.ToUniTask(cancellationToken);
+            }
+            catch (System.OperationCanceledException)
+            {
+                // キャンセル時は全文を表示
+                if (text) text.maxVisibleCharacters = total;
+                throw;
+            }
+
+            if (text) text.maxVisibleCharacters = total;
+        }
+
+        /// <summary>
         /// TransformをLitMotionで指定位置に移動
         /// </summary>
         public static MotionHandle MoveTo(this Transform transform, Vector3 targetPosition, float duration, Ease ease = Ease.Linear, bool ignoreTimeScale = false)
