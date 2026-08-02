@@ -35,6 +35,19 @@ namespace Void2610.UnityTemplate
 
         public float Spacing => spacing;
 
+        /// <summary>スライドイン再生中か (演出の静止を待ってから撮る / 判定する用途)</summary>
+        public bool IsPlaying
+        {
+            get
+            {
+                foreach (var handle in _animHandles)
+                {
+                    if (handle.IsActive()) return true;
+                }
+                return false;
+            }
+        }
+
         private readonly List<MotionHandle> _animHandles = new();
 
         // Noneモード用: 子要素の初期位置キャッシュ
