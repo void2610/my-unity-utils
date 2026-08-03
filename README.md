@@ -104,13 +104,13 @@ cp -r my-unity-utils/* <YourUnityProject>/Assets/Scripts/Utils/
 - **UniTask** - 各種async/await対応スクリプト
 - **LitMotion** - BgmManager.cs, FloatMove.cs等
 - **UIEffect** - IrisShot.cs
-- **Addressables** - IrisShot.cs, AsyncPrefabHost.cs（条件付きコンパイル）
+- **Addressables** - IrisShot.cs, AsyncPrefabHost.cs, MultiPlatformBuildWindowBase.cs（条件付きコンパイル）
 
 ### Addressablesを使用する場合
 
 Addressablesパッケージをインストールすれば、asmdefの`versionDefines`により`ADDRESSABLES`シンボルが自動で定義される。Scripting Define Symbolsへの手動追加は不要。
 
-パッケージ未導入の場合、`AsyncPrefabHost.cs`はコンパイル対象から外れ、IrisShotのAddressables経路は無効になる。
+パッケージ未導入の場合、`AsyncPrefabHost.cs`はコンパイル対象から外れ、IrisShotのAddressables経路とビルド時のAddressablesコンテンツ生成は無効になる。
 
 ## 🔄 更新方法
 
