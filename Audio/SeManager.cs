@@ -166,6 +166,16 @@ namespace Void2610.UnityTemplate
         }
 
         /// <summary>
+        /// 登録済みSEの長さ（秒）を返す。未登録なら0
+        /// </summary>
+        /// <param name="seName">SE名</param>
+        public float GetSeLength(string seName)
+        {
+            var data = soundData.FirstOrDefault(t => t.name == seName);
+            return data?.audioClip ? data.audioClip.length : 0f;
+        }
+
+        /// <summary>
         /// すべてのSE再生を停止
         /// </summary>
         public void StopAllSe()
