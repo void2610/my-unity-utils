@@ -27,9 +27,11 @@ Unityゲーム開発で頻繁に使用するユーティリティスクリプト
 - **FloatMove.cs** - オブジェクトの浮遊アニメーション
 - **SpriteSheetAnimator.cs** - スプライトシートアニメーション再生
 
-### Core/ (4ファイル)
+### Core/ (6ファイル)
 
 - **ExtendedMethods.cs** - 拡張メソッド集（Transform, Image, Text等）
+- **IModule.cs** - シーンのDIへ組み込む機能単位
+- **ModuleContainerBuilderExtensions.cs** - IModuleの登録ヘルパー
 - **SerializableDictionary.cs** - Unity-serializable Dictionary実装
 - **SingletonMonoBehaviour.cs** - スレッドセーフシングルトン
 - **Utils.cs** - 汎用ユーティリティ関数
