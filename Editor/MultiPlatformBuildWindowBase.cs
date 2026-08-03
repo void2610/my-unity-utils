@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO.Compression;
 using System.IO;
 using System.Linq;
-#if ENABLE_ADDRESSABLES
+#if ADDRESSABLES
 using UnityEditor.AddressableAssets.Settings;
 #endif
 using UnityEditor;
@@ -126,7 +126,7 @@ namespace Void2610.UnityTemplate
         {
             buildResult = default;
 
-#if ENABLE_ADDRESSABLES
+#if ADDRESSABLES
             if (!EditorUserBuildSettings.SwitchActiveBuildTarget(targetGroup, target))
             {
                 EditorUtility.DisplayDialog("Build Failed", $"ビルドターゲットの切り替えに失敗しました: {target}", "OK");
