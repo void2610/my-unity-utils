@@ -47,6 +47,8 @@ Unityゲーム開発で頻繁に使用するユーティリティスクリプト
 
 ### System/ (12ファイル)
 
+- **AsyncPrefabContainerBuilderExtensions.cs** - 非同期生成プレハブのVContainer登録ヘルパー
+- **AsyncPrefabHost.cs** - Addressablesのプレハブをシーン開始時に生成しDIへ載せる
 - **CameraAspectRatioHandler.cs** - カメラアスペクト比管理
 - **CameraShake.cs** - カメラシェイク効果
 - **CanvasAspectRatioFitter.cs** - Canvasアスペクト比調整
@@ -102,18 +104,13 @@ cp -r my-unity-utils/* <YourUnityProject>/Assets/Scripts/Utils/
 - **UniTask** - 各種async/await対応スクリプト
 - **LitMotion** - BgmManager.cs, FloatMove.cs等
 - **UIEffect** - IrisShot.cs
-- **Addressables** - IrisShot.cs（条件付きコンパイル）
+- **Addressables** - IrisShot.cs, AsyncPrefabHost.cs（条件付きコンパイル）
 
 ### Addressablesを使用する場合
 
-IrisShot.csでAddressables機能を使用する場合は、以下の設定が必要です：
+Addressablesパッケージをインストールすれば、asmdefの`versionDefines`により`ADDRESSABLES`シンボルが自動で定義される。Scripting Define Symbolsへの手動追加は不要。
 
-1. Addressablesパッケージをインストール
-2. Scripting Define Symbolsに`ADDRESSABLES`を追加
-   - Unity Editor > Project Settings > Player > Other Settings > Scripting Define Symbols
-   - `ADDRESSABLES`を追加して適用
-
-**注意:** `ADDRESSABLES`シンボルを定義しない場合、IrisShotはエラーメッセージを出力して動作しません。
+パッケージ未導入の場合、`AsyncPrefabHost.cs`はコンパイル対象から外れ、IrisShotのAddressables経路は無効になる。
 
 ## 🔄 更新方法
 

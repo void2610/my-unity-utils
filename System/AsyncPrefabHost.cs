@@ -1,13 +1,12 @@
+#if ADDRESSABLES
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using VContainer.Unity;
-using Object = UnityEngine.Object;
-#if ADDRESSABLES
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
-#endif
+using VContainer.Unity;
+using Object = UnityEngine.Object;
 
 namespace Void2610.UnityTemplate
 {
@@ -31,9 +30,7 @@ namespace Void2610.UnityTemplate
         private readonly UniTaskCompletionSource _ready = new();
 
         private T _instance;
-#if ADDRESSABLES
         private AsyncOperationHandle<GameObject> _handle;
-#endif
 
         public AsyncPrefabHost(string address, Func<Canvas> canvasSelector, Action<T> onInstantiated = null)
         {
@@ -46,17 +43,14 @@ namespace Void2610.UnityTemplate
         {
             try
             {
-#if ADDRESSABLES
                 _handle = Addressables.LoadAssetAsync<GameObject>(_address);
                 var prefab = await _handle.ToUniTask(cancellationToken: ct);
                 _instance = Object.Instantiate(prefab, _canvasSelector().transform, false).GetComponent<T>();
-                _instance.transform.SetAsLastSibling();
+                if (!_instance)
+                    throw new InvalidOperationException($"'{_address}' のプレハブに {typeof(T).Name} が付いていません");
+
                 _onInstantiated?.Invoke(_instance);
                 _ready.TrySetResult();
-#else
-                await UniTask.CompletedTask;
-                throw new NotSupportedException($"{nameof(AsyncPrefabHost<T>)} には Addressables が必要です");
-#endif
             }
             catch (OperationCanceledException)
             {
@@ -75,9 +69,8 @@ namespace Void2610.UnityTemplate
         {
             _ready.TrySetCanceled();
             if (_instance) Object.Destroy(_instance.gameObject);
-#if ADDRESSABLES
             if (_handle.IsValid()) Addressables.Release(_handle);
-#endif
         }
     }
 }
+#endif

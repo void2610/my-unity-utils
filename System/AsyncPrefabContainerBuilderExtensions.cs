@@ -1,3 +1,4 @@
+#if ADDRESSABLES
 using System;
 using UnityEngine;
 using VContainer;
@@ -31,6 +32,8 @@ namespace Void2610.UnityTemplate
         {
             builder.Register(_ => new AsyncPrefabHost<T>(address, canvasSelector, onInstantiated), Lifetime.Singleton)
                 .AsSelf().As<IAsyncStartable>();
+            // 他にエントリーポイントが無いスコープでも StartAsync が走るようにする
+            EntryPointsBuilder.EnsureDispatcherRegistered(builder);
             return new AsyncPrefabRegistration<T>(builder);
         }
     }
@@ -50,9 +53,19 @@ namespace Void2610.UnityTemplate
         public AsyncPrefabRegistration<T> Expose<TComponent>(
             Func<T, TComponent> selector, Action<RegistrationBuilder> configure = null) where TComponent : class
         {
-            var registration = _builder.Register(c => selector(c.Resolve<AsyncPrefabHost<T>>().Instance), Lifetime.Singleton);
+            var registration = _builder.Register(c =>
+            {
+                var host = c.Resolve<AsyncPrefabHost<T>>();
+                // 生成前に解決すると null がシングルトンとして固定されるため、契約違反として弾く
+                if (!host.IsReady)
+                    throw new InvalidOperationException(
+                        $"{nameof(AsyncPrefabHost<T>)}<{typeof(T).Name}> はまだ生成されていません。ReadyAsync を待ってから解決してください");
+
+                return selector(host.Instance);
+            }, Lifetime.Singleton);
             configure?.Invoke(registration);
             return this;
         }
     }
 }
+#endif
