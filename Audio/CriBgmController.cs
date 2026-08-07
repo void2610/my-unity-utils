@@ -1,6 +1,7 @@
 #if CRIWARE_ENABLE
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CriWare;
 using CriWare.Assets;
 using Cysharp.Threading.Tasks;
@@ -31,6 +32,9 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
 {
     [SerializeField] private List<BgmData> bgmList = new();
     [SerializeField, Range(0f, 1f)] private float baseVolume = 1.0f;
+
+    /// <summary>登録済み BGM の名前一覧。シナリオ用の参照一覧等、外部ツールへ渡す用</summary>
+    public IEnumerable<string> EnumerateBgmNames() => bgmList.Select(b => b.Name);
 
     public bool IsInitialized { get; private set; }
     public bool HasCurrentPlayback { get; private set; }

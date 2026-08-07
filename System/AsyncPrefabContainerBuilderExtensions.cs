@@ -53,6 +53,8 @@ namespace Void2610.UnityTemplate
         public AsyncPrefabRegistration<T> Expose<TComponent>(
             Func<T, TComponent> selector, Action<RegistrationBuilder> configure = null) where TComponent : class
         {
+            // Singleton にすると VContainer が Lazy で結果を抱え、生成前の 1 回で投げた例外まで固定されてしまう。
+            // 生成物から取り出すだけの軽い処理なので都度引き直す
             var registration = _builder.Register(c =>
             {
                 var host = c.Resolve<AsyncPrefabHost<T>>();
@@ -62,7 +64,7 @@ namespace Void2610.UnityTemplate
                         $"{nameof(AsyncPrefabHost<T>)}<{typeof(T).Name}> はまだ生成されていません。ReadyAsync を待ってから解決してください");
 
                 return selector(host.Instance);
-            }, Lifetime.Singleton);
+            }, Lifetime.Transient);
             configure?.Invoke(registration);
             return this;
         }
