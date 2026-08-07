@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -25,6 +26,11 @@ namespace Void2610.UnityTemplate
         [SerializeField] private AudioMixerGroup seMixerGroup;
         [SerializeField] private SoundData[] soundData;
         [SerializeField] private int maxChannels = 20;
+
+        /// <summary>
+        /// Inspector に登録済みの SE 名を列挙する（エディタのリファレンス表示等の目録用途）
+        /// </summary>
+        public IEnumerable<string> EnumerateSeNames() => soundData.Select(d => d.name);
 
         /// <summary>
         /// SE音量プロパティ（0.0f～1.0f）
