@@ -53,9 +53,9 @@ namespace Void2610.UnityTemplate
         [SerializeField, Range(0f, 1f)] private float projectMasterVolume = 1.0f;
 
         /// <summary>
-        /// Inspector に登録済みの BGM 名を列挙する（エディタのリファレンス表示等の目録用途）
+        /// Inspector に登録済みの BGM 名とクリップを列挙する（エディタのリファレンス表示・試聴等の目録用途）
         /// </summary>
-        public IEnumerable<string> EnumerateBgmNames() => bgmList.Select(b => b.name);
+        public IEnumerable<(string name, AudioClip clip)> EnumerateBgmEntries() => bgmList.Select(b => (b.name, b.audioClip));
 
         /// <summary>
         /// BGM音量プロパティ（0.0f～1.0f）

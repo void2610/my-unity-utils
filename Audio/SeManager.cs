@@ -28,9 +28,9 @@ namespace Void2610.UnityTemplate
         [SerializeField] private int maxChannels = 20;
 
         /// <summary>
-        /// Inspector に登録済みの SE 名を列挙する（エディタのリファレンス表示等の目録用途）
+        /// Inspector に登録済みの SE 名とクリップを列挙する（エディタのリファレンス表示・試聴等の目録用途）
         /// </summary>
-        public IEnumerable<string> EnumerateSeNames() => soundData.Select(d => d.name);
+        public IEnumerable<(string name, AudioClip clip)> EnumerateSeEntries() => soundData.Select(d => (d.name, d.audioClip));
 
         /// <summary>
         /// SE音量プロパティ（0.0f～1.0f）
