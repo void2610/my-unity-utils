@@ -39,6 +39,18 @@ namespace Void2610.UnityTemplate
             _frontIsB = false;
         }
 
+        /// <summary>両面を空にする。スプライトが null のまま不透明だと白い矩形として描画されるため、alpha も落とす</summary>
+        public void Clear()
+        {
+            _handle.TryComplete();
+            CurrentSprite = null;
+            imageA.sprite = null;
+            imageB.sprite = null;
+            SetAlpha(imageA, 0f);
+            SetAlpha(imageB, 0f);
+            _frontIsB = false;
+        }
+
         /// <summary>クロスフェードで差し替え、完了まで待機する。同一スプライトなら即完了</summary>
         public UniTask CrossfadeAsync(Sprite sprite, CancellationToken ct = default)
         {
