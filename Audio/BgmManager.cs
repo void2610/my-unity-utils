@@ -95,6 +95,8 @@ namespace Void2610.UnityTemplate
         private bool _isPlaying;
         private float _bgmVolume = 1.0f;
         private SoundData _currentBGM;
+        // PlayBGM / Stop の後勝ちを保証する世代番号。フェード await 中に新しい要求が来たら古い要求は以降を捨てる
+        private int _requestVersion;
         private MotionHandle _fadeHandle;
         private MotionHandle _duckingHandle;
         private MotionHandle _lowpassHandle;
@@ -187,6 +189,7 @@ namespace Void2610.UnityTemplate
         /// </summary>
         public async UniTask Stop(float fadeDuration)
         {
+            var version = ++_requestVersion;
             _isPlaying = false;
             var resolvedFadeDuration = ResolveFadeOutDuration(fadeDuration);
 
@@ -196,6 +199,7 @@ namespace Void2610.UnityTemplate
                 .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
                 .BindToVolume(_audioSource)
                 .ToUniTask();
+            if (version != _requestVersion) return;
 
             _audioSource.Stop();
             _currentBGM = null;
@@ -324,6 +328,7 @@ namespace Void2610.UnityTemplate
         /// </summary>
         private async UniTaskVoid PlayBGMInternal(SoundData data, float fadeOutDuration, float fadeInDuration, bool loop)
         {
+            var version = ++_requestVersion;
             _isPlaying = true;
             _currentLoop = loop;
             var resolvedFadeOutDuration = ResolveFadeOutDuration(fadeOutDuration);
@@ -337,6 +342,8 @@ namespace Void2610.UnityTemplate
                     .WithEase(Ease.InQuad)
                     .BindToVolume(_audioSource)
                     .ToUniTask();
+                // フェードアウト中に別の PlayBGM / Stop が来ていたら、その要求の側が再生を確定させる
+                if (version != _requestVersion) return;
                 _audioSource.Stop();
             }
 
