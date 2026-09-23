@@ -44,12 +44,9 @@ namespace Void2610.UnityTemplate
                 if (_seVolume <= 0.0f) _seVolume = 0.0001f;
 
                 seMixerGroup.audioMixer.SetFloat("SeVolume", Mathf.Log10(_seVolume) * 20);
-                PlayerPrefs.SetFloat(SE_VOLUME_KEY, _seVolume);
+                PlayerPrefs.SetFloat(AudioVolumePrefs.SeVolumeKey, _seVolume);
             }
         }
-
-        // PlayerPrefsキー
-        private const string SE_VOLUME_KEY = "SeVolume";
 
         private AudioSource[] _seAudioSourceList;
         // 各チャンネルで現在再生中の再生ハンドル (StopSe(handle) で「その再生だけ」を狙い撃ちするため)。0 = 無効
@@ -334,7 +331,7 @@ namespace Void2610.UnityTemplate
             }
 
             // 保存された音量を読み込み
-            _seVolume = PlayerPrefs.GetFloat(SE_VOLUME_KEY, 0.5f);
+            _seVolume = PlayerPrefs.GetFloat(AudioVolumePrefs.SeVolumeKey, 0.5f);
             SeVolume = _seVolume;
         }
 

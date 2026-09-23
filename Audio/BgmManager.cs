@@ -69,7 +69,7 @@ namespace Void2610.UnityTemplate
                 if (_bgmVolume <= 0.0f) _bgmVolume = 0.0001f;
 
                 ApplyMixerVolume();
-                PlayerPrefs.SetFloat(BGM_VOLUME_KEY, _bgmVolume);
+                PlayerPrefs.SetFloat(AudioVolumePrefs.BgmVolumeKey, _bgmVolume);
             }
         }
 
@@ -82,9 +82,6 @@ namespace Void2610.UnityTemplate
         /// 再生中かどうか
         /// </summary>
         public bool IsPlaying => _isPlaying && _audioSource && _audioSource.isPlaying;
-
-        // PlayerPrefsキー
-        private const string BGM_VOLUME_KEY = "BgmVolume";
 
         // AudioMixer の expose 済みローパスカットオフパラメータ名
         private const string BGM_LOWPASS_PARAM = "BgmLowpassCutoff";
@@ -424,7 +421,7 @@ namespace Void2610.UnityTemplate
             _audioSource.loop = true; // デフォルトはループ再生
 
             // 保存された音量を読み込み
-            _bgmVolume = PlayerPrefs.GetFloat(BGM_VOLUME_KEY, 1.0f);
+            _bgmVolume = PlayerPrefs.GetFloat(AudioVolumePrefs.BgmVolumeKey, 1.0f);
             BgmVolume = _bgmVolume;
         }
 

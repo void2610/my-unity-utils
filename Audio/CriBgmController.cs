@@ -42,7 +42,6 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
     public bool IsPlayingBGM1 { get; private set; } = true;
 
     private const string AISAC_CONTROL_NAME = "AisacControl_00";
-    private const string BGM_VOLUME_KEY = "BgmVolume";
 
     private CriSoundPlayer _player;
     private CriSoundPlayer.SimplePlayback _currentPlayback;
@@ -65,7 +64,7 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
         set
         {
             _bgmVolume = Mathf.Clamp01(value);
-            PlayerPrefs.SetFloat(BGM_VOLUME_KEY, _bgmVolume);
+            PlayerPrefs.SetFloat(AudioVolumePrefs.BgmVolumeKey, _bgmVolume);
             UpdateVolume();
         }
     }
@@ -196,7 +195,7 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
     protected override void Awake()
     {
         base.Awake();
-        BgmVolume = PlayerPrefs.GetFloat(BGM_VOLUME_KEY, 1.0f);
+        BgmVolume = PlayerPrefs.GetFloat(AudioVolumePrefs.BgmVolumeKey, 1.0f);
         _player = new CriSoundPlayer();
     }
 
