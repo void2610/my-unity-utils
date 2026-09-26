@@ -16,6 +16,8 @@ namespace Void2610.UnityTemplate
         [SerializeField] private AnimationCurve moveCurve = AnimationCurve.EaseInOut(0, 0, 1, 1); // 移動カーブ
         [SerializeField] private bool autoStart = true; // 自動開始
         [SerializeField] private bool useRandomOffset; // ランダムオフセット
+        // 傾いた親の中で画面に対して直立させた要素を、自分の向きのまま揺らしたいときに使う
+        [SerializeField] private bool moveAlongSelfUp;
 
         private Vector3 _originalPosition;
         private bool _isMovingUp = true;
@@ -103,18 +105,17 @@ namespace Void2610.UnityTemplate
             }
         }
 
-        private void Start()
+        // 非表示→再表示のたびに元の位置から揺れ直す (Start だと初回しか始まらない)
+        private void OnEnable()
         {
-            if (autoStart)
+            if (!autoStart) return;
+            if (startDelay > 0)
             {
-                if (startDelay > 0)
-                {
-                    Invoke(nameof(StartFloating), startDelay);
-                }
-                else
-                {
-                    StartFloating();
-                }
+                Invoke(nameof(StartFloating), startDelay);
+            }
+            else
+            {
+                StartFloating();
             }
         }
 
@@ -136,13 +137,15 @@ namespace Void2610.UnityTemplate
             var yOffset = _isMovingUp ? Mathf.Lerp(0f, moveDistance, curveValue) : Mathf.Lerp(moveDistance, 0f, curveValue);
 
             // 位置を更新
-            var newPosition = _originalPosition + Vector3.up * yOffset;
+            var direction = moveAlongSelfUp ? _targetTransform.localRotation * Vector3.up : Vector3.up;
+            var newPosition = _originalPosition + direction * yOffset;
             _targetTransform.localPosition = newPosition;
         }
 
         private void OnDisable()
         {
-            StopFloating();
+            CancelInvoke(nameof(StartFloating));
+            ResetToOriginalPosition();
         }
 
         /// <summary>
