@@ -23,6 +23,7 @@ namespace Void2610.UnityTemplate
         private readonly IdleDetector _idleDetector;
         private readonly ISceneTransitionService _sceneTransitionService;
         private readonly IExhibitOverlay _overlay;
+        private readonly ExhibitInputBlocker _inputBlocker = new();
 
         private State _state = State.Monitoring;
         private float _overlayShownTime;
@@ -41,6 +42,9 @@ namespace Void2610.UnityTemplate
 
         public void Tick()
         {
+            // 解除後の入力の戻しはシーンやフェードに関係なく進める
+            _inputBlocker.Tick();
+
             if (!_settings.EnableIdlePauseAndReturn) return;
 
             // スキップ対象のシーンではスキップ
@@ -66,6 +70,7 @@ namespace Void2610.UnityTemplate
             if (_idleDetector.IdleSeconds >= _settings.IdleToPauseSeconds)
             {
                 _overlay.Show();
+                _inputBlocker.Block();
                 _overlayShownTime = Time.realtimeSinceStartup;
                 _state = State.OverlayShown;
             }
@@ -77,6 +82,8 @@ namespace Void2610.UnityTemplate
             if (_idleDetector.IdleSeconds < 1f)
             {
                 _overlay.Hide();
+                // 閉じた入力そのものがゲームに届かないよう、離されるまで止めたままにする
+                _inputBlocker.RequestRelease();
                 _state = State.Monitoring;
                 return;
             }
@@ -94,12 +101,13 @@ namespace Void2610.UnityTemplate
         {
             _overlay.Hide();
             await _sceneTransitionService.TransitionToSceneWithFade(_settings.IdleReturnSceneName);
+            _inputBlocker.ReleaseNow();
             _idleDetector.ResetIdleTimer();
             _state = State.Monitoring;
         }
 
         public void Start() { }
 
-        public void Dispose() { }
+        public void Dispose() => _inputBlocker.ReleaseNow();
     }
 }
