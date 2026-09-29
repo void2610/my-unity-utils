@@ -29,7 +29,11 @@ namespace Void2610.UnityTemplate
 
         private void Update()
         {
-            targetObject = EventSystem.current.currentSelectedGameObject;
+            // EventSystem が無いフレーム（シーン遷移中やテストで無効にされた間）でも例外を出さない
+            var eventSystem = EventSystem.current;
+#pragma warning disable VUA1001
+            targetObject = eventSystem ? eventSystem.currentSelectedGameObject : null;
+#pragma warning restore VUA1001
         }
     }
 }
