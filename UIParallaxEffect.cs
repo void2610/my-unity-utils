@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Utils
 {
@@ -83,10 +84,10 @@ namespace Utils
                 return _emulatedScreenPosition;
             }
 
-            // マウス入力が有効ならマウス位置を使用
-            if (useMousePosition)
+            // マウス入力が有効ならポインタ位置を使用 (旧 Input Manager は無効化されたプロジェクトで例外になるため Input System から読む)
+            if (useMousePosition && Pointer.current != null)
             {
-                return Input.mousePosition;
+                return Pointer.current.position.ReadValue();
             }
 
             // どちらも使わない場合は画面中心を基準にする
