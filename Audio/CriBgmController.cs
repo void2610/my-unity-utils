@@ -313,9 +313,32 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
     {
         if (HasCurrentPlayback)
         {
-            _currentPlayback.SetVolumeAndPitch(baseVolume * _bgmVolume * _currentFadeVolume * _temporaryVolume, 1.0f);
+            var editorMute = IsEditorAudioMuted() ? 0f : 1f;
+            _currentPlayback.SetVolumeAndPitch(baseVolume * _bgmVolume * _currentFadeVolume * _temporaryVolume * editorMute, 1.0f);
         }
     }
+
+    // CRI の再生は Unity の AudioListener を通らないため、エディタの消音 (Game ビューの Mute やテスト実行中の消音) を自前で反映する
+    private static bool IsEditorAudioMuted()
+    {
+#if UNITY_EDITOR
+        return UnityEditor.EditorUtility.audioMasterMute;
+#else
+        return false;
+#endif
+    }
+
+#if UNITY_EDITOR
+    private bool _lastEditorAudioMuted;
+
+    private void Update()
+    {
+        var muted = IsEditorAudioMuted();
+        if (muted == _lastEditorAudioMuted) return;
+        _lastEditorAudioMuted = muted;
+        UpdateVolume();
+    }
+#endif
 
     /// <summary>
     /// 一時停止の内部処理
