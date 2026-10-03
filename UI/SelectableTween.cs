@@ -40,6 +40,17 @@ namespace Void2610.UnityTemplate
         }
 
         /// <summary>
+        /// 選択を外したときに戻る基準のスケールを変え、すぐにその大きさにする。
+        /// 生成した後で大きさを変える要素 (ワールドマップのボスのノードなど) は、Awake で覚えた元の大きさへ戻らないようにこれを使う
+        /// </summary>
+        public void SetDefaultScale(float newDefaultScale)
+        {
+            CancelAllMotions();
+            _defaultScale = newDefaultScale;
+            transform.localScale = Vector3.one * _defaultScale;
+        }
+
+        /// <summary>
         /// アニメーション設定を更新
         /// </summary>
         /// <param name="newScale">新しいスケール値</param>
