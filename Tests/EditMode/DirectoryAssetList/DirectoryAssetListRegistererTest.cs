@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Void2610.UnityTemplate.Tests
 {
     /// <summary>
-    /// アセットの追加・削除・移動に合わせて、同じフォルダの IDirectoryAssetList が登録し直されることを、一時フォルダの実アセットで確かめる
+    /// アセットの追加・削除・移動に合わせて、同じフォルダの [SameDirectoryAssets] を付けた一覧が登録し直されることを、一時フォルダの実アセットで確かめる
     /// </summary>
     [TestFixture]
     public class DirectoryAssetListRegistererTest
