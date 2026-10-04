@@ -103,7 +103,6 @@ namespace Void2610.UnityTemplate
         /// </summary>
         public void OnSelect(BaseEventData eventData)
         {
-            if (SelectSeSuppression.ShouldSuppress) return;
             PlaySelectSound();
         }
 
