@@ -7,7 +7,7 @@ using UnityEngine.EventSystems;
 namespace Void2610.UnityTemplate
 {
     /// <summary>
-    /// ドラッグ中の見た目を受け持つ。掴んだら持ち上げてポインタに付いていき、置き損ねたら元の場所へすべって戻る
+    /// ドラッグ中の見た目を受け持つ。掴んだら持ち上げてポインタに付いていき、受け取り先に収まるか、置き損ねたら元の場所へすべって戻る
     /// ドラッグする要素そのもの、または指に付いてくるゴーストに付け、ドラッグのイベントを受けた側から呼ぶ
     /// </summary>
     [RequireComponent(typeof(RectTransform), typeof(CanvasGroup))]
@@ -81,12 +81,15 @@ namespace Void2610.UnityTemplate
             }
         }
 
-        /// <summary>受け取り先に置けたとき。戻る動きは置き損ねに見えるため見せず、その場でホームへ戻して再び掴めるようにする</summary>
-        public void Drop()
+        /// <summary>受け取り先に収めたとき。持ち上げをやめて掴む前の見た目に戻し、受け取り先の位置 (ワールド座標) に置く。後片付けで <see cref="SnapHome"/> を呼ぶまでホームへは戻さない</summary>
+        public void Place(Vector3 worldPosition)
         {
             if (!IsHeld) return;
+            IsHeld = false;
             _motion.TryCancel();
-            Land();
+            transform.position = worldPosition;
+            transform.localScale = _homeScale;
+            _group.alpha = _homeAlpha;
         }
 
         /// <summary>置き損ねたとき。離した位置から掴んだ場所へすべらせて戻し、着いたら再び掴めるようにする</summary>

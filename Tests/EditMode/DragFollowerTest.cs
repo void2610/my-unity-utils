@@ -14,6 +14,7 @@ namespace Void2610.UnityTemplate.Tests
     {
         private static readonly Vector2 HOME_POSITION = new(10f, 20f);
         private static readonly Vector2 RELEASE_POSITION = new(300f, -150f);
+        private static readonly Vector3 SLOT_POSITION = new(-80f, 40f, 0f);
         private const float RETURN_TIMEOUT_SECONDS = 2f;
 
         private GameObject _parent;
@@ -43,12 +44,16 @@ namespace Void2610.UnityTemplate.Tests
         }
 
         [Test]
-        public void 受け取られるとその場でホームへ戻り再び掴める()
+        public void 受け取り先に収めるとその位置に残り後片付けでホームへ戻る()
         {
-            _follower.Drop();
+            _follower.Place(SLOT_POSITION);
+
+            Assert.That(_follower.transform.position, Is.EqualTo(SLOT_POSITION));
+            Assert.That(_follower.IsHeld, Is.False);
+
+            _follower.SnapHome();
 
             Assert.That(AnchoredPosition, Is.EqualTo(HOME_POSITION));
-            Assert.That(_group.blocksRaycasts, Is.True);
         }
 
         [UnityTest]
