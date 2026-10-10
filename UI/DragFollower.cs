@@ -125,14 +125,14 @@ namespace Void2610.UnityTemplate
             transform.localScale = _homeScale;
         }
 
-        /// <summary>掴んでいる途中や戻りの途中で打ち切り、その場でホームへ置く。打ち切りは呼び出し側の都合で起きるため、入力の可否は呼び出し側が決める</summary>
+        /// <summary>途中の動きを打ち切り、その場でホームへ置く。打ち切りは呼び出し側の都合で起きるため、入力の可否は呼び出し側が決める</summary>
         public void SnapHome()
         {
             _motion.TryCancel();
-            if (!_away) return;
             IsHeld = false;
             _away = false;
-            PlaceHome();
+            // ホームへ置いた後に呼び出し側の演出で動かされることもあるため、離れているかに関わらず置き直す
+            if (_homeParent != null) PlaceHome();
         }
 
         private void RememberHome()

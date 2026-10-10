@@ -76,6 +76,18 @@ namespace Void2610.UnityTemplate.Tests
             Assert.That(_group.blocksRaycasts, Is.False);
         }
 
+        [Test]
+        public void ホームへ置いた後に動かされても打ち切りでホームへ置き直す()
+        {
+            // 次の出題で打ち切られた後に、前の問題の落下演出がホームから動かす順序
+            _follower.SnapHome();
+            ((RectTransform)_follower.transform).anchoredPosition = RELEASE_POSITION;
+
+            _follower.SnapHome();
+
+            Assert.That(AnchoredPosition, Is.EqualTo(HOME_POSITION));
+        }
+
         private Vector2 AnchoredPosition => ((RectTransform)_follower.transform).anchoredPosition;
     }
 }
