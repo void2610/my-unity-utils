@@ -51,6 +51,7 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
     private float _currentFadeVolume;
     private float _temporaryVolume = 1.0f;
     private float _aisacValue;
+    private int _playRequestId;
     private MotionHandle _fadeHandle;
     private MotionHandle _temporaryVolumeHandle;
 
@@ -108,6 +109,7 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
     /// <param name="bgmName">BGMデータの名前</param>
     public void PlayBgm(string bgmName)
     {
+        _playRequestId++;
         var bgmData = bgmList.Find(x => x.Name == bgmName);
         // ACB ロード失敗 (CI 環境) や不明な bgmName で bgmData/AcbAsset が無い場合は無音再生扱いにする。
         // 呼び出し側は再生成否を分岐しないので、no-op で通す方が失敗モードとして安全。
@@ -118,7 +120,7 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
             return;
         }
         CurrentBgmName = bgmName;
-        PlayBgmInternal(bgmData.CueReference).Forget();
+        PlayBgmInternal(bgmData.CueReference, _playRequestId).Forget();
     }
     
     public async UniTaskVoid PlayBgm(string bgmName, int delayMilliseconds)
@@ -129,11 +131,12 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
 
     public void Stop()
     {
+        _playRequestId++;
+        CurrentBgmName = string.Empty;
         if (HasCurrentPlayback)
         {
             _currentPlayback.Stop();
             HasCurrentPlayback = false;
-            CurrentBgmName = string.Empty;
         }
     }
 
@@ -286,7 +289,8 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
     /// BGM再生の内部処理
     /// </summary>
     /// <param name="cueReference">再生するキュー参照</param>
-    private async UniTaskVoid PlayBgmInternal(CriAtomCueReference cueReference)
+    /// <param name="requestId">この再生を頼んだときの依頼番号</param>
+    private async UniTaskVoid PlayBgmInternal(CriAtomCueReference cueReference, int requestId)
     {
         if (HasCurrentPlayback)
         {
@@ -294,6 +298,8 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
             HasCurrentPlayback = false;
             await UniTask.Delay(50);
         }
+        // 前の曲を止めて待つ間に Stop や別の PlayBgm が来たら、古い依頼の曲は鳴らさない
+        if (requestId != _playRequestId) return;
 
         _currentPlayback = _player.StartPlayback(cueReference);
         // 再生開始直後に正しい音量を設定（一瞬大音量になるのを防ぐ）
