@@ -32,27 +32,38 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
 {
     [SerializeField] private List<BgmData> bgmList = new();
     [SerializeField, Range(0f, 1f)] private float baseVolume = 1.0f;
+    [Tooltip("曲を切り替えるときに前の曲と重ねて入れ替える秒数。0 なら前の曲を止めてから次の曲を流す")]
+    [SerializeField, Min(0f)] private float crossfadeDuration;
+
+    /// <summary>曲を流していないときの CurrentBgmName</summary>
+    public const string NO_BGM_NAME = "";
 
     /// <summary>登録済み BGM の名前一覧。シナリオ用の参照一覧等、外部ツールへ渡す用</summary>
     public IEnumerable<string> EnumerateBgmNames() => bgmList.Select(b => b.Name);
 
+    public float CrossfadeDuration => crossfadeDuration;
     public bool IsInitialized { get; private set; }
     public bool HasCurrentPlayback { get; private set; }
-    public string CurrentBgmName { get; private set; } = string.Empty;
+    public string CurrentBgmName { get; private set; } = NO_BGM_NAME;
     public bool IsPlayingBGM1 { get; private set; } = true;
 
     private const string AISAC_CONTROL_NAME = "AisacControl_00";
 
     private CriSoundPlayer _player;
     private CriSoundPlayer.SimplePlayback _currentPlayback;
+    // 切り替えで音量を下げきるまで鳴らしておく前の曲
+    private CriSoundPlayer.SimplePlayback _outgoingPlayback;
+    private bool _hasOutgoingPlayback;
     private CriAtomExAcb _acbAsset;
 
     private float _bgmVolume = 1.0f;
     private float _currentFadeVolume;
+    private float _outgoingFadeVolume;
     private float _temporaryVolume = 1.0f;
     private float _aisacValue;
     private int _playRequestId;
     private MotionHandle _fadeHandle;
+    private MotionHandle _outgoingFadeHandle;
     private MotionHandle _temporaryVolumeHandle;
 
     /// <summary>
@@ -89,7 +100,12 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
 
     public bool IsPlaying => HasCurrentPlayback && _currentPlayback.IsPlaying();
     public void Pause() => PauseInternal();
-    public void Resume() => _currentPlayback.Resume();
+
+    public void Resume()
+    {
+        if (HasCurrentPlayback) _currentPlayback.Resume();
+        if (_hasOutgoingPlayback) _outgoingPlayback.Resume();
+    }
 
     /// <summary>
     /// 次の再生ブロックインデックスを設定
@@ -120,7 +136,10 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
             return;
         }
         CurrentBgmName = bgmName;
-        PlayBgmInternal(bgmData.CueReference, _playRequestId).Forget();
+        if (crossfadeDuration > 0f)
+            CrossfadeTo(bgmData.CueReference, _playRequestId);
+        else
+            PlayBgmInternal(bgmData.CueReference, _playRequestId).Forget();
     }
     
     public async UniTaskVoid PlayBgm(string bgmName, int delayMilliseconds)
@@ -132,7 +151,9 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
     public void Stop()
     {
         _playRequestId++;
-        CurrentBgmName = string.Empty;
+        CurrentBgmName = NO_BGM_NAME;
+        _fadeHandle.TryCancel();
+        StopOutgoing();
         if (HasCurrentPlayback)
         {
             _currentPlayback.Stop();
@@ -141,24 +162,17 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
     }
 
     /// <summary>
-    /// BGMをフェードアウトして停止
+    /// BGMをフェードアウトして停止。呼んだ時点で曲を流していない扱いになり、フェード中に次の曲を流せる
     /// </summary>
     /// <param name="duration">フェード時間（秒）</param>
     public async UniTask FadeOut(float duration = 0.5f)
     {
+        _playRequestId++;
+        CurrentBgmName = NO_BGM_NAME;
         if (!HasCurrentPlayback) return;
 
-        _fadeHandle.TryCancel();
-        await LMotion.Create(_currentFadeVolume, 0f, duration)
-            .WithEase(Ease.OutQuad)
-            .Bind(x =>
-            {
-                _currentFadeVolume = x;
-                UpdateVolume();
-            })
-            .ToUniTask();
-
-        Stop();
+        ReleaseCurrentToOutgoing(duration);
+        await _outgoingFadeHandle.ToUniTask().SuppressCancellationThrow();
     }
 
 
@@ -211,6 +225,7 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
     {
         _fadeHandle.TryCancel();
         _temporaryVolumeHandle.TryCancel();
+        StopOutgoing();
         if (HasCurrentPlayback)
         {
             _currentPlayback.Stop();
@@ -307,8 +322,68 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
         HasCurrentPlayback = true;
         UpdateVolume();
 
-        await UniTask.Delay(100);
+        ApplyAisacAfterStart(requestId).Forget();
+    }
 
+    /// <summary>
+    /// 今の曲を前の曲として下げていきながら、次の曲を無音から上げて重ねる
+    /// </summary>
+    private void CrossfadeTo(CriAtomCueReference cueReference, int requestId)
+    {
+        ReleaseCurrentToOutgoing(crossfadeDuration);
+
+        _currentPlayback = _player.StartPlayback(cueReference);
+        _currentFadeVolume = 0f;
+        HasCurrentPlayback = true;
+        UpdateVolume();
+        _fadeHandle = LMotion.Create(0f, 1f, crossfadeDuration)
+            .Bind(x =>
+            {
+                _currentFadeVolume = x;
+                UpdateVolume();
+            });
+
+        ApplyAisacAfterStart(requestId).Forget();
+    }
+
+    /// <summary>
+    /// 今の曲を前の曲へ移し、duration かけて音量を下げきったら止める。下げている途中だった前の曲はすぐ止める
+    /// </summary>
+    private void ReleaseCurrentToOutgoing(float duration)
+    {
+        _fadeHandle.TryCancel();
+        StopOutgoing();
+        if (!HasCurrentPlayback) return;
+
+        _outgoingPlayback = _currentPlayback;
+        _outgoingFadeVolume = _currentFadeVolume;
+        _hasOutgoingPlayback = true;
+        HasCurrentPlayback = false;
+        _outgoingFadeHandle = LMotion.Create(_outgoingFadeVolume, 0f, duration)
+            .WithOnComplete(() =>
+            {
+                _outgoingPlayback.Stop();
+                _hasOutgoingPlayback = false;
+            })
+            .Bind(x =>
+            {
+                _outgoingFadeVolume = x;
+                UpdateVolume();
+            });
+    }
+
+    private void StopOutgoing()
+    {
+        _outgoingFadeHandle.TryCancel();
+        if (!_hasOutgoingPlayback) return;
+        _outgoingPlayback.Stop();
+        _hasOutgoingPlayback = false;
+    }
+
+    private async UniTaskVoid ApplyAisacAfterStart(int requestId)
+    {
+        await UniTask.Delay(100);
+        if (requestId != _playRequestId || !HasCurrentPlayback) return;
         _currentPlayback.SetAisacControl(AISAC_CONTROL_NAME, _aisacValue);
     }
 
@@ -317,11 +392,11 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
     /// </summary>
     private void UpdateVolume()
     {
+        var volume = baseVolume * _bgmVolume * _temporaryVolume * (IsEditorAudioMuted() ? 0f : 1f);
         if (HasCurrentPlayback)
-        {
-            var editorMute = IsEditorAudioMuted() ? 0f : 1f;
-            _currentPlayback.SetVolumeAndPitch(baseVolume * _bgmVolume * _currentFadeVolume * _temporaryVolume * editorMute, 1.0f);
-        }
+            _currentPlayback.SetVolumeAndPitch(volume * _currentFadeVolume, 1.0f);
+        if (_hasOutgoingPlayback)
+            _outgoingPlayback.SetVolumeAndPitch(volume * _outgoingFadeVolume, 1.0f);
     }
 
     // CRI の再生は Unity の AudioListener を通らないため、エディタの消音 (Game ビューの Mute やテスト実行中の消音) を自前で反映する
@@ -353,6 +428,8 @@ public class CriBgmController : SingletonMonoBehaviour<CriBgmController>
     {
         if (HasCurrentPlayback)
             _currentPlayback.Pause();
+        if (_hasOutgoingPlayback)
+            _outgoingPlayback.Pause();
     }
 }
 #endif
