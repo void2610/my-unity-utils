@@ -355,7 +355,9 @@ namespace Void2610.UnityTemplate
                     (0.5f - anchorCenter.x) * parentSize.x,
                     (0.5f - anchorCenter.y) * parentSize.y
                 );
-                child.anchoredPosition = positions[i] + anchorCorrection;
+                var target = positions[i] + anchorCorrection;
+                // 同じ値の再代入でも端数が変わるとシーンや Prefab に差分が出るため、変わるときだけ書く
+                if ((child.anchoredPosition - target).sqrMagnitude > 1e-4f) child.anchoredPosition = target;
             }
         }
 
@@ -378,6 +380,8 @@ namespace Void2610.UnityTemplate
         private void OnValidate()
         {
             if (layoutMode == LayoutMode.None) return;
+            // 読み込み・インポート時の Prefab アセットへ書くと、開いてもいない Prefab に差分が出る
+            if (UnityEditor.EditorUtility.IsPersistent(this)) return;
             if (_isLayoutApplyScheduled) return;
             _isLayoutApplyScheduled = true;
 
@@ -385,8 +389,15 @@ namespace Void2610.UnityTemplate
             UnityEditor.EditorApplication.delayCall += () =>
             {
                 _isLayoutApplyScheduled = false;
-                if (this) ApplyLayout();
+                if (this && IsParentLaidOut()) ApplyLayout();
             };
+        }
+
+        // 親の大きさが未確定 (0) だとアンカーの補正が 0 になり、隅アンカーの子へ誤った位置を書いてしまう
+        private bool IsParentLaidOut()
+        {
+            var size = ((RectTransform)transform).rect.size;
+            return size.x > 0f && size.y > 0f;
         }
 #endif
 
