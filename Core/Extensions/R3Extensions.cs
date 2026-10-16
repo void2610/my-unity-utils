@@ -1,4 +1,6 @@
 using System;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using R3;
 
 namespace Void2610.UnityTemplate
@@ -9,6 +11,19 @@ namespace Void2610.UnityTemplate
     /// </summary>
     public static class R3Extensions
     {
+        /// <summary>
+        /// 次の 1 件を待つ。待っている間に source が完了したら (発行元の破棄など) キャンセルとして抜ける。
+        /// R3 の FirstAsync は要素の無いまま完了すると InvalidOperationException を投げるため、シーン破棄と競合しうる待ちに使う
+        /// </summary>
+        public static async UniTask<T> NextOrCancelAsync<T>(this Observable<T> source, CancellationToken cancellationToken)
+        {
+            var tcs = new UniTaskCompletionSource<T>();
+            using (source.Subscribe(value => tcs.TrySetResult(value), _ => tcs.TrySetCanceled()))
+            {
+                return await tcs.Task.AttachExternalCancellation(cancellationToken);
+            }
+        }
+
         /// <summary>
         /// ReactivePropertyの値が増加した時のみ発火するObservableを返す
         /// スコアやHP増加などの検知に便利
