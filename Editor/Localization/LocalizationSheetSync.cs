@@ -60,6 +60,7 @@ namespace Void2610.UnityTemplate.Editor.Localization
             public Dictionary<string, int> RowIndexByKey;
             public int RowCount;
             public List<string> DuplicateKeys;
+            public IReadOnlyList<string> KeyNotes;
         }
 
         public static string FindSpreadsheetId() => LinkedCollections("").Select(c => c.Extensions.OfType<GoogleSheetsExtension>().First().SpreadsheetId).FirstOrDefault();
@@ -101,10 +102,10 @@ namespace Void2610.UnityTemplate.Editor.Localization
 
                     var local = ReadLocal(target);
                     var plan = SheetMergePlanner.PlanPush(target.Locales, local, drive.Rows, BaseOf(spreadsheet.BaseTables, target.TableName), forceKeys);
-                    CollectWrites(writes, target, drive, local, plan);
+                    var keyNoteCount = CollectWrites(writes, target, drive, local, plan);
                     spreadsheet.BaseTables[target.TableName] = plan.NextBase;
 
-                    report.AppendLine($"[{target.TableName}] 書き換え {plan.Updates.Count} セル / 追加 {plan.Appends.Count} 行 / 削除 {plan.Deletes.Count} 行 / 書かなかった {plan.Skipped.Count} セル");
+                    report.AppendLine($"[{target.TableName}] 書き換え {plan.Updates.Count} セル / 追加 {plan.Appends.Count} 行 / 削除 {plan.Deletes.Count} 行 / 書かなかった {plan.Skipped.Count} セル / KeyId のメモ {keyNoteCount} 行");
                     foreach (var cell in plan.Updates) AppendCell(report, "書き換え", cell);
                     foreach (var key in plan.Appends) report.AppendLine($"  追加 {key}");
                     foreach (var key in plan.Deletes) report.AppendLine($"  削除 {key}");
@@ -211,12 +212,13 @@ namespace Void2610.UnityTemplate.Editor.Localization
                 var valueRanges = request.Execute().ValueRanges;
 
                 var baseValues = baseSheet != null ? valueRanges[targets.Count].Values ?? new List<IList<object>>() : new List<IList<object>>();
+                var keyNotes = ReadKeyNotes(service, spreadsheetId, targets);
                 yield return new SpreadsheetData
                 {
                     Service = service,
                     SpreadsheetId = spreadsheetId,
                     Targets = targets,
-                    Drives = targets.Select((t, i) => (t.TableName, Drive: ParseDrive(t, valueRanges[i].Values ?? new List<IList<object>>())))
+                    Drives = targets.Select((t, i) => (t.TableName, Drive: ParseDrive(t, valueRanges[i].Values ?? new List<IList<object>>(), keyNotes[t.SheetId])))
                         .ToDictionary(x => x.TableName, x => x.Drive),
                     BaseSheet = baseSheet,
                     BaseRowCount = baseValues.Count,
@@ -272,6 +274,22 @@ namespace Void2610.UnityTemplate.Editor.Localization
             }
         }
 
+        // キーのセルのメモは Unity 標準の Pull がキーを引き当てる KeyId で、値の API では読めないため、キーの列だけをセルの情報として読む
+        private static Dictionary<int, IReadOnlyList<string>> ReadKeyNotes(SheetsService service, string spreadsheetId, IReadOnlyList<SheetTarget> targets)
+        {
+            var request = service.Spreadsheets.Get(spreadsheetId);
+            request.Ranges = targets.Select(t =>
+            {
+                var column = SheetColumn.IndexToColumnName(t.KeyColumnIndex);
+                return $"{Quote(t.Title)}!{column}:{column}";
+            }).ToList();
+            request.Fields = "sheets(properties.sheetId,data.rowData.values.note)";
+            return request.Execute().Sheets.ToDictionary(
+                s => s.Properties.SheetId ?? 0,
+                s => (IReadOnlyList<string>)(s.Data?.FirstOrDefault()?.RowData ?? new List<RowData>())
+                    .Select(r => r?.Values?.FirstOrDefault()?.Note ?? "").ToList());
+        }
+
         private static TranslationRows ReadLocal(SheetTarget target)
         {
             var rows = new TranslationRows();
@@ -288,7 +306,7 @@ namespace Void2610.UnityTemplate.Editor.Localization
             return rows;
         }
 
-        private static DriveSheet ParseDrive(SheetTarget target, IList<IList<object>> values)
+        private static DriveSheet ParseDrive(SheetTarget target, IList<IList<object>> values, IReadOnlyList<string> keyNotes)
         {
             var drive = new DriveSheet
             {
@@ -296,6 +314,7 @@ namespace Void2610.UnityTemplate.Editor.Localization
                 RowIndexByKey = new Dictionary<string, int>(),
                 RowCount = values.Count,
                 DuplicateKeys = new List<string>(),
+                KeyNotes = keyNotes,
             };
 
             // 1 行目は見出し
@@ -331,7 +350,7 @@ namespace Void2610.UnityTemplate.Editor.Localization
             return tables;
         }
 
-        private static void CollectWrites(SheetWrites writes, SheetTarget target, DriveSheet drive, TranslationRows local, SheetPushPlan plan)
+        private static int CollectWrites(SheetWrites writes, SheetTarget target, DriveSheet drive, TranslationRows local, SheetPushPlan plan)
         {
             var columnByLocale = target.LocaleColumns.ToDictionary(c => c.Locale, c => c.ColumnIndex);
             foreach (var cell in plan.Updates)
@@ -347,6 +366,16 @@ namespace Void2610.UnityTemplate.Editor.Localization
             }
             AddRowsIfShort(writes, target.SheetId, target.GridRowCount, drive.RowCount + plan.Appends.Count);
 
+            // メモが無いと、Drive でキー名を直したときに Pull が改名ではなく別のキーとして足してしまう
+            var keyRows = drive.RowIndexByKey.Where(r => local.HasKey(r.Key)).Select(r => (r.Key, RowIndex: r.Value))
+                .Concat(plan.Appends.Select((key, i) => (Key: key, RowIndex: drive.RowCount + i)));
+            var noteRequests = keyRows
+                .Select(r => (r.RowIndex, Note: target.Collection.SharedData.GetId(r.Key).ToString()))
+                .Where(r => (r.RowIndex < drive.KeyNotes.Count ? drive.KeyNotes[r.RowIndex] : "") != r.Note)
+                .Select(r => KeyNoteRequest(target, r.RowIndex, r.Note))
+                .ToList();
+            writes.Structure.AddRange(noteRequests);
+
             // 下の行から消し、消す前の行番号のまま指せるようにする
             writes.Deletes.AddRange(plan.Deletes.Select(k => drive.RowIndexByKey[k]).OrderByDescending(i => i)
                 .Select(i => new Request
@@ -356,6 +385,20 @@ namespace Void2610.UnityTemplate.Editor.Localization
                         Range = new DimensionRange { SheetId = target.SheetId, Dimension = "ROWS", StartIndex = i, EndIndex = i + 1 },
                     },
                 }));
+            return noteRequests.Count;
+        }
+
+        private static Request KeyNoteRequest(SheetTarget target, int rowIndex, string note)
+        {
+            return new Request
+            {
+                UpdateCells = new UpdateCellsRequest
+                {
+                    Start = new GridCoordinate { SheetId = target.SheetId, RowIndex = rowIndex, ColumnIndex = target.KeyColumnIndex },
+                    Rows = new List<RowData> { new() { Values = new List<CellData> { new() { Note = note } } } },
+                    Fields = "note",
+                },
+            };
         }
 
         private static void CollectBaseWrites(SheetWrites writes, SpreadsheetData spreadsheet)
