@@ -6,13 +6,13 @@ namespace Void2610.UnityTemplate.Editor.Localization
 {
     public enum SheetCellState
     {
-        /// <summary>  </summary>
+        /// <summary> ローカルと Drive が同じ値 </summary>
         InSync,
-        /// <summary>  </summary>
+        /// <summary> Drive は前回の同期時点のままで、ローカルだけ変わった </summary>
         LocalChanged,
-        /// <summary>  </summary>
+        /// <summary> ローカルは前回の同期時点のままで、Drive だけ変わった </summary>
         DriveChanged,
-        /// <summary>  </summary>
+        /// <summary> ローカルと Drive の両方が前回の同期時点から変わり、値も違う </summary>
         Conflict,
     }
 

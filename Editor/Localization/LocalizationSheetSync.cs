@@ -118,7 +118,7 @@ namespace Void2610.UnityTemplate.Editor.Localization
         }
 
         /// <summary>
-        /// シートの内容で StringTable を丸ごと置き換える (Unity Localization 標準の Pull)
+        /// シートの内容を StringTable へ取り込む (Unity Localization 標準の Pull)。シートに無いキーは消さずに末尾へ回す
         /// </summary>
         public static string PullAll()
         {
