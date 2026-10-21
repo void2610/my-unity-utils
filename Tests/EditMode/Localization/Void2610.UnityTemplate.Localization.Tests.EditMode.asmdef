@@ -1,0 +1,29 @@
+{
+    "name": "Void2610.UnityTemplate.Localization.Tests.EditMode",
+    "rootNamespace": "Void2610.UnityTemplate.Tests",
+    "references": [
+        "GUID:b59c53c49c594216aeee8109aab4e0e9"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS",
+        "UNITY_LOCALIZATION"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.localization",
+            "expression": "1.0.0",
+            "define": "UNITY_LOCALIZATION"
+        }
+    ],
+    "noEngineReferences": false
+}
