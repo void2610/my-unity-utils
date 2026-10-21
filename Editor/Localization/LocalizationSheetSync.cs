@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Google.Apis.Auth.OAuth2.Responses;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
 using UnityEditor;
@@ -198,7 +199,7 @@ namespace Void2610.UnityTemplate.Editor.Localization
                 EnsureAuthorized(group.Key.Provider);
                 var service = group.Key.Provider.Service;
                 var spreadsheetId = group.Key.SpreadsheetId;
-                var properties = ReadSheetProperties(service, spreadsheetId);
+                var properties = ReadSheetProperties(group.Key.Provider, spreadsheetId);
                 var targets = group.Select(c => CreateTarget(c, properties, !string.IsNullOrEmpty(spreadsheetIdOverride))).ToList();
                 var baseSheet = properties.FirstOrDefault(p => p.Title == BASE_SHEET_TITLE);
 
@@ -255,11 +256,20 @@ namespace Void2610.UnityTemplate.Editor.Localization
             };
         }
 
-        private static IList<SheetProperties> ReadSheetProperties(SheetsService service, string spreadsheetId)
+        // トークンの更新は最初の通信で行われるので、認証切れはここで分かる
+        private static IList<SheetProperties> ReadSheetProperties(SheetsServiceProvider provider, string spreadsheetId)
         {
-            var request = service.Spreadsheets.Get(spreadsheetId);
+            var request = provider.Service.Spreadsheets.Get(spreadsheetId);
             request.Fields = "sheets.properties";
-            return request.Execute().Sheets.Select(s => s.Properties).ToList();
+            try
+            {
+                return request.Execute().Sheets.Select(s => s.Properties).ToList();
+            }
+            catch (TokenResponseException e)
+            {
+                throw new InvalidOperationException(
+                    $"Google の認証が切れています ({e.Error?.Error})。{AssetDatabase.GetAssetPath(provider)} のインスペクタの Authorize... からブラウザで認証し直してください", e);
+            }
         }
 
         private static TranslationRows ReadLocal(SheetTarget target)
