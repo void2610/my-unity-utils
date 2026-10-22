@@ -118,6 +118,31 @@ namespace Void2610.UnityTemplate.Editor.Localization
         }
 
         /// <summary>
+        /// PullAll で Drive の値に置き換わるローカルの値を返す。無ければ空文字
+        /// </summary>
+        public static string DescribeLocalChangesLostByPull()
+        {
+            var report = new StringBuilder();
+            foreach (var spreadsheet in Load("", ""))
+            {
+                foreach (var target in spreadsheet.Targets)
+                {
+                    var drive = spreadsheet.Drives[target.TableName];
+                    if (AppendDuplicateError(report, target, drive)) continue;
+
+                    var lost = SheetMergePlanner.Compare(target.Locales, ReadLocal(target), drive.Rows, BaseOf(spreadsheet.BaseTables, target.TableName))
+                        .Where(SheetMergePlanner.IsLostByPull)
+                        .ToList();
+                    if (lost.Count == 0) continue;
+
+                    report.AppendLine($"[{target.TableName}] {lost.Count} セル");
+                    foreach (var cell in lost) AppendCell(report, SheetMergePlanner.Describe(cell.State), cell);
+                }
+            }
+            return report.ToString();
+        }
+
+        /// <summary>
         /// シートの内容を StringTable へ取り込む (Unity Localization 標準の Pull)。シートに無いキーは消さずに末尾へ回す
         /// </summary>
         public static string PullAll()

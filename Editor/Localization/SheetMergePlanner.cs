@@ -61,6 +61,11 @@ namespace Void2610.UnityTemplate.Editor.Localization
             SheetCellState.Conflict => "衝突",
             _ => throw new ArgumentOutOfRangeException(nameof(state), state, null),
         };
+
+        /// <summary>
+        /// Pull で Drive の値に置き換わって失われるローカルの変更か。Pull は Drive に無いキーを消さずに残すので、Drive に行があるセルだけが対象
+        /// </summary>
+        public static bool IsLostByPull(SheetCell cell) => cell.Drive != null && cell.State is SheetCellState.LocalChanged or SheetCellState.Conflict;
         public static SheetCellState Classify(string local, string drive, string baseValue)
         {
             if (local == drive) return SheetCellState.InSync;

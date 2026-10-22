@@ -27,6 +27,21 @@ namespace Void2610.UnityTemplate.Tests
             Assert.That(state, Is.EqualTo(expected));
         }
 
+        [TestCase("新", "旧", "旧", true)]
+        [TestCase("新", "Drive", "旧", true)]
+        [TestCase(null, "旧", "旧", true)]
+        [TestCase("旧", "Drive", "旧", false)]
+        [TestCase("旧", null, "旧", false)]
+        [TestCase("新", null, null, false)]
+        [TestCase(null, "Drive", null, false)]
+        [TestCase("同じ", "同じ", "旧", false)]
+        public void IsLostByPull_Driveに行があるセルのローカルの変更だけを失われる値とみなす(string local, string drive, string baseValue, bool expected)
+        {
+            var cell = new SheetCell("K", "ja", local, drive, baseValue, SheetMergePlanner.Classify(local, drive, baseValue));
+
+            Assert.That(SheetMergePlanner.IsLostByPull(cell), Is.EqualTo(expected));
+        }
+
         [Test]
         public void PlanPush_ローカルで変えたセルだけを書き換える()
         {
