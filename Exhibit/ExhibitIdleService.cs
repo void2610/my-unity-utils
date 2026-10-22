@@ -23,6 +23,7 @@ namespace Void2610.UnityTemplate
         private readonly IdleDetector _idleDetector;
         private readonly ISceneTransitionService _sceneTransitionService;
         private readonly IExhibitOverlay _overlay;
+        private readonly ExhibitEvents _events;
         private readonly ExhibitInputBlocker _inputBlocker = new();
 
         private State _state = State.Monitoring;
@@ -32,12 +33,14 @@ namespace Void2610.UnityTemplate
             ExhibitSettings settings,
             IdleDetector idleDetector,
             ISceneTransitionService sceneTransitionService,
-            IExhibitOverlay overlay)
+            IExhibitOverlay overlay,
+            ExhibitEvents events)
         {
             _settings = settings;
             _idleDetector = idleDetector;
             _sceneTransitionService = sceneTransitionService;
             _overlay = overlay;
+            _events = events;
         }
 
         public void Tick()
@@ -73,6 +76,7 @@ namespace Void2610.UnityTemplate
                 _inputBlocker.Block();
                 _overlayShownTime = Time.realtimeSinceStartup;
                 _state = State.OverlayShown;
+                _events.NotifyIdlePaused();
             }
         }
 
@@ -85,6 +89,7 @@ namespace Void2610.UnityTemplate
                 // 閉じた入力そのものがゲームに届かないよう、離されるまで止めたままにする
                 _inputBlocker.RequestRelease();
                 _state = State.Monitoring;
+                _events.NotifyIdleResumed();
                 return;
             }
 
@@ -100,6 +105,7 @@ namespace Void2610.UnityTemplate
         private async UniTaskVoid TransitionToIdleReturn()
         {
             _overlay.Hide();
+            _events.NotifyIdleReturning();
             await _sceneTransitionService.TransitionToSceneWithFade(_settings.IdleReturnSceneName);
             _inputBlocker.ReleaseNow();
             _idleDetector.ResetIdleTimer();

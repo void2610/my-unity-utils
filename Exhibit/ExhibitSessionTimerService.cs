@@ -14,6 +14,7 @@ namespace Void2610.UnityTemplate
         private readonly ExhibitSettings _settings;
         private readonly IdleDetector _idleDetector;
         private readonly ISceneTransitionService _sceneTransitionService;
+        private readonly ExhibitEvents _events;
 
         private float _sessionStartTime;
         private bool _hasTriggered;
@@ -21,11 +22,13 @@ namespace Void2610.UnityTemplate
         public ExhibitSessionTimerService(
             ExhibitSettings settings,
             IdleDetector idleDetector,
-            ISceneTransitionService sceneTransitionService)
+            ISceneTransitionService sceneTransitionService,
+            ExhibitEvents events)
         {
             _settings = settings;
             _idleDetector = idleDetector;
             _sceneTransitionService = sceneTransitionService;
+            _events = events;
         }
 
         public void Tick()
@@ -53,6 +56,7 @@ namespace Void2610.UnityTemplate
 
         private async UniTaskVoid TransitionToSessionLimit()
         {
+            _events.NotifySessionLimitReached();
             await _sceneTransitionService.TransitionToSceneWithFade(_settings.SessionLimitSceneName);
             _idleDetector.ResetIdleTimer();
         }

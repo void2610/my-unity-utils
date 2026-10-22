@@ -61,6 +61,7 @@ namespace Void2610.UnityTemplate
 
             builder.RegisterInstance(runtimeSettings);
             builder.Register<IdleDetector>(Lifetime.Singleton);
+            builder.Register<ExhibitEvents>(Lifetime.Singleton);
             builder.Register<TSceneTransitionService>(Lifetime.Singleton).As<ISceneTransitionService>();
             builder.RegisterEntryPoint<ExhibitSessionTimerService>();
             return runtimeSettings;
