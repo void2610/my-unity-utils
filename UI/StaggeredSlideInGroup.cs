@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using LitMotion;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Void2610.UnityTemplate
 {
@@ -137,9 +138,20 @@ namespace Void2610.UnityTemplate
                 var child = transform.GetChild(i) as RectTransform;
                 if (!child) continue;
                 if (activeOnly && !child.gameObject.activeSelf) continue;
+                // Unity の LayoutGroup と同じく、レイアウトから外す指定の子 (全面を覆う入力用の要素など) は並べも動かしもしない
+                if (IgnoresLayout(child)) continue;
                 children.Add(child);
             }
             return children;
+        }
+
+        private static bool IgnoresLayout(RectTransform child)
+        {
+            foreach (var ignorer in child.GetComponents<ILayoutIgnorer>())
+            {
+                if (ignorer.ignoreLayout) return true;
+            }
+            return false;
         }
 
         private List<(RectTransform rect, CanvasGroup canvasGroup)> BuildTargets(List<RectTransform> children)
