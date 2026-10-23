@@ -45,6 +45,15 @@ namespace Void2610.UnityTemplate
         /// <summary>掴む。持ち上げた見た目にして、下の受け取り先へレイキャストを通す</summary>
         public void PickUp(PointerEventData eventData)
         {
+            Lift();
+            Follow(eventData);
+        }
+
+        /// <summary>
+        /// ポインタを使わずにその場で掴む (ゲームパッドの決定で選んだときなど)。その後は <see cref="Place"/> / <see cref="Return"/> / <see cref="Release"/> をドラッグと同じく使える
+        /// </summary>
+        public void Lift()
+        {
             _rect = (RectTransform)transform;
             _group = GetComponent<CanvasGroup>();
             _motion.TryCancel();
@@ -68,7 +77,6 @@ namespace Void2610.UnityTemplate
             {
                 transform.localScale = target;
             }
-            Follow(eventData);
         }
 
         /// <summary>掴んでいる間、ポインタの位置へ付いていく</summary>
