@@ -22,10 +22,11 @@ Unityゲーム開発で頻繁に使用するユーティリティスクリプト
 - **TMPInputFieldCaretFixer.cs** - TextMeshPro InputFieldのキャレット修正
 - **UILineRenderer.cs** - UI用ライン描画
 
-### Animation/ (2ファイル)
+### Animation/ (3ファイル)
 
 - **FloatMove.cs** - オブジェクトの浮遊アニメーション
 - **SpriteSheetAnimator.cs** - スプライトシートアニメーション再生
+- **SteppedRotationAnimator.cs** - 角度を補間せずコマ送りで切り替える揺れ
 
 ### Core/ (6ファイル)
 
