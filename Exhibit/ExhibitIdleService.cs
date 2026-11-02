@@ -28,6 +28,7 @@ namespace Void2610.UnityTemplate
 
         private State _state = State.Monitoring;
         private float _overlayShownTime;
+        private bool _isMonitoringEnabled;
 
         public ExhibitIdleService(
             ExhibitSettings settings,
@@ -48,7 +49,17 @@ namespace Void2610.UnityTemplate
             // 解除後の入力の戻しはシーンやフェードに関係なく進める
             _inputBlocker.Tick();
 
-            if (!_settings.EnableIdlePauseAndReturn) return;
+            if (!_settings.EnableIdlePauseAndReturn)
+            {
+                StopMonitoring();
+                return;
+            }
+            // 実行中に有効になったときは、その時点から放置を数える (無効だった間の放置で、有効にした途端に止めない)
+            if (!_isMonitoringEnabled)
+            {
+                _isMonitoringEnabled = true;
+                _idleDetector.ResetIdleTimer();
+            }
 
             // スキップ対象のシーンではスキップ
             var currentSceneName = SceneManager.GetActiveScene().name;
@@ -100,6 +111,18 @@ namespace Void2610.UnityTemplate
                 _state = State.Transitioning;
                 TransitionToIdleReturn().Forget();
             }
+        }
+
+        /// <summary>
+        /// 実行中に無効になったら、出しているオーバーレイを閉じて入力を戻す
+        /// </summary>
+        private void StopMonitoring()
+        {
+            _isMonitoringEnabled = false;
+            if (_state != State.OverlayShown) return;
+            _overlay.Hide();
+            _inputBlocker.ReleaseNow();
+            _state = State.Monitoring;
         }
 
         private async UniTaskVoid TransitionToIdleReturn()

@@ -33,7 +33,14 @@ namespace Void2610.UnityTemplate
 
         public void Tick()
         {
-            if (!_settings.EnableSessionTimeLimit || _hasTriggered) return;
+            // 無効の間は時計を進めない。実行中に有効になったら、時間切れの後でもその時点から新しいセッションを数える
+            if (!_settings.EnableSessionTimeLimit)
+            {
+                _sessionStartTime = Time.realtimeSinceStartup;
+                _hasTriggered = false;
+                return;
+            }
+            if (_hasTriggered) return;
             if (SceneManager.GetActiveScene().name == _settings.SessionLimitSceneName) return;
             if (_sceneTransitionService.IsFading) return;
 
