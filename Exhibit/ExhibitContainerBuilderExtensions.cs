@@ -19,14 +19,11 @@ namespace Void2610.UnityTemplate
             where TSceneTransitionService : class, ISceneTransitionService
             where TExhibitOverlay : class, IExhibitOverlay
         {
-            var runtimeSettings = RegisterSharedServices<TSceneTransitionService>(builder, settings);
+            RegisterSharedServices<TSceneTransitionService>(builder, settings);
 
-            builder.Register<TExhibitOverlay>(Lifetime.Singleton).As<IExhibitOverlay>();
-
-            if (runtimeSettings.EnableExhibitMode)
-            {
-                builder.RegisterEntryPoint<ExhibitIdleService>();
-            }
+            builder.Register<TExhibitOverlay>(Lifetime.Singleton);
+            builder.Register<IExhibitOverlay>(resolver => new LazyExhibitOverlay(() => resolver.Resolve<TExhibitOverlay>()), Lifetime.Singleton);
+            builder.RegisterEntryPoint<ExhibitIdleService>();
         }
 
         /// <summary>
@@ -38,21 +35,15 @@ namespace Void2610.UnityTemplate
             Func<IExhibitOverlay> overlayFactory)
             where TSceneTransitionService : class, ISceneTransitionService
         {
-            var runtimeSettings = RegisterSharedServices<TSceneTransitionService>(builder, settings);
+            RegisterSharedServices<TSceneTransitionService>(builder, settings);
 
-            if (!runtimeSettings.EnableExhibitMode) return;
-
-            var overlay = overlayFactory?.Invoke();
-            if (overlay == null)
-            {
-                throw new InvalidOperationException("Exhibit overlay factory returned null.");
-            }
-
-            builder.RegisterInstance(overlay).As<IExhibitOverlay>();
+            builder.RegisterInstance<IExhibitOverlay>(new LazyExhibitOverlay(overlayFactory));
             builder.RegisterEntryPoint<ExhibitIdleService>();
         }
 
-        private static ExhibitSettings RegisterSharedServices<TSceneTransitionService>(
+        // 展示モードは実行中に切り替えられる (ExhibitSettings.OverrideExhibitMode) ので、無効でもサービスは登録しておく。
+        // 各サービスは毎フレーム設定を見て、無効の間は何もしない。オーバーレイは初めて出すときに作る
+        private static void RegisterSharedServices<TSceneTransitionService>(
             IContainerBuilder builder,
             ExhibitSettings settings)
             where TSceneTransitionService : class, ISceneTransitionService
@@ -64,7 +55,6 @@ namespace Void2610.UnityTemplate
             builder.Register<ExhibitEvents>(Lifetime.Singleton);
             builder.Register<TSceneTransitionService>(Lifetime.Singleton).As<ISceneTransitionService>();
             builder.RegisterEntryPoint<ExhibitSessionTimerService>();
-            return runtimeSettings;
         }
     }
 }

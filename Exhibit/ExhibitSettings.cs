@@ -32,8 +32,11 @@ namespace Void2610.UnityTemplate
         [SerializeField] private bool enableTitleIdlePv = true;
         [SerializeField] private float titleIdleToPvSeconds = 30f;
 
-        /// <summary>展示モード有効か</summary>
-        public bool EnableExhibitMode => enableExhibitMode;
+        // 実行中だけの上書き。アセットには書かない。Domain Reload を切っていても Play をまたいで残らないよう、static に置いて Play のたびに外す
+        private static bool? _exhibitModeOverride;
+
+        /// <summary>展示モード有効か。<see cref="OverrideExhibitMode"/> で上書きしていればその値</summary>
+        public bool EnableExhibitMode => _exhibitModeOverride ?? enableExhibitMode;
 
         /// <summary>アイドル時の戻り先シーン名</summary>
         public string IdleReturnSceneName => idleReturnSceneName;
@@ -43,14 +46,14 @@ namespace Void2610.UnityTemplate
         public string[] IdleSkipSceneNames => idleSkipSceneNames;
 
         /// <summary>アイドル時ポーズ＆タイトル戻りが有効か</summary>
-        public bool EnableIdlePauseAndReturn => enableExhibitMode && enableIdlePauseAndReturn;
+        public bool EnableIdlePauseAndReturn => EnableExhibitMode && enableIdlePauseAndReturn;
         /// <summary>アイドル→ポーズまでの秒数</summary>
         public float IdleToPauseSeconds => idleToPauseSeconds;
         /// <summary>ポーズ→タイトル戻りまでの秒数</summary>
         public float PauseToTitleSeconds => pauseToTitleSeconds;
 
         /// <summary>セッション時間制限が有効か</summary>
-        public bool EnableSessionTimeLimit => enableExhibitMode && enableSessionTimeLimit;
+        public bool EnableSessionTimeLimit => EnableExhibitMode && enableSessionTimeLimit;
         /// <summary>セッション制限秒数</summary>
         public float SessionTimeLimitSeconds => sessionTimeLimitSeconds;
 
@@ -58,8 +61,17 @@ namespace Void2610.UnityTemplate
         public float ThanksIdleToTitleSeconds => thanksIdleToTitleSeconds;
 
         /// <summary>タイトルPV再生が有効か</summary>
-        public bool EnableTitleIdlePv => enableExhibitMode && enableTitleIdlePv;
+        public bool EnableTitleIdlePv => EnableExhibitMode && enableTitleIdlePv;
         /// <summary>タイトルでアイドル→PV再生までの秒数</summary>
         public float TitleIdleToPvSeconds => titleIdleToPvSeconds;
+
+        /// <summary>
+        /// アセットを書き換えずに、実行中だけ展示モードを切り替える (テストやデバッグ用)。null でアセットの値に戻す。
+        /// 展示のサービスは無効でも登録してあり、毎フレーム設定を見るので、切り替えはすぐ効く
+        /// </summary>
+        public static void OverrideExhibitMode(bool? enabled) => _exhibitModeOverride = enabled;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetOverride() => _exhibitModeOverride = null;
     }
 }
