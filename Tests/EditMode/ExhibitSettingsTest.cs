@@ -16,6 +16,7 @@ namespace Void2610.UnityTemplate.Tests
         public void SetUp()
         {
             ExhibitSettings.OverrideExhibitMode(null);
+            ExhibitSettings.OverrideIdleToPauseSeconds(null);
             // 新しく作った設定はアセットの値として展示モードが無効
             _settings = ScriptableObject.CreateInstance<ExhibitSettings>();
         }
@@ -24,6 +25,7 @@ namespace Void2610.UnityTemplate.Tests
         public void TearDown()
         {
             ExhibitSettings.OverrideExhibitMode(null);
+            ExhibitSettings.OverrideIdleToPauseSeconds(null);
             Object.DestroyImmediate(_settings);
         }
 
@@ -54,6 +56,18 @@ namespace Void2610.UnityTemplate.Tests
             ExhibitSettings.OverrideExhibitMode(null);
 
             Assert.That(_settings.EnableExhibitMode, Is.False);
+        }
+
+        [Test]
+        public void アイドルからポーズまでの秒数を上書きでき外すとアセットの値に戻る()
+        {
+            var assetValue = _settings.IdleToPauseSeconds;
+
+            ExhibitSettings.OverrideIdleToPauseSeconds(2f);
+            Assert.That(_settings.IdleToPauseSeconds, Is.EqualTo(2f));
+
+            ExhibitSettings.OverrideIdleToPauseSeconds(null);
+            Assert.That(_settings.IdleToPauseSeconds, Is.EqualTo(assetValue));
         }
     }
 }

@@ -34,6 +34,7 @@ namespace Void2610.UnityTemplate
 
         // 実行中だけの上書き。アセットには書かない。Domain Reload を切っていても Play をまたいで残らないよう、static に置いて Play のたびに外す
         private static bool? _exhibitModeOverride;
+        private static float? _idleToPauseSecondsOverride;
 
         /// <summary>展示モード有効か。<see cref="OverrideExhibitMode"/> で上書きしていればその値</summary>
         public bool EnableExhibitMode => _exhibitModeOverride ?? enableExhibitMode;
@@ -47,8 +48,8 @@ namespace Void2610.UnityTemplate
 
         /// <summary>アイドル時ポーズ＆タイトル戻りが有効か</summary>
         public bool EnableIdlePauseAndReturn => EnableExhibitMode && enableIdlePauseAndReturn;
-        /// <summary>アイドル→ポーズまでの秒数</summary>
-        public float IdleToPauseSeconds => idleToPauseSeconds;
+        /// <summary>アイドル→ポーズまでの秒数。<see cref="OverrideIdleToPauseSeconds"/> で上書きしていればその値</summary>
+        public float IdleToPauseSeconds => _idleToPauseSecondsOverride ?? idleToPauseSeconds;
         /// <summary>ポーズ→タイトル戻りまでの秒数</summary>
         public float PauseToTitleSeconds => pauseToTitleSeconds;
 
@@ -71,7 +72,16 @@ namespace Void2610.UnityTemplate
         /// </summary>
         public static void OverrideExhibitMode(bool? enabled) => _exhibitModeOverride = enabled;
 
+        /// <summary>
+        /// アセットを書き換えずに、実行中だけアイドル→ポーズまでの秒数を変える (テストで放置を短く待つため)。null でアセットの値に戻す
+        /// </summary>
+        public static void OverrideIdleToPauseSeconds(float? seconds) => _idleToPauseSecondsOverride = seconds;
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetOverride() => _exhibitModeOverride = null;
+        private static void ResetOverride()
+        {
+            _exhibitModeOverride = null;
+            _idleToPauseSecondsOverride = null;
+        }
     }
 }
