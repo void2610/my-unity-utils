@@ -1,4 +1,4 @@
-// 暗幕の指定矩形を _MaskTex の階調で抜き、境界をぼかす (SpotlightMask が穴の位置を毎フレーム渡す)
+// 暗幕の指定矩形を抜き、矩形からの距離で境界をぼかす (SpotlightMask が穴の位置を毎フレーム渡す)
 // Unmask (ステンシル) では二値にしかならず、ふんわりした境界を出せないため専用シェーダにしている
 Shader "Void2610/UI/SpotlightMask"
 {
@@ -6,9 +6,9 @@ Shader "Void2610/UI/SpotlightMask"
     {
         [PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
         _Color ("Tint", Color) = (1, 1, 1, 1)
-        _MaskTex ("Hole Mask", 2D) = "black" {}
-        // _MaskTex の 9 スライスのボーダー幅 (テクスチャ UV 上)
-        _MaskSliceBorder ("Mask Slice Border", Vector) = (0, 0, 0, 0)
+        // SpotlightMask がフェードのたびに書き換える (エディタ上でも暗幕が見えるよう既定は 1)
+        [HideInInspector] _CurtainAlpha ("Curtain Alpha", Float) = 1
+        [HideInInspector] _HoleAlpha ("Hole Alpha", Float) = 1
 
         _StencilComp ("Stencil Comparison", Float) = 8
         _Stencil ("Stencil ID", Float) = 0
@@ -74,17 +74,17 @@ Shader "Void2610/UI/SpotlightMask"
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
-            sampler2D _MaskTex;
             fixed4 _Color;
             fixed4 _TextureSampleAdd;
             float4 _ClipRect;
-            float4 _MaskSliceBorder;
             // ワールド座標を穴のローカル座標へ移す行列 (Canvas がメッシュをまとめても崩れないようワールドを経由する)
             float4x4 _WorldToHole;
             // 穴の矩形 (穴のローカル座標)。xy = 左下, zw = サイズ。サイズ 0 は穴なし
             float4 _HoleRect;
-            // 穴の一辺に対するぼかし幅の比率
-            float2 _HoleEdge;
+            // 穴の外側のぼかし幅 (穴のローカル座標)
+            float _HoleEdge;
+            float _HoleAlpha;
+            float _CurtainAlpha;
 
             v2f vert(appdata_t v)
             {
@@ -97,34 +97,20 @@ Shader "Void2610/UI/SpotlightMask"
                 return o;
             }
 
-            // Sliced Image のメッシュ 9 分割と同じ見た目になるよう、一辺の座標をテクスチャ UV へリマップする
-            float SliceAxis(float t, float destBorder, float srcBorder)
-            {
-                if (destBorder <= 0) return t;
-                // 穴がぼかし 2 つ分より狭いと中央領域の除数が 0 になり、NaN が暗幕全体へ広がるので手前で詰める
-                destBorder = min(destBorder, 0.4999);
-                if (t < destBorder) return t / destBorder * srcBorder;
-                if (t > 1 - destBorder) return 1 - (1 - t) / destBorder * srcBorder;
-                return srcBorder + (t - destBorder) / (1 - 2 * destBorder) * (1 - 2 * srcBorder);
-            }
-
             fixed4 frag(v2f i) : SV_Target
             {
                 half hole = 0;
                 if (_HoleRect.z > 0 && _HoleRect.w > 0)
                 {
                     float2 local = mul(_WorldToHole, mul(unity_ObjectToWorld, i.worldPosition)).xy;
-                    float2 t = (local - _HoleRect.xy) / _HoleRect.zw;
-                    // 矩形の外は 0。clamp サンプリングだと縁の階調が外側へ伸びる
-                    if (all(t > 0) && all(t < 1))
-                    {
-                        float2 uv = float2(SliceAxis(t.x, _HoleEdge.x, _MaskSliceBorder.x), SliceAxis(t.y, _HoleEdge.y, _MaskSliceBorder.y));
-                        hole = tex2D(_MaskTex, uv).a;
-                    }
+                    float2 halfSize = _HoleRect.zw * 0.5;
+                    // 矩形の外側への距離。角では等距離線が円弧になるので、ぼかしが広いほど角丸が目立たない
+                    float outside = length(max(abs(local - (_HoleRect.xy + halfSize)) - halfSize, 0));
+                    hole = (1 - smoothstep(0, max(_HoleEdge, 0.0001), outside)) * _HoleAlpha;
                 }
 
                 fixed4 color = i.color;
-                color.a *= 1 - hole;
+                color.a *= (1 - hole) * _CurtainAlpha;
 
                 #ifdef UNITY_UI_CLIP_RECT
                 color.a *= UnityGet2DClipping(i.worldPosition.xy, _ClipRect);

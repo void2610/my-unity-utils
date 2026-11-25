@@ -21,7 +21,7 @@ Unityゲーム開発で頻繁に使用するユーティリティスクリプト
 - **TextAutoSizer.cs** - テキスト自動サイズ調整
 - **TMPInputFieldCaretFixer.cs** - TextMeshPro InputFieldのキャレット修正
 - **UILineRenderer.cs** - UI用ライン描画
-- **Spotlight/SpotlightMask.cs** - 暗幕に縁のぼけた穴を開けて場所を示す (チュートリアルのクリック位置の誘導。穴の中のクリックは下へ通す。シェーダ・マテリアル・マスク画像同梱)
+- **Spotlight/SpotlightMask.cs** - 暗幕に縁のぼけた穴を開けて場所を示す (チュートリアルのクリック位置の誘導。穴の中のクリックは下へ通す。シェーダ・マテリアル同梱)
 
 ### Animation/ (3ファイル)
 
